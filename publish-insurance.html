@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>保险选择 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;overflow:hidden}
+.card.header{background:linear-gradient(135deg,#FF6B35,#FF8F65);padding:20px;color:#fff;display:flex;align-items:center;gap:12px}
+.card.header .icon{font-size:32px}.card.header .title{font-size:16px;font-weight:600}
+.card.header .title small{display:block;font-size:12px;font-weight:400;opacity:.85;margin-top:2px;line-height:1.5}
+.card.body{padding:20px}
+.insurance-option{border:2px solid #FF6B35;border-radius:12px;padding:16px;margin-bottom:12px;position:relative;background:#FFF7E6}
+.insurance-option.forced{border-color:#FF4D4F;background:#FFF1F0}
+.insurance-option .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.insurance-option .top .name{font-size:15px;font-weight:600;color:#1a1a2e}
+.insurance-option .top .price{font-size:18px;font-weight:700;color:#FF6B35}
+.insurance-option .top .price small{font-size:12px;font-weight:400;color:#999}
+.insurance-option .details{font-size:12px;color:#666;line-height:1.8}
+.insurance-option .details span{display:inline-block;background:#f5f6fa;padding:1px 8px;border-radius:4px;margin-right:4px;margin-bottom:4px}
+.insurance-option .toggle{position:absolute;top:16px;right:16px;width:44px;height:24px;border-radius:12px;background:#52C41A;cursor:pointer}
+.insurance-option .toggle.disabled{background:#ddd}
+.insurance-option .toggle .dot{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:22px;transition:.2s}
+.insurance-option .toggle.disabled .dot{left:2px}
+.insurance-option .forced-tag{position:absolute;top:16px;right:16px;background:#FF4D4F;color:#fff;font-size:11px;padding:3px 10px;border-radius:4px;font-weight:500}
+.warn-box{background:#FFF1F0;border-radius:8px;padding:12px;font-size:12px;color:#FF4D4F;line-height:1.6;margin-top:8px;display:none}
+.warn-box.show{display:block}
+.next-btn{display:block;width:calc(100% - 32px);margin:12px auto 24px;height:48px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.next-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">保险选择</span><span class="placeholder"></span></div>
+<div class="card">
+  <div class="header"><div class="icon">🛡️</div><div class="title" id="headerTitle">为你的任务选择保险保障<small id="headerSub">平台补贴后可低价投保</small></div></div>
+  <div class="body" id="insuranceBody"></div>
+</div>
+<button class="next-btn" onclick="saveAndNext()">下一步：确认发布</button>
+<script>
+const params=new URLSearchParams(window.location.search);
+const type=params.get('type')||'waimao';
+const highRiskTypes=['waimao','paopao'];
+if(highRiskTypes.includes(type)&&!sessionStorage.getItem('publishSafetyConfirmed:'+type))location.replace('publish-safety.html?type='+type);
+const draft=JSON.parse(localStorage.getItem('publishDraft')||'{}');
+const difficulty=(draft.sceneData&&draft.sceneData.sportDifficulty)||'中';
+const outdoorPriceMap={低:'2.5',中:'3.5',高:'4.5'};
+const config={
+  waimao:{title:'为上门服务选择保险保障',sub:'家财与入户场景建议购买，平台补贴 50%，低至 1.5 元起。',mode:'optional',name:'🛡️ 已购保险',price:'1.5',tags:['保额 ¥2,000','上门服务类'],desc:'保障服务过程中的财物损失与轻微入户风险，未投保时由双方自行协商。',warn:'⚠️ 未购保险时，服务过程中发生财物损失需由双方自行协商解决。'},
+  paopao:{title:'户外任务需购买运动人身险',sub:'根据运动难度自动计算费率，发布前需完成投保。',mode:'forced',name:'🏃 户外运动人身险',price:outdoorPriceMap[difficulty]||'3.5',tags:['保额 ¥5万','难度 '+difficulty,'轨迹留痕'],desc:'保障跑步/爬山中的意外伤害风险，难度越高保费越高，发布前必须购买。'},
+  peizhen:{title:'为陪诊任务补充责任保障',sub:'医院流程复杂，建议购买陪诊责任险，减少履约纠纷。',mode:'optional',name:'🏥 陪诊责任险',price:'2.0',tags:['保额 ¥3,000','就医流程类'],desc:'覆盖排队、陪同与就诊流程中的基础责任风险，建议在高峰医院场景投保。',warn:'⚠️ 未购保险时，流程争议与物品损失风险需由双方自行协商解决。'},
+  hunqing:{title:'为婚庆任务补充履约与物品保障',sub:'婚礼场景时间敏感、物品密集，建议搭配婚庆保障险。',mode:'optional',name:'💒 婚庆履约保障险',price:'3.5',tags:['保额 ¥5,000','重要日期类'],desc:'覆盖婚礼现场物品保管与基础履约风险，适合红包管理、物品保管等高配合度场景。',warn:'⚠️ 未购保险时，重要日期场景中的物品与履约争议保障较弱。'}
+};
+let insuranceOn=draft.insuranceSelected!==undefined?draft.insuranceSelected:true;
+const info=config[type]||config.waimao;
+document.getElementById('backLink').href='publish-remark.html?type='+type;
+document.getElementById('headerTitle').childNodes[0].textContent=info.title;
+document.getElementById('headerSub').textContent=info.sub;
+render();
+
+function render(){
+  const body=document.getElementById('insuranceBody');
+  if(info.mode==='forced'){
+    body.innerHTML=`<div class="insurance-option forced"><div class="top"><span class="name">${info.name}</span><span class="price">¥${info.price}<small>（随难度浮动）</small></span></div><div class="details">${info.tags.map(tag=>`<span>${tag}</span>`).join('')}<br>${info.desc}</div><span class="forced-tag">🔒 强制购买</span></div><div class="warn-box show">已根据当前任务难度“${difficulty}”自动匹配保险费率，发布时不可关闭。</div>`;
+    return;
+  }
+  body.innerHTML=`<div class="insurance-option" id="insuranceCard"><div class="top"><span class="name">${info.name}</span><span class="price">¥${info.price}<small>（平台补贴后）</small></span></div><div class="details">${info.tags.map(tag=>`<span>${tag}</span>`).join('')}<br>${info.desc}</div><div class="toggle ${insuranceOn?'':'disabled'}" id="toggleSwitch" onclick="toggleInsurance()"><div class="dot"></div></div></div><div class="warn-box ${insuranceOn?'':'show'}" id="warnBox">${info.warn}</div>`;
+  const card=document.getElementById('insuranceCard');
+  if(!insuranceOn){
+    card.style.borderColor='#FFB59A';
+    card.style.background='#fff';
+  }
+}
+
+function toggleInsurance(){
+  insuranceOn=!insuranceOn;
+  render();
+}
+
+function saveAndNext(){
+  draft.type=type;
+  draft.insuranceSelected=info.mode==='forced'?true:insuranceOn;
+  draft.insuranceFee=(info.mode==='forced'||insuranceOn)?info.price:'0';
+  draft.insuranceSummary=(info.mode==='forced'||insuranceOn)?'🛡️ 已购保险':'未购保险';
+  localStorage.setItem('publishDraft',JSON.stringify(draft));
+  location.href='publish-confirm.html?type='+type;
+}
+</script>
+</body>
+</html>

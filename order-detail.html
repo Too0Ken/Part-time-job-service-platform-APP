@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>订单详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:84px}
+.status-bar{height:44px;background:#FF6B35;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:12px}
+.nav{height:44px;background:#FF6B35;display:flex;align-items:center;padding:0 16px;gap:12px}
+.nav .back{font-size:20px;color:#fff;text-decoration:none}
+.nav .title{font-size:16px;font-weight:600;color:#fff;flex:1;text-align:center}
+.nav .action{font-size:13px;color:rgba(255,255,255,.88);text-decoration:none}
+.status-summary{display:flex;justify-content:center;padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid #f2f4f7}
+.status-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:112px;padding:14px 20px;border-radius:18px;font-size:15px;font-weight:700;line-height:1.2}
+.status-badge #statusIcon{font-size:24px;line-height:1}
+.section{background:#fff;margin-top:10px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.detail-copy{font-size:14px;color:#1a1a2e;line-height:1.75}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.detail-grid .item{font-size:13px;color:#666}
+.detail-grid .item .val{font-size:14px;color:#1a1a2e;font-weight:500;line-height:1.5;margin-top:2px}
+.detail-media{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.service-code-banner{display:none;margin:10px 16px 0;padding:14px 16px;border-radius:16px;background:linear-gradient(135deg,#FFF7F0,#FFFFFF);border:1px solid #FFD8C2;text-align:center}
+.service-code-banner.show{display:block}
+.service-code-banner .label{font-size:12px;color:#FF8A4C}
+.service-code-banner .code{font-size:30px;line-height:1;font-weight:800;letter-spacing:4px;color:#FF6B35;margin-top:8px}
+.service-code-banner .desc{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.service-code-banner .meta{font-size:11px;color:#98a2b3;line-height:1.6;margin-top:4px}
+.service-code-banner .refresh{height:30px;margin-top:10px;padding:0 14px;border:none;border-radius:15px;background:#FF6B35;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.sos-inline-alert{display:none;margin:10px 16px 0;padding:12px 14px;border-radius:14px;background:#FFF1F0;border:1px solid #FFD6D6;color:#B42318;font-size:12px;line-height:1.7}
+.sos-inline-alert.show{display:block}
+.publisher-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:#FFF7F3}
+.publisher-card .avatar{width:48px;height:48px;border:none;border-radius:50%;background:#FFE3D8;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer}
+.publisher-card .name{font-size:15px;font-weight:700;color:#1a1a2e}
+.publisher-card .meta{font-size:12px;color:#8c8c8c;margin-top:4px;line-height:1.6}
+.publisher-card .view-btn{padding:8px 14px;border:none;border-radius:18px;background:#FF6B35;color:#fff;font-size:12px;cursor:pointer}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.info-grid .item{font-size:12px;color:#8c8c8c}
+.info-grid .item.location-item{grid-column:1/-1}
+.info-grid .val{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.6;margin-top:3px}
+.info-grid .val.money{color:#FF6B35;font-size:18px;font-weight:800}
+.info-grid .nav-link{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:0;border:none;background:none;color:#FF6B35;font-size:12px;font-weight:700;cursor:pointer}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:2px;bottom:4px;width:2px;background:#ececec}
+.node{position:relative;padding-bottom:18px}
+.node::before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:#d0d7de;border:2px solid #fff;box-shadow:0 0 0 2px #f2f2f2}
+.node.done::before{background:#4A6CF7;box-shadow:0 0 0 2px #E6EDFF}
+.node.current::before{background:#52C41A;box-shadow:0 0 0 2px #E9FBEA}
+.node .time{font-size:11px;color:#999;margin-bottom:3px}
+.node .desc{font-size:13px;color:#333;line-height:1.6}
+.node .sub{font-size:12px;color:#8c8c8c;line-height:1.6;margin-top:3px}
+.timeline-toggle{display:none;align-items:center;justify-content:center;width:100%;margin-top:4px;border:none;background:none;color:#98a2b3;font-size:12px;line-height:1.8;cursor:pointer}
+.timeline-toggle:active{opacity:.72}
+.record-list,.voucher-list,.review-list{display:grid;gap:10px}
+.record-card,.voucher-card,.review-card{border:1px solid #eef0f5;border-radius:14px;padding:14px;background:#fff}
+.record-top,.review-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.record-title,.voucher-title,.review-title{font-size:14px;font-weight:700;color:#1a1a2e}
+.record-time,.review-score{font-size:12px;color:#8c8c8c}
+.record-desc,.voucher-desc,.review-desc{font-size:13px;color:#5f6675;line-height:1.7;margin-top:8px}
+.record-media,.voucher-media{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.media-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:none;border-radius:999px;background:#FFF5EF;color:#FF6B35;font-size:11px;font-weight:600;cursor:pointer}
+.media-pill:active{transform:scale(.98)}
+.cancel-summary{border:1px solid #f0f2f5;border-radius:14px;padding:14px;background:#fff}
+.cancel-summary .row{display:flex;justify-content:space-between;gap:14px;padding:6px 0;font-size:13px;color:#667085}
+.cancel-summary .row strong{color:#1a1a2e;text-align:right}
+.cancel-summary .desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:8px}
+.cancel-summary .link{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border-radius:18px;border:1px solid #ffd7c2;color:#FF6B35;text-decoration:none;font-size:12px;font-weight:700;margin-top:12px}
+.tip-card{background:linear-gradient(135deg,#FFF6ED,#FFFDF8);border:1px solid #FFD7B8;border-radius:16px;padding:16px}
+.tip-card .topline{font-size:13px;color:#8c8c8c}
+.tip-card .amount{font-size:30px;font-weight:800;color:#FF6B35;margin-top:8px}
+.tip-card .meta{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.tip-card .message{margin-top:12px;padding:12px;border-radius:12px;background:#fff;color:#5f6675;font-size:13px;line-height:1.7}
+.tip-card .empty{font-size:13px;color:#5f6675;line-height:1.8;margin-top:10px}
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;padding:10px 16px;display:flex;gap:10px;border-top:1px solid #eee;z-index:20}
+.bottom-bar button{flex:1;height:44px;border-radius:22px;font-size:14px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666}
+.bottom-bar button.primary{background:linear-gradient(135deg,#FF6B35,#FF8F65);border:none;color:#fff}
+.bottom-bar button.danger{background:#FFF1F0;border-color:#FFD6D6;color:#FF4D4F}
+.aux-action-section{padding:14px 16px 18px;background:transparent;margin-top:0}
+.aux-action-list{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}
+.aux-action-list button{padding:0;border:none;background:none;color:#FF6B35;font-size:12px;font-weight:400;line-height:1.8;cursor:pointer}
+.aux-action-list button:active{opacity:.72}
+.sos-float{position:fixed;right:16px;bottom:94px;width:48px;height:48px;border:none;border-radius:50%;background:#FF4D4F;color:#fff;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(255,77,79,.32);z-index:30}
+.sos-mask{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.sos-mask.show{display:flex}
+.sos-dialog{width:calc(100% - 24px);margin-bottom:16px;background:linear-gradient(180deg,#FF5A5F 0%,#FF3B30 100%);border-radius:24px;padding:20px 18px;color:#fff;box-shadow:0 18px 40px rgba(255,59,48,.28)}
+.sos-dialog h3{font-size:18px;margin-bottom:8px}
+.sos-dialog p{font-size:13px;line-height:1.7;color:rgba(255,255,255,.92)}
+.sos-count{display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);font-size:30px;font-weight:800;margin:18px auto 14px}
+.sos-actions{display:flex;gap:10px;margin-top:16px}
+.sos-actions button{flex:1;height:46px;border:none;border-radius:23px;font-size:15px;cursor:pointer}
+.sos-actions .cancel{background:rgba(255,255,255,.16);color:#fff}
+.sos-actions .trigger{background:#fff;color:#FF3B30;font-weight:700}
+.preview-mask{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;padding:24px;z-index:80}
+.preview-mask.show{display:flex}
+.preview-dialog{width:min(100%,320px);background:#fff;border-radius:24px;padding:18px;box-shadow:0 20px 50px rgba(15,23,42,.22)}
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.preview-head h4{font-size:16px;color:#1a1a2e}
+.preview-close{width:32px;height:32px;border:none;border-radius:50%;background:#F2F4F7;color:#667085;font-size:18px;cursor:pointer}
+.preview-card{margin-top:14px;border-radius:20px;background:linear-gradient(135deg,#EEF3FF,#FFFFFF);padding:28px 18px;text-align:center}
+.preview-card .icon{font-size:42px;line-height:1}
+.preview-card .name{font-size:15px;font-weight:700;color:#1a1a2e;margin-top:12px}
+.preview-card .meta{font-size:12px;color:#667085;line-height:1.7;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+<div class="nav">
+  <a href="order-list.html" class="back" id="backLink">←</a>
+  <span class="title">订单详情</span>
+  <span class="action" style="visibility:hidden">占位</span>
+</div>
+
+<div class="service-code-banner" id="serviceCodeBanner">
+  <div class="label">开始服务验证码</div>
+  <div class="code" id="serviceCodeValue">000000</div>
+  <div class="desc">请将验证码提供给服务者，对方输入正确后才能开始服务</div>
+  <div class="meta" id="serviceCodeMeta">有效期 24 小时</div>
+  <button class="refresh" id="refreshServiceCodeBtn" type="button">重新获取服务码</button>
+</div>
+
+<div class="sos-inline-alert" id="sosInlineAlert">SOS 已触发，平台安全团队正在处理中；C 端不提供历史记录入口，处理进展将通过消息中心同步。</div>
+
+<div class="section">
+  <div class="status-summary">
+    <div class="status-badge" id="statusBadge"><span id="statusIcon">🧭</span><span id="statusTitle">待服务</span></div>
+  </div>
+  <div class="timeline" id="timeline"></div>
+  <button class="timeline-toggle" id="timelineToggleBtn" type="button">展开完整进度 ↓</button>
+</div>
+
+<div class="section">
+  <div class="section-title">订单信息</div>
+  <div class="info-grid" id="infoGrid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">结算信息</div>
+  <div class="info-grid" id="settlementGrid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">任务要求</div>
+  <div class="detail-copy" id="taskRequirementContent"></div>
+</div>
+
+<div class="section" id="otherSupplementSection" style="display:none">
+  <div class="section-title">其他补充</div>
+  <div class="detail-grid" id="otherSupplementList"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">详细说明</div>
+  <div class="detail-copy" id="taskDetailDescription"></div>
+  <div class="detail-media" id="taskDetailMedia" style="display:none"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">当前服务者</div>
+  <div class="publisher-card">
+    <button class="avatar" id="providerAvatar" type="button">👤</button>
+    <div style="flex:1">
+      <div class="name" id="providerName">王小明</div>
+      <div class="meta" id="providerMeta">信用92 · 北京林业大学 · 宠物护理师证书</div>
+    </div>
+    <button class="view-btn" id="providerButton" type="button">查看详情</button>
+  </div>
+</div>
+
+<div class="section" id="cancelReasonSection" style="display:none">
+  <div class="section-title">取消原因</div>
+  <div class="cancel-summary" id="cancelReasonCard"></div>
+</div>
+
+<div class="section" id="tipSection" style="display:none">
+  <div class="section-title">打赏信息</div>
+  <div class="tip-card" id="tipCard"></div>
+</div>
+
+<div class="section" id="recordSection" style="display:none">
+  <div class="section-title">服务打卡记录</div>
+  <div class="record-list" id="recordList"></div>
+</div>
+
+<div class="section" id="voucherSection" style="display:none">
+  <div class="section-title">完成服务凭证</div>
+  <div class="voucher-list" id="voucherList"></div>
+</div>
+
+<div class="section" id="reviewSection" style="display:none">
+  <div class="section-title">评价信息</div>
+  <div class="review-list" id="reviewList"></div>
+</div>
+
+<div class="aux-action-section" id="auxActionSection" style="display:none">
+  <div class="aux-action-list" id="auxActionList"></div>
+</div>
+
+<div class="bottom-bar" id="bottomBar"></div>
+<button class="sos-float" id="sosButton" style="display:none">🆘 SOS</button>
+<div class="sos-mask" id="sosMask">
+  <div class="sos-dialog">
+    <h3>确认触发 SOS 报警</h3>
+    <p>平台将立即记录当前订单、定位信息，并同步通知平台安全团队和你的紧急联系人。若为误触，请在倒计时结束前取消。</p>
+    <div class="sos-count" id="sosCount">5</div>
+    <div class="sos-actions">
+      <button class="cancel" id="sosCancelBtn" type="button">取消</button>
+      <button class="trigger" id="sosTriggerBtn" type="button">立即触发</button>
+    </div>
+  </div>
+</div>
+<div class="preview-mask" id="previewMask">
+  <div class="preview-dialog">
+    <div class="preview-head">
+      <h4>图片预览</h4>
+      <button class="preview-close" id="previewClose" type="button">×</button>
+    </div>
+    <div class="preview-card">
+      <div class="icon">🖼️</div>
+      <div class="name" id="previewName">打卡图片</div>
+      <div class="meta" id="previewMeta">订单详情里可放大查看当前打卡或凭证图片。</div>
+    </div>
+  </div>
+</div>
+
+<script src="urgent-top-data.js"></script>
+<script src="order-tip-data.js"></script>
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="service-start-code.js"></script>
+<script src="completion-confirmation.js"></script>
+<script>
+const PUBLISHED_ORDER_KEY='banxing.latestPublishedOrder';
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const status=params.get('status')||'waiting';
+const type=params.get('type')||'cat';
+const applicantsCount=Math.max(Number(params.get('applicants')||0),0);
+const providerId=params.get('provider')||'';
+const disputeHistory=params.get('disputeHistory')==='1';
+const counterpartyDispute=params.get('counterparty')==='1'||params.get('disputeSource')==='counterparty';
+const evidenceExpired=params.get('evidenceExpired')==='1';
+const orderId=(params.get('id')||'p1').toUpperCase();
+const returnRole=params.get('returnRole')||'published';
+const returnStatus=params.get('returnStatus')||'all';
+const SOS_STORAGE_KEY='banxing.sosRecords';
+const queryTitle=params.get('title')||'';
+const queryTime=params.get('time')||'';
+const queryLocation=params.get('location')||'';
+const queryPrice=params.get('price')||'';
+const queryCoupon=params.get('coupon')||'';
+const queryPaid=params.get('paid')||'';
+const queryRefund=params.get('refund')||'';
+const queryInsuranceFee=params.get('insuranceFee')||'';
+const queryUrgentEnabled=params.get('urgentEnabled')||'';
+const queryUrgentKm=params.get('urgentKm')||'';
+const queryUrgentDuration=params.get('urgentDuration')||'';
+const queryUrgentFee=params.get('urgentFee')||'';
+const queryUrgentCreatedAt=params.get('urgentCreatedAt')||'';
+const queryUrgentExpiresAt=params.get('urgentExpiresAt')||'';
+const queryUrgentNextKm=params.get('urgentNextKm')||'';
+const queryUrgentNextFee=params.get('urgentNextFee')||'';
+const queryUrgentNextDuration=params.get('urgentNextDuration')||'';
+const queryUrgentNextStartsAt=params.get('urgentNextStartsAt')||'';
+const queryUrgentNextExpiresAt=params.get('urgentNextExpiresAt')||'';
+const queryUrgentPrevKm=params.get('urgentPrevKm')||'';
+const queryUrgentPrevDuration=params.get('urgentPrevDuration')||'';
+const queryUrgentChangedRange=params.get('urgentChangedRange')||'';
+const queryPaymentMethod=params.get('paymentMethod')||'';
+let timelineExpanded=false;
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function buildPageLink(page,extra){
+  return page+'?'+buildQuery({
+    owner,
+    status,
+    type,
+    id:orderId.toLowerCase(),
+    provider:providerId,
+    disputeHistory:disputeHistory?'1':'',
+    applicants:applicantsCount,
+    returnRole,
+    returnStatus,
+    title:currentTaskName,
+    time:currentType.time,
+    location:getSharedLocationText(),
+    price:currentType.amount,
+    coupon:currentFinance&&currentFinance.coupon,
+    paid:currentFinance&&currentFinance.paid,
+    refund:currentFinance&&currentFinance.refund,
+    insuranceFee:currentFinance&&currentFinance.insuranceFee,
+    paymentMethod:currentFinance&&currentFinance.paymentMethod,
+    counterparty:counterpartyDispute?'1':'',
+    disputeSource:counterpartyDispute?'counterparty':'',
+    evidenceExpired:evidenceExpired?'1':'',
+    urgentEnabled:currentUrgentTop&&currentUrgentTop.enabled?'1':'',
+    urgentKm:currentUrgentTop&&currentUrgentTop.km,
+    urgentDuration:currentUrgentTop&&currentUrgentTop.durationHours,
+    urgentFee:currentFinance&&currentFinance.topFee,
+    urgentCreatedAt:currentUrgentTop&&currentUrgentTop.createdAt,
+    urgentExpiresAt:currentUrgentTop&&currentUrgentTop.expiresAt,
+    urgentNextKm:currentUrgentTop&&currentUrgentTop.nextKm,
+    urgentNextFee:currentUrgentTop&&currentUrgentTop.nextFee,
+    urgentNextDuration:currentUrgentTop&&currentUrgentTop.nextDurationHours,
+    urgentNextStartsAt:currentUrgentTop&&currentUrgentTop.nextStartsAt,
+    urgentNextExpiresAt:currentUrgentTop&&currentUrgentTop.nextExpiresAt,
+    urgentPrevKm:currentUrgentTop&&currentUrgentTop.previousKm,
+    urgentPrevDuration:currentUrgentTop&&currentUrgentTop.previousDurationHours,
+    urgentChangedRange:currentUrgentTop&&currentUrgentTop.changedRange?'1':'',
+    ...extra
+  });
+}
+
+function applicantsHref(extra){
+  return 'applicants.html?'+buildQuery({
+    owner,
+    status,
+    type,
+    id:orderId.toLowerCase(),
+    provider:providerId,
+    disputeHistory:disputeHistory?'1':'',
+    applicants:applicantsCount,
+    returnRole,
+    returnStatus,
+    title:currentTaskName,
+    time:currentType.time,
+    location:getSharedLocationText(),
+    price:currentType.amount,
+    coupon:currentFinance&&currentFinance.coupon,
+    paid:currentFinance&&currentFinance.paid,
+    refund:currentFinance&&currentFinance.refund,
+    insuranceFee:currentFinance&&currentFinance.insuranceFee,
+    paymentMethod:currentFinance&&currentFinance.paymentMethod,
+    ...extra
+  });
+}
+
+function getProviderUserPageHref(){
+  const providerUserMap={
+    wang:'wang',
+    liu:'li',
+    chen:'chen'
+  };
+  return 'applicant-detail.html?'+buildQuery({
+    mode:'user',
+    userId:providerUserMap[providerId]||'wang',
+    backHref:buildPageLink('order-detail.html',{})
+  });
+}
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+document.getElementById('backLink').href='order-list.html?'+buildQuery({role:returnRole,status:returnStatus});
+
+const typeMeta={
+  cat:{
+    icon:'🐱',
+    name:'上门喂猫',
+    time:'2026年4月18日 14:00-15:30',
+    location:'中关村南大街XX小区',
+    amount:'¥120',
+    insurance:'🛡️ 已购保险',
+    records:[
+      {time:'14:05',text:'已到达服务地点，在门口完成签到并确认可正常入户。',images:['门口照片']},
+      {time:'14:20',text:'已完成喂食、换水和猫砂清理，猫咪状态稳定。',images:['喂食照片','清理照片']},
+      {time:'15:26',text:'服务结束前补充了猫咪状态照片，并确认门锁已复位。',images:['猫咪状态照片']}
+    ],
+    vouchers:[
+      {time:'15:26',text:'已完成喂食、换水、猫砂清理和陪玩互动，离场前已确认门锁复位。',images:['完成照片','猫咪状态照片']}
+    ]
+  },
+  outdoor:{
+    icon:'🏃',
+    name:'户外任务',
+    time:'2026年4月19日 17:00',
+    location:'奥森公园南门',
+    amount:'¥80',
+    insurance:'🛡️ 已购保险',
+    records:[
+      {time:'16:55',text:'已到达集合点，和发布者确认本次陪跑路线与配速。',images:['集合点照片']},
+      {time:'17:35',text:'已完成中段陪同、补水提醒和节奏调整。',images:['途中照片']},
+      {time:'18:12',text:'服务结束，双方已在终点完成确认。',images:['结束点照片']}
+    ],
+    vouchers:[
+      {time:'18:12',text:'本次户外陪同已完成约定时长、路线陪同、补水提醒和节奏调整。',images:['集合点照片','结束点照片']}
+    ]
+  },
+  health:{
+    icon:'🏥',
+    name:'陪诊',
+    time:'2026年4月22日 09:00',
+    location:'北医三院',
+    amount:'¥150',
+    insurance:'🛡️ 已购保险',
+    records:[
+      {time:'09:02',text:'已到达医院并完成到院签到。',images:['到院照片']},
+      {time:'09:48',text:'候诊过程中已同步排队进度和陪同情况。',images:['候诊照片']},
+      {time:'10:35',text:'已完成取药并同步医嘱重点信息。',images:['取药照片']}
+    ],
+    vouchers:[
+      {time:'10:35',text:'已完成陪诊、候诊陪同和取药，医嘱重点已整理同步给发布者。',images:['医嘱照片','取药回执']}
+    ]
+  },
+  wedding:{
+    icon:'💒',
+    name:'婚庆协助',
+    time:'2026年4月10日 08:00',
+    location:'海淀逸林酒店',
+    amount:'¥420',
+    insurance:'🛡️ 未购保险',
+    records:[
+      {time:'07:28',text:'已到达婚礼现场并完成到场确认。',images:['到场照片']},
+      {time:'09:10',text:'已完成迎宾、流程配合和现场物品照看。',images:['现场照片']},
+      {time:'12:05',text:'已确认现场交接完成，服务顺利结束。',images:['交接照片']}
+    ],
+    vouchers:[
+      {time:'12:05',text:'迎宾、流程协助和物品保管等项目已完成，现场交接顺利结束。',images:['现场完成照片','交接照片']}
+    ]
+  }
+};
+
+const providers={
+  wang:{id:'wang',avatar:'🐾',name:'王小明',meta:'信用92 · 北京林业大学 · 宠物护理师证书'},
+  liu:{id:'liu',avatar:'🏃',name:'刘同学',meta:'信用95 · 北京体育大学 · 户外运动指导员证'},
+  chen:{id:'chen',avatar:'💒',name:'陈学长',meta:'信用94 · 中国传媒大学 · 婚礼策划师证书'}
+};
+
+const statusMeta={
+  waiting:{
+    title:'待接单',
+    icon:'⏳',
+    desc:'任务已发布成功，正在等待服务者接单申请。',
+    chip:{text:'待接单',background:'#FFF7E6',color:'#FA8C16'},
+    showProvider:false,
+    recordCount:0,
+    showVoucher:false,
+    reviewMode:'hide',
+    tags:['可修改任务','可取消任务'],
+    timeline:[
+      {state:'current',time:'当前',desc:'订单待确认',sub:'当前还没有确认具体服务者'},
+      {state:'todo',time:'后续',desc:'等待开始服务',sub:'确认服务者后进入待服务阶段'},
+      {state:'todo',time:'后续',desc:'待提交完成凭证',sub:'服务完成后提交文字和图片凭证'},
+      {state:'todo',time:'后续',desc:'待双方评价',sub:'双方完成评价后进入结算'},
+      {state:'todo',time:'后续',desc:'已完成结算',sub:'订单闭环后完成资金结转'}
+    ],
+    actions:[
+      {label:'急单置顶',key:'urgentTop',kind:'primary'},
+      {label:'修改任务',key:'modifyTask'},
+      {label:'取消订单',key:'cancelConfirm',kind:'danger'}
+    ]
+  },
+  applying:{
+    title:'已申请',
+    icon:'📨',
+    desc:'已有服务者发起申请，建议尽快查看并确认。',
+    chip:{text:'已申请',background:'#FFF1F0',color:'#FF7A45'},
+    showProvider:false,
+    recordCount:0,
+    showVoucher:false,
+    reviewMode:'hide',
+    tags:['可查看申请列表','可取消任务'],
+    timeline:[
+      {state:'current',time:'当前',desc:'订单待确认',sub:'已有服务者申请，等待你确认最终人选'},
+      {state:'todo',time:'后续',desc:'等待开始服务',sub:'确认服务者后进入待服务阶段'},
+      {state:'todo',time:'后续',desc:'待提交完成凭证',sub:'服务完成后提交文字和图片凭证'},
+      {state:'todo',time:'后续',desc:'待双方评价',sub:'双方完成评价后进入结算'},
+      {state:'todo',time:'后续',desc:'已完成结算',sub:'订单闭环后完成资金结转'}
+    ],
+    actions:[
+      {label:'急单置顶',key:'urgentTop',kind:'primary'},
+      {label:'申请列表（'+applicantsCount+'）',key:'applicants'},
+      {label:'取消订单',key:'cancelConfirm',kind:'danger'}
+    ]
+  },
+  ready:{
+    title:'待服务',
+    icon:'🧍',
+    desc:'服务者已确认，订单进入待服务阶段。',
+    chip:{text:'待服务',background:'#EEF2FF',color:'#4A6CF7'},
+    showProvider:true,
+    recordCount:0,
+    showVoucher:false,
+    reviewMode:'hide',
+    tags:['可联系服务者','可查看服务者详情'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'服务者已确认接单并锁定履约'},
+      {state:'current',time:'当前',desc:'等待开始服务',sub:'服务开始前可继续沟通细节'},
+      {state:'todo',time:'下一步',desc:'待提交完成凭证',sub:'服务完成后提交文字和图片凭证'},
+      {state:'todo',time:'后续',desc:'待双方评价',sub:'双方完成评价后进入结算'},
+      {state:'todo',time:'后续',desc:'已完成结算',sub:'订单闭环后完成资金结转'}
+    ],
+    actions:[
+      {label:'聊天',key:'chat'},
+      {label:'取消订单',key:'cancelConfirm',kind:'danger'}
+    ]
+  },
+  serving:{
+    title:'服务中',
+    icon:'🔄',
+    desc:'服务者正在执行任务，当前可查看服务过程记录。',
+    chip:{text:'服务中',background:'#E6F4FF',color:'#1677FF'},
+    showProvider:true,
+    recordCount:2,
+    showVoucher:false,
+    reviewMode:'hide',
+    tags:['可聊天','可查看打卡','可申请纠纷'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'当前由该服务者继续履约'},
+      {state:'done',time:'14:00',desc:'服务已开始',sub:'双方已确认本次服务开始'},
+      {state:'current',time:'当前',desc:'待提交完成凭证',sub:'服务完成后提交文字和图片凭证'},
+      {state:'todo',time:'后续',desc:'待双方评价',sub:'双方完成评价后进入结算'},
+      {state:'todo',time:'后续',desc:'已完成结算',sub:'订单闭环后完成资金结转'}
+    ],
+    actions:[
+      {label:'聊天',key:'chat'},
+      {label:'申请纠纷',key:'disputeApply',kind:'danger'},
+      {label:'SOS',key:'sos',kind:'danger'}
+    ]
+  },
+  confirm:{
+    title:'待确认完成',
+    icon:'📋',
+    desc:'服务者已提交完成凭证，等待你确认本次服务是否完成。',
+    chip:{text:'待确认完成',background:'#FFF7E6',color:'#D48806'},
+    showProvider:true,
+    recordCount:3,
+    showVoucher:true,
+    reviewMode:'hide',
+    tags:['可查看完成凭证','可确认完成'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'履约关系已锁定'},
+      {state:'done',time:'14:00',desc:'服务已开始',sub:'过程打卡已同步留存'},
+      {state:'done',time:'刚刚',desc:'服务者已提交完成凭证',sub:'文字说明和图片凭证已上传'},
+      {state:'current',time:'当前',desc:'等待你确认完成',sub:'确认后订单才会进入待评价'},
+      {state:'todo',time:'后续',desc:'待双方评价',sub:'双方完成评价后进入结算'}
+    ],
+    actions:[
+      {label:'聊天',key:'chat'},
+      {label:'确认完成',key:'confirmComplete',kind:'primary'},
+      {label:'申请纠纷',key:'disputeApply',kind:'danger'},
+      {label:'SOS',key:'sos',kind:'danger'}
+    ]
+  },
+  review:{
+    title:'待评价',
+    icon:'⭐',
+    desc:'服务已完成，当前可查看完成凭证并完成评价。',
+    chip:{text:'待评价',background:'#F5F3FF',color:'#7C3AED'},
+    showProvider:true,
+    recordCount:3,
+    showVoucher:true,
+    reviewMode:'pending',
+    tags:['可查看凭证','可去评价'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'履约关系已锁定'},
+      {state:'done',time:'14:00',desc:'服务已开始',sub:'过程打卡已同步留存'},
+      {state:'done',time:'15:26',desc:'已提交完成凭证',sub:'服务者填写的文字和图片已上传'},
+      {state:'current',time:'当前',desc:'待双方评价',sub:'双方完成评价后进入结算'},
+      {state:'todo',time:'后续',desc:'已完成结算',sub:'订单闭环后完成资金结转'}
+    ],
+    actions:[
+      {label:'去评价',key:'rating',kind:'primary'},
+      {label:'再次发布',key:'publish'}
+    ]
+  },
+  done:{
+    title:'已评价',
+    icon:'✅',
+    desc:'订单已完成并结算，可回看过程记录、完成凭证和评价。',
+    chip:{text:'已评价',background:'#F0FFF4',color:'#52C41A'},
+    showProvider:true,
+    recordCount:3,
+    showVoucher:true,
+    reviewMode:'done',
+    tags:['可查看评价','可申诉信用分'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'履约关系已锁定'},
+      {state:'done',time:'服务当日',desc:'服务已开始',sub:'过程记录已完整留存'},
+      {state:'done',time:'服务结束',desc:'已提交完成凭证',sub:'完成说明和图片已同步保存'},
+      {state:'done',time:'服务后 1 小时',desc:'已完成评价',sub:'双方评价已同步到订单记录'},
+      {state:'done',time:'服务后 2 小时',desc:'已完成结算',sub:'资金已按规则结转'}
+    ],
+    actions:[
+      ...(hasCreditAppeal()?[{label:'信用分申诉',key:'appeal',kind:'primary'}]:[])
+    ]
+  },
+  dispute:{
+    title:'纠纷中',
+    icon:'⚠️',
+    desc:'订单已进入平台仲裁流程，可查看双方材料和平台处理进度。',
+    chip:{text:'纠纷中',background:'#FFF1F0',color:'#FF4D4F'},
+    showProvider:true,
+    recordCount:3,
+    showVoucher:true,
+    reviewMode:'hide',
+    tags:['可查看纠纷','可查看凭证'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'履约关系已锁定'},
+      {state:'done',time:'服务当日',desc:'服务已开始',sub:'过程记录和完成凭证已保留'},
+      {state:'done',time:'服务结束',desc:'已提交完成凭证',sub:'相关文字和图片已自动带入仲裁材料'},
+      {state:'done',time:'昨天 18:40',desc:'纠纷已发起',sub:'平台已收到双方申诉'},
+      {state:'current',time:'当前',desc:'平台处理中',sub:'可查看已提交的材料和处理进度'}
+    ],
+    actions:[
+      {label:'聊天',key:'chat'},
+      {label:'查看纠纷',key:'disputeView',kind:'danger'}
+    ]
+  },
+  refund:{
+    title:'已退款',
+    icon:'💸',
+    desc:'当前订单已完成退款，可查看纠纷处理结果和退款去向。',
+    chip:{text:'已退款',background:'#FFF7E6',color:'#D48806'},
+    showProvider:true,
+    recordCount:3,
+    showVoucher:true,
+    reviewMode:'hide',
+    tags:['可查看纠纷','可查看退款'],
+    timeline:[
+      {state:'done',time:'昨天 21:00',desc:'订单已确认',sub:'履约关系已锁定'},
+      {state:'done',time:'服务当日',desc:'服务已开始',sub:'过程记录已同步留存'},
+      {state:'done',time:'服务结束',desc:'已提交完成凭证',sub:'完成说明和图片已同步保存'},
+      {state:'done',time:'昨天 18:40',desc:'纠纷已发起',sub:'平台已收到双方申诉'},
+      {state:'done',time:'昨天 20:10',desc:'平台处理中',sub:'平台已完成责任核验并输出处理结果'},
+      {state:'current',time:'当前',desc:'已退款',sub:'退款结果会同步到钱包和消息页'}
+    ],
+    actions:[
+      {label:'纠纷详情',key:'disputeView'},
+      ...(hasCreditAppeal()?[{label:'信用分申诉',key:'appeal'}]:[])
+    ]
+  },
+  cancel:{
+    title:'已取消',
+    icon:'🚫',
+    desc:'订单已取消，可查看取消原因和对应的费用说明。',
+    chip:{text:'已取消',background:'#F3F4F6',color:'#9CA3AF'},
+    showProvider:false,
+    recordCount:0,
+    showVoucher:false,
+    reviewMode:'hide',
+    tags:['可查看原因','可再次发布'],
+    timeline:[
+      {state:'done',time:'任务发布后',desc:'订单待确认',sub:'订单在确认服务者前已进入流转'},
+      {state:'current',time:'当前',desc:'已取消',sub:'不会继续进入服务流程'}
+    ],
+    actions:[
+      {label:'取消原因',key:'cancelView'},
+      {label:'再次发布',key:'publish',kind:'primary'},
+      ...(hasCreditAppeal()?[{label:'信用分申诉',key:'appeal'}]:[])
+    ]
+  }
+};
+
+function readLatestPublishedOrder(){
+  try{
+    return JSON.parse(localStorage.getItem(PUBLISHED_ORDER_KEY)||'null');
+  }catch(error){
+    return null;
+  }
+}
+
+const currentTypeBase=typeMeta[type]||typeMeta.cat;
+const currentType={
+  ...currentTypeBase,
+  name:queryTitle||currentTypeBase.name,
+  time:BanxingTimeUtils.formatTaskTime(queryTime||currentTypeBase.time)||queryTime||currentTypeBase.time,
+  location:queryLocation||currentTypeBase.location,
+  amount:queryPrice||currentTypeBase.amount
+};
+const taskDetailMetaByType={
+  cat:{
+    taskRequirements:'需要细心、有上门服务经验，能严格按喂养说明执行，结束后同步照片和服务情况。',
+    otherSupplement:[{label:'上门方式',value:'密码锁入户'},{label:'猫咪数量',value:'2只'},{label:'特殊说明',value:'冻干零食在冰箱，结束后帮忙拍一张猫砂盆状态照片。'}],
+    detailDescription:'猫粮在柜子第二层，猫砂盆在阳台。到场后先补粮换水，再清理猫砂，最后陪小橘玩一会儿。门锁为密码锁，接单后我会单独同步进门方式和注意事项。',
+    detailImages:['照片1','照片2']
+  },
+  outdoor:{
+    taskRequirements:'需要熟悉常见跑步路线，体能稳定，能根据现场状态协助控配速并提醒热身和拉伸。',
+    otherSupplement:[{label:'目标距离',value:'5km'},{label:'目标配速',value:'6\'00"-7\'00"/km'}],
+    detailDescription:'今天主要想在奥森完成约 5km 走跑结合训练，如果现场体感不错也可能临时调整节奏。建议自备运动鞋和饮水，集合后先简单热身，再按路线陪同完成任务。',
+    detailImages:['路线图','集合点']
+  },
+  health:{
+    taskRequirements:'需要耐心细致，能协助挂号、候诊、陪同检查和取药，并注意保护就诊隐私。',
+    otherSupplement:[{label:'就诊科室',value:'骨科复诊'},{label:'陪同内容',value:'挂号、候诊、检查、取药'}],
+    detailDescription:'这次是骨科复诊，老人步行较慢，现场可能需要搀扶。希望接单人能全程陪同看号、协助往返检查点位，并在结束后帮忙确认药品和医嘱信息。',
+    detailImages:['门诊楼','取药窗口']
+  },
+  wedding:{
+    taskRequirements:'需要性格开朗、执行力强，能配合婚礼流程安排，有现场协助或活动执行经验更合适。',
+    otherSupplement:[{label:'角色需求',value:'伴娘 / 婚礼协助'},{label:'着装要求',value:'浅色礼服，自备高跟鞋'}],
+    detailDescription:'当天需要协助迎宾、流程配合、礼金桌照看和部分拍照留念，着装要求为浅色礼服。到场时间会早于正式仪式，接单后会同步更完整的流程表和现场联系人。',
+    detailImages:['礼服参考','酒店宴会厅']
+  }
+};
+const defaultTaskDurationByType={
+  cat:'1.5 小时',
+  outdoor:'1 小时',
+  health:'3 小时',
+  wedding:'半天'
+};
+function formatTaskDuration(timeText,fallbackText,typeKey){
+  const primary=String(timeText||'').trim();
+  const fallback=String(fallbackText||'').trim();
+  const source=primary||fallback;
+  if(!source)return defaultTaskDurationByType[typeKey]||'';
+  const rangeMatch=source.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if(rangeMatch){
+    const startMinutes=Number(rangeMatch[1])*60+Number(rangeMatch[2]);
+    let endMinutes=Number(rangeMatch[3])*60+Number(rangeMatch[4]);
+    if(endMinutes<=startMinutes)endMinutes+=24*60;
+    const hours=(endMinutes-startMinutes)/60;
+    return String(Number.isInteger(hours)?hours:hours.toFixed(1).replace(/\.0$/,''))+' 小时';
+  }
+  const hourMatch=source.match(/(\d+(?:\.\d+)?)\s*小时/);
+  if(hourMatch)return hourMatch[1]+' 小时';
+  const minuteMatch=source.match(/(\d+)\s*分钟/);
+  if(minuteMatch)return minuteMatch[1]+' 分钟';
+  const dayMatch=source.match(/(\d+(?:\.\d+)?)\s*天/);
+  if(dayMatch)return dayMatch[1]+' 天';
+  if(/半天|半日/.test(source))return '半天';
+  if(/全天/.test(source))return '全天';
+  return defaultTaskDurationByType[typeKey]||'';
+}
+function extractTaskDistrict(locationText){
+  const source=String(locationText||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return '';
+  const resolved=window.BanxingLocationUtils&&typeof BanxingLocationUtils.resolveLocation==='function'
+    ?BanxingLocationUtils.resolveLocation(source)
+    :null;
+  const base=resolved&&resolved.region?resolved.region:source;
+  const matches=String(base).match(/[^省市区县旗\s·,，/]+(?:区|县|旗|市)/g);
+  if(matches&&matches.length){
+    const filtered=matches.filter(function(item){
+      return !/^(北京市|上海市|天津市|重庆市)$/.test(item);
+    });
+    return filtered[filtered.length-1]||matches[matches.length-1];
+  }
+  const parts=source.split(/[·,，/]/).map(function(item){
+    return item.trim();
+  }).filter(Boolean);
+  return parts[parts.length-1]||source;
+}
+const currentTaskName=[
+  currentTypeBase.name,
+  formatTaskDuration(currentType.time,currentType.name,type),
+  extractTaskDistrict(currentType.location)
+].filter(Boolean).join('｜')||currentTypeBase.name;
+const currentProvider=providers[providerId]||null;
+const currentStatusKey=BanxingCompletionConfirm.resolveStatus(status,{
+  type,
+  time:currentType.time,
+  amount:currentType.amount
+});
+const currentStatus={
+  ...(statusMeta[currentStatusKey]||statusMeta.waiting),
+  tags:[...((statusMeta[currentStatusKey]||statusMeta.waiting).tags||[])],
+  actions:[...((statusMeta[currentStatusKey]||statusMeta.waiting).actions||[])],
+  timeline:[...((statusMeta[currentStatusKey]||statusMeta.waiting).timeline||[])]
+};
+const currentActions=[...(currentStatus.actions||[])];
+const flowMeta={
+  type,
+  time:currentType.time,
+  amount:currentType.amount
+};
+const ratingState=BanxingCompletionConfirm.getRatingState(flowMeta);
+const currentUserHasRated=BanxingCompletionConfirm.hasRated(flowMeta,'published');
+const bothSidesRated=BanxingCompletionConfirm.areBothRated(flowMeta);
+const EVIDENCE_KEY='mockOrderEvidenceV2';
+let sosCountdown=5;
+let sosTimer=null;
+
+function hasCreditAppeal(){
+  return ['P4'].includes(orderId);
+}
+
+function getFlowTimestamps(){
+  return {
+    confirmed:'2026-04-16 21:10:00',
+    started:'2026-04-17 14:00:00',
+    proof:'2026-04-17 15:26:00',
+    dispute:'2026-04-17 18:40:00',
+    disputeDone:'2026-04-17 20:10:00',
+    cancel:'2026-04-17 20:10:00',
+    rated:'2026-04-17 18:00:00'
+  };
+}
+
+function getReviewProgressLabel(){
+  if(bothSidesRated)return'双方已评价';
+  if(currentUserHasRated)return'待对方评价';
+  if(ratingState.acceptedRated)return'待评价';
+  return'待双方评价';
+}
+
+function readEvidenceStore(){
+  try{
+    return JSON.parse(localStorage.getItem(EVIDENCE_KEY)||'{}');
+  }catch(error){
+    return {};
+  }
+}
+
+function normalizeEntry(item){
+  return {
+    time:(item&&item.time)||'刚刚',
+    text:(item&&item.text)||(item&&item.desc)||'',
+    images:Array.isArray(item&&item.images)?item.images.filter(Boolean):[],
+    videos:Array.isArray(item&&item.videos)?item.videos.filter(Boolean):[]
+  };
+}
+
+function getOrderEvidence(){
+  const store=readEvidenceStore();
+  const saved=store[[type,orderId.toLowerCase()].join(':')]||{};
+  return {
+    progressRecords:Array.isArray(saved.progressRecords)&&saved.progressRecords.length?saved.progressRecords.map(normalizeEntry):currentType.records.map(normalizeEntry),
+    completionProofs:Array.isArray(saved.completionProofs)&&saved.completionProofs.length?saved.completionProofs.map(normalizeEntry):currentType.vouchers.map(normalizeEntry)
+  };
+}
+
+const orderEvidence=getOrderEvidence();
+const financeMetaByOrderId={
+  P4:{coupon:'¥20.00',insuranceFee:'¥0.00',topFee:'¥0.00',paid:'¥480.00',refund:'¥480.00',paymentMethod:'微信支付',note:'纠纷成立后已退回任务相关实付金额，优惠券已原路退回，急单置顶费不退。'},
+  P5:{coupon:'¥0.00',insuranceFee:'¥0.00',topFee:'¥0.00',paid:'¥90.00',refund:'¥0.00',paymentMethod:'平台余额',note:'订单正常完成，信用积分自动 +1，前台不展示加分明细。'},
+  P7:{coupon:'¥20.00',insuranceFee:'¥0.00',topFee:'¥0.00',paid:'¥140.00',refund:'¥0.00',paymentMethod:'微信支付',note:'订单已核销优惠券，待评价完成后结算。'},
+  P8:{coupon:'¥2.00',insuranceFee:'¥0.00',topFee:'¥0.00',paid:'¥63.00',refund:'¥15.00',paymentMethod:'平台余额',note:'当前订单处于纠纷处理中，若平台最终调整退款金额，会同步更新结算结果并回冲收益。'},
+  P9:{coupon:'¥0.00',insuranceFee:'¥0.00',topFee:'¥0.00',paid:'¥360.00',refund:'¥360.00',paymentMethod:'微信支付',note:'订单已取消，任务金额已原路退回；无保险费、急单置顶费和打赏金额。'}
+};
+const baseUrgentTopByOrderId={
+  P2:{enabled:true,km:10,fee:5,durationHours:6,durationLabel:'6小时',createdAt:'2026-04-18T09:00:00+08:00',expiresAt:'2026-04-18T15:00:00+08:00',nextKm:30,nextFee:10,nextDurationHours:12,nextDurationLabel:'12小时',nextStartsAt:'2026-04-18T15:00:00+08:00',nextExpiresAt:'2026-04-19T03:00:00+08:00'}
+};
+const baseTipAliasesByOrderId={
+  P5:'A4',
+  P7:'A3'
+};
+const queryUrgentTop=(queryUrgentEnabled==='1'||queryUrgentKm)?BanxingUrgentTop.normalize({
+  orderId:orderId,
+  enabled:true,
+  km:Number(queryUrgentKm||10),
+  fee:Number(String(queryUrgentFee||'').replace(/[^\d.]/g,''))||BanxingUrgentTop.getFeeByKm(Number(queryUrgentKm||10)),
+  durationHours:Number(queryUrgentDuration||2),
+  createdAt:queryUrgentCreatedAt,
+  expiresAt:queryUrgentExpiresAt,
+  nextKm:queryUrgentNextKm,
+  nextFee:Number(String(queryUrgentNextFee||'').replace(/[^\d.]/g,''))||0,
+  nextDurationHours:queryUrgentNextDuration,
+  nextStartsAt:queryUrgentNextStartsAt,
+  nextExpiresAt:queryUrgentNextExpiresAt,
+  previousKm:queryUrgentPrevKm,
+  previousDurationHours:queryUrgentPrevDuration,
+  changedRange:queryUrgentChangedRange==='1'
+}):null;
+const currentUrgentTop=BanxingUrgentTop.getByOrderId(orderId)||queryUrgentTop||(baseUrgentTopByOrderId[orderId]?BanxingUrgentTop.normalize({orderId:orderId,...baseUrgentTopByOrderId[orderId]}):null);
+const currentTip=BanxingOrderTips.getByOrderId(orderId)||(baseTipAliasesByOrderId[orderId]?BanxingOrderTips.getByOrderId(baseTipAliasesByOrderId[orderId]):null);
+function parseMoney(text){
+  return Number(String(text||'').replace(/[^\d.]/g,''))||0;
+}
+function formatMoney(amount){
+  return '¥'+(Number(amount)||0).toFixed(2);
+}
+const baseFinance=financeMetaByOrderId[orderId]||{coupon:'¥0.00',insuranceFee:'¥0.00',topFee:'¥0.00',paid:currentType.amount,refund:'¥0.00',paymentMethod:'平台余额',note:'当前订单未退款，未使用优惠券。'};
+const taskAmountValue=parseMoney(currentType.amount);
+const insuranceFeeValue=parseMoney(queryInsuranceFee||baseFinance.insuranceFee);
+const topFeeValue=parseMoney(queryUrgentFee||baseFinance.topFee||(currentUrgentTop?BanxingUrgentTop.formatMoney(currentUrgentTop.fee):'¥0.00'));
+const couponValue=parseMoney(queryCoupon||baseFinance.coupon);
+const refundValue=parseMoney(queryRefund||baseFinance.refund);
+const tipValue=currentTip&&currentTip.amount>0?Number(currentTip.amount):0;
+const currentFinance={
+  coupon:queryCoupon||baseFinance.coupon,
+  insuranceFee:formatMoney(insuranceFeeValue),
+  topFee:formatMoney(topFeeValue),
+  paid:queryPaid||formatMoney(Math.max(taskAmountValue+insuranceFeeValue+topFeeValue+tipValue-couponValue-refundValue,0)),
+  refund:queryRefund||baseFinance.refund,
+  paymentMethod:queryPaymentMethod||baseFinance.paymentMethod,
+  note:baseFinance.note
+};
+const shouldShowServiceCode=!!(currentProvider&&currentStatusKey==='ready');
+const serviceCodeMeta={
+  type,
+  time:currentType.time,
+  amount:currentType.amount,
+  providerId:currentProvider&&currentProvider.id,
+  orderId:orderId.toLowerCase()
+};
+let serviceStartCode=shouldShowServiceCode?BanxingServiceStartCode.ensureCode(serviceCodeMeta):'';
+const orderLocationDisplay=BanxingLocationUtils.getOrderLocationDisplay(currentType.location,{
+  exactVisible:true
+});
+const sharedLocationDisplay=BanxingLocationUtils.getOrderLocationDisplay(currentType.location,{
+  exactVisible:false,
+  maskStyle:'asterisk'
+});
+
+function getSharedLocationText(){
+  return sharedLocationDisplay.maskedText||currentType.location;
+}
+
+function getStoredCancelReason(){
+  try{
+    return JSON.parse(localStorage.getItem('cancelReason_'+owner+'_'+orderId.toLowerCase())||'null');
+  }catch(error){
+    return null;
+  }
+}
+
+function getCancelArchiveMeta(){
+  const preset={
+    P9:{
+      operator:'发布者',
+      reason:'发布者临时取消当前服务需求',
+      refund:'任务金额已原路退回',
+      credit:'服务者不扣分',
+      desc:'本次取消由发布者发起，平台已停止后续履约流程，取消原因与费用说明已归档。'
+    }
+  };
+  const stored=getStoredCancelReason();
+  if(stored&&stored.reason){
+    return {
+      operator:'发布者',
+      reason:stored.reason==='其他原因'&&stored.extraReason
+        ?('【其他原因】'+stored.extraReason)
+        :stored.reason,
+      refund:'按规则退回任务金额及可退费用',
+      credit:'将按订单阶段同步信用影响',
+      desc:'取消原因已归档到当前订单，若对信用影响有异议，可继续发起信用分申诉。'
+    };
+  }
+  return preset[orderId]||{
+    operator:'发布者',
+    reason:'取消原因已归档',
+    refund:'按规则退回或释放待结算金额',
+    credit:'以平台最终结论为准',
+    desc:'当前订单已终止，相关取消说明和处理结果已同步保存。'
+  };
+}
+
+const tipAmountText=currentTip&&currentTip.amount>0?BanxingOrderTips.formatMoney(currentTip.amount):'¥0.00';
+
+if(currentTip&&currentTip.amount>0){
+  currentStatus.tags=(currentStatus.tags||[]).concat('已打赏');
+}
+if(currentFinance.coupon!=='¥0'&&currentFinance.coupon!=='¥0.00'){
+  currentStatus.tags=(currentStatus.tags||[]).concat('含优惠券');
+}
+if(currentUrgentTop&&BanxingUrgentTop.isActive(currentUrgentTop)){
+  currentStatus.tags=(currentStatus.tags||[]).concat('急单置顶');
+}
+if(currentStatusKey==='waiting'||currentStatusKey==='applying'){
+  const urgentAction=currentStatus.actions.find(function(action){return action.key==='urgentTop';});
+  if(urgentAction){
+    urgentAction.label=currentUrgentTop&&currentUrgentTop.enabled?'续费置顶':'急单置顶';
+  }
+}
+
+function nowText(){
+  return BanxingTimeUtils.now();
+}
+
+function appendSosRecord(){
+  let records=[];
+  try{
+    records=JSON.parse(localStorage.getItem(SOS_STORAGE_KEY)||'[]');
+    if(!Array.isArray(records))records=[];
+  }catch(error){
+    records=[];
+  }
+  records.unshift({
+    id:'SOS-'+Date.now(),
+    time:nowText(),
+    status:'处理中',
+    role:'发布者',
+    source:'订单详情',
+    orderId:orderId,
+    orderTitle:currentTaskName,
+    location:currentType.location,
+    contacts:'已通知平台安全团队、紧急联系人',
+    desc:'发布者在订单详情页触发 SOS，系统已同步当前订单、位置和处理优先级。',
+    timeline:'平台已受理，等待回访'
+  });
+  localStorage.setItem(SOS_STORAGE_KEY,JSON.stringify(records));
+}
+
+function hasActiveSosRecord(){
+  try{
+    const records=JSON.parse(localStorage.getItem(SOS_STORAGE_KEY)||'[]');
+    return Array.isArray(records)&&records.some(function(item){
+      return item.orderId===orderId&&item.status!=='已关闭';
+    });
+  }catch(error){
+    return false;
+  }
+}
+
+function renderSosInlineAlert(){
+  const alertNode=document.getElementById('sosInlineAlert');
+  if(alertNode){
+    alertNode.classList.toggle('show',hasActiveSosRecord());
+  }
+}
+
+function formatServiceCodeTime(timestamp){
+  if(!timestamp)return '有效期 24 小时';
+  const date=new Date(Number(timestamp));
+  if(Number.isNaN(date.getTime()))return '有效期 24 小时';
+  return '有效至 '+date.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+function renderServiceCodeBanner(){
+  if(!shouldShowServiceCode)return;
+  const info=BanxingServiceStartCode.getCodeInfo(serviceCodeMeta);
+  serviceStartCode=info.code;
+  document.getElementById('serviceCodeValue').textContent=serviceStartCode;
+  document.getElementById('serviceCodeMeta').textContent=formatServiceCodeTime(info.expiresAt)+' · 版本 '+info.version;
+}
+
+document.getElementById('statusIcon').textContent=currentStatus.icon;
+document.getElementById('statusTitle').textContent=currentStatus.title;
+const statusBadge=document.getElementById('statusBadge');
+if(currentStatus.chip){
+  statusBadge.style.background=currentStatus.chip.background;
+  statusBadge.style.color=currentStatus.chip.color;
+}
+const serviceCodeBanner=document.getElementById('serviceCodeBanner');
+if(shouldShowServiceCode){
+  serviceCodeBanner.classList.add('show');
+  renderServiceCodeBanner();
+  document.getElementById('refreshServiceCodeBtn').addEventListener('click',function(){
+    BanxingServiceStartCode.refreshCode(serviceCodeMeta);
+    renderServiceCodeBanner();
+    alert('新的服务码已生成，旧码已立即失效。请通过订单内沟通或当面告知服务者。');
+  });
+}
+renderSosInlineAlert();
+
+const providerSection=document.querySelector('#providerAvatar').closest('.section');
+if(currentStatus.showProvider&&currentProvider){
+  document.getElementById('providerAvatar').textContent=currentProvider.avatar;
+  document.getElementById('providerName').textContent=currentProvider.name;
+  document.getElementById('providerMeta').textContent=currentProvider.meta;
+  document.getElementById('providerAvatar').addEventListener('click',function(){
+    location.href=getProviderUserPageHref();
+  });
+  document.getElementById('providerButton').addEventListener('click',function(){
+    location.href=getProviderUserPageHref();
+  });
+}else{
+  providerSection.style.display='none';
+}
+
+function renderTimeline(){
+  const timelineItems=currentStatus.timeline||[];
+  const collapsedItem=timelineItems.find(function(item){return item.state==='current';})||timelineItems[timelineItems.length-1];
+  const visibleItems=timelineExpanded?timelineItems:(collapsedItem?[collapsedItem]:[]);
+  document.getElementById('timeline').innerHTML=visibleItems.map(function(item){
+    return `
+      <div class="node ${item.state==='done'?'done':''} ${item.state==='current'?'current':''}">
+        <div class="time">${BanxingTimeUtils.formatMaybe(item.time)}</div>
+        <div class="desc">${item.desc}</div>
+        ${item.sub?'<div class="sub">'+item.sub+'</div>':''}
+      </div>
+    `;
+  }).join('');
+  const toggleBtn=document.getElementById('timelineToggleBtn');
+  if(timelineItems.length>1){
+    toggleBtn.style.display='inline-flex';
+    toggleBtn.textContent=timelineExpanded?'收起完整进度 ↑':'展开完整进度 ↓';
+  }else{
+    toggleBtn.style.display='none';
+  }
+}
+renderTimeline();
+document.getElementById('timelineToggleBtn').addEventListener('click',function(){
+  timelineExpanded=!timelineExpanded;
+  renderTimeline();
+});
+
+const infoItems=[
+  ['订单号',orderId],
+  ['任务名称',currentTaskName],
+  ['期望时间',currentType.time],
+  ['服务地点',orderLocationDisplay.text],
+  ['任务金额',currentType.amount],
+  ...(currentUrgentTop&&currentUrgentTop.enabled?[['急单置顶',currentUrgentTop.km+'km · '+BanxingUrgentTop.formatCountdown(currentUrgentTop)]]:[]),
+  ['保险状态',currentType.insurance]
+];
+
+const settlementItems=[
+  ['任务金额',currentType.amount],
+  ['保险费',currentFinance.insuranceFee],
+  ['急单置顶费',currentFinance.topFee],
+  ['优惠券抵扣',currentFinance.coupon],
+  ['打赏金额',tipAmountText],
+  ['退款金额',currentFinance.refund],
+  ['实付金额',currentFinance.paid,'money']
+];
+
+function launchNavigation(locationName){
+  if(orderLocationDisplay.canNavigate){
+    alert('已拉起前往“'+locationName+'”的导航。');
+    return;
+  }
+  alert('当前状态下暂不支持导航。');
+}
+
+document.getElementById('infoGrid').innerHTML=infoItems.map(function(item){
+  const isLocation=item[0]==='服务地点';
+  const navAction=isLocation&&orderLocationDisplay.canNavigate?`<button class="nav-link" type="button" onclick='launchNavigation(${JSON.stringify(orderLocationDisplay.exactText)})'>📍 去导航</button>`:'';
+  return `
+    <div class="item ${isLocation?'location-item':''}">
+      ${escapeHtml(item[0])}
+      <div class="val">${escapeHtml(item[1])}</div>
+      ${navAction}
+    </div>
+  `;
+}).join('');
+
+const latestPublishedOrder=readLatestPublishedOrder();
+const matchedLatestPublishedOrder=latestPublishedOrder&&String(latestPublishedOrder.id||'').toUpperCase()===orderId?latestPublishedOrder:null;
+const currentTaskDetail=matchedLatestPublishedOrder?{
+  taskRequirements:String(matchedLatestPublishedOrder.taskRequirements||'').trim(),
+  otherSupplement:Array.isArray(matchedLatestPublishedOrder.otherSupplement)?matchedLatestPublishedOrder.otherSupplement.filter(function(item){
+    return item&&String(item.label||'').trim()&&String(item.value||'').trim();
+  }):[],
+  detailDescription:String(matchedLatestPublishedOrder.detailDescription||'').trim(),
+  detailImages:Array.isArray(matchedLatestPublishedOrder.detailImages)?matchedLatestPublishedOrder.detailImages.filter(Boolean):[]
+}:(taskDetailMetaByType[type]||taskDetailMetaByType.cat);
+document.getElementById('taskRequirementContent').textContent=currentTaskDetail.taskRequirements||'待补充';
+document.getElementById('taskDetailDescription').textContent=currentTaskDetail.detailDescription||'待补充';
+if(Array.isArray(currentTaskDetail.otherSupplement)&&currentTaskDetail.otherSupplement.length){
+  document.getElementById('otherSupplementSection').style.display='block';
+  document.getElementById('otherSupplementList').innerHTML=currentTaskDetail.otherSupplement.map(function(item){
+    return '<div class="item">'+escapeHtml(item.label)+'<div class="val">'+escapeHtml(item.value)+'</div></div>';
+  }).join('');
+}
+if(Array.isArray(currentTaskDetail.detailImages)&&currentTaskDetail.detailImages.length){
+  const mediaNode=document.getElementById('taskDetailMedia');
+  mediaNode.style.display='flex';
+  mediaNode.innerHTML=currentTaskDetail.detailImages.map(function(name){
+    return '<button type="button" class="media-pill" data-preview-name="'+escapeHtml(name)+'" data-preview-type="image">🖼️ '+escapeHtml(name)+'</button>';
+  }).join('');
+}
+
+document.getElementById('settlementGrid').innerHTML=settlementItems.map(function(item){
+  return `
+    <div class="item">
+      ${escapeHtml(item[0])}
+      <div class="val ${item[2]||''}">${escapeHtml(item[1])}</div>
+    </div>
+  `;
+}).join('');
+window.launchNavigation=launchNavigation;
+
+if(currentStatusKey==='cancel'){
+  const cancelMeta=getCancelArchiveMeta();
+  document.getElementById('cancelReasonSection').style.display='block';
+  document.getElementById('cancelReasonCard').innerHTML=
+    '<div class="row"><span>取消方</span><strong>'+escapeHtml(cancelMeta.operator)+'</strong></div>'+
+    '<div class="row"><span>取消原因</span><strong>'+escapeHtml(cancelMeta.reason)+'</strong></div>'+
+    '<div class="row"><span>退款结果</span><strong>'+escapeHtml(cancelMeta.refund)+'</strong></div>'+
+    '<div class="row"><span>信用影响</span><strong>'+escapeHtml(cancelMeta.credit)+'</strong></div>'+
+    '<div class="desc">'+escapeHtml(cancelMeta.desc)+'</div>'+
+    '<a class="link" href="'+escapeHtml(buildPageLink('order-cancel.html',{mode:'view',detailStatus:'cancel'}))+'">查看完整取消说明</a>';
+}
+
+function renderTipSection(){
+  const section=document.getElementById('tipSection');
+  if(!(['review','done'].includes(currentStatusKey)||(currentTip&&currentTip.amount>0))){
+    section.style.display='none';
+    return;
+  }
+  section.style.display='block';
+  document.getElementById('tipCard').innerHTML=currentTip&&currentTip.amount>0?`
+    <div class="topline">你已向服务者打赏</div>
+    <div class="amount">${escapeHtml(BanxingOrderTips.formatMoney(currentTip.amount))}</div>
+    <div class="meta">${escapeHtml(currentTip.paidAt||'刚刚')}</div>
+    ${currentTip.message?'<div class="message">留言：'+escapeHtml(currentTip.message)+'</div>':''}
+  `:`
+    <div class="topline">当前打赏金额</div>
+    <div class="amount">¥0.00</div>
+    <div class="empty">当前暂无打赏记录；如后续产生打赏，金额和留言会同步展示在这里。</div>
+  `;
+}
+
+function renderMediaButtons(item,className){
+  const imageButtons=(item.images||[]).map(function(image){
+    return '<button class="media-pill" type="button" data-preview-type="image" data-preview-name="'+escapeHtml(image)+'">🖼️ '+escapeHtml(image)+'</button>';
+  }).join('');
+  const videoButtons=(item.videos||[]).map(function(video){
+    return '<button class="media-pill" type="button" data-preview-type="video" data-preview-name="'+escapeHtml(video)+'">🎬 '+escapeHtml(video)+'</button>';
+  }).join('');
+  const mediaHtml=imageButtons+videoButtons;
+  return mediaHtml?'<div class="'+className+'">'+mediaHtml+'</div>':'';
+}
+
+function renderRecords(){
+  const section=document.getElementById('recordSection');
+  if(!currentStatus.recordCount){
+    section.style.display='none';
+    return;
+  }
+  const records=orderEvidence.progressRecords.slice(0,Math.max(currentStatus.recordCount,orderEvidence.progressRecords.length));
+  section.style.display='block';
+  document.getElementById('recordList').innerHTML=records.map(item=>`
+    <div class="record-card">
+      <div class="record-time">${item.time}</div>
+      <div class="record-desc">${item.text}</div>
+      ${renderMediaButtons(item,'record-media')}
+    </div>
+  `).join('');
+}
+
+function renderVouchers(){
+  const section=document.getElementById('voucherSection');
+  if(!currentStatus.showVoucher){
+    section.style.display='none';
+    return;
+  }
+  section.style.display='block';
+  document.getElementById('voucherList').innerHTML=orderEvidence.completionProofs.map(item=>`
+    <div class="voucher-card">
+      <div class="record-time">${item.time}</div>
+      <div class="voucher-desc">${item.text}</div>
+      ${renderMediaButtons(item,'voucher-media')}
+    </div>
+  `).join('');
+}
+
+function reviewCards(mode){
+  if(mode==='pending'){
+    if(currentUserHasRated){
+      return [
+        {title:'我的评价',score:'已提交',desc:'你已完成评价，等待服务者完成评价后同步展示内容。'},
+        {title:'对方评价',score:'待开启',desc:'对方完成评价后，双方评价内容会同时展示。'}
+      ];
+    }
+    if(ratingState.acceptedRated){
+      return [
+        {title:'对方评价',score:'已提交',desc:'服务者评价已提交，待双方都完成后统一展示。'},
+        {title:'我的评价',score:'待评价',desc:'你可以继续补充自己对服务者的评价，完成后进入已评价。'}
+      ];
+    }
+    return [
+      {title:'对方评价',score:'待评价',desc:'你可以结合本次服务过程和完成情况，对服务者进行评价。'},
+      {title:'我的评价',score:'待开启',desc:'待双方都完成评价后，互相评价内容会同步显示。'}
+    ];
+  }
+  if(mode==='done'){
+    return [
+      {title:'对方评价',score:'5.0 分',desc:'需求说明清楚，过程配合度高，确认完成也很及时。'},
+      {title:'我的评价',score:'5.0 分',desc:'服务过程清楚，完成凭证完整，现场沟通也很顺畅。'}
+    ];
+  }
+  if(mode==='paused'){
+    return [
+      {title:'评价状态',score:'已暂停',desc:'当前订单处于纠纷处理中，评价展示暂时冻结。'}
+    ];
+  }
+  return [];
+}
+
+function renderReviews(){
+  const section=document.getElementById('reviewSection');
+  if(currentStatus.reviewMode==='hide'){
+    section.style.display='none';
+    return;
+  }
+  section.style.display='block';
+  document.getElementById('reviewList').innerHTML=reviewCards(currentStatus.reviewMode).map(item=>`
+    <div class="review-card">
+      <div class="review-top">
+        <div class="review-title">${item.title}</div>
+        <div class="review-score">${item.score}</div>
+      </div>
+      <div class="review-desc">${item.desc}</div>
+    </div>
+  `).join('');
+}
+
+renderRecords();
+renderVouchers();
+renderReviews();
+renderTipSection();
+
+function openPreview(name,type){
+  const isVideo=type==='video';
+  document.querySelector('#previewMask .icon').textContent=isVideo?'🎬':'🖼️';
+  document.querySelector('#previewMask h4').textContent=isVideo?'视频预览':'图片预览';
+  document.getElementById('previewName').textContent=name||(isVideo?'视频':'图片');
+  document.getElementById('previewMeta').textContent=isVideo
+    ?'当前为原型预览，正式版会在这里播放并放大查看该视频内容。'
+    :'当前为原型预览，正式版会在这里放大展示该图片内容。';
+  document.getElementById('previewMask').classList.add('show');
+}
+
+function closePreview(){
+  document.getElementById('previewMask').classList.remove('show');
+}
+
+document.addEventListener('click',function(event){
+  const trigger=event.target.closest('[data-preview-name]');
+  if(trigger){
+    openPreview(trigger.getAttribute('data-preview-name'),trigger.getAttribute('data-preview-type'));
+    return;
+  }
+  if(event.target.id==='previewMask'||event.target.id==='previewClose'){
+    closePreview();
+  }
+});
+
+const chatHref=buildPageLink('chat.html',{
+  status:currentStatusKey,
+  title:currentTaskName+'服务订单',
+  chatName:currentProvider&&currentProvider.name||'服务者'
+});
+const detailHref=buildPageLink('order-detail.html',{});
+function getAppealTitleByStatus(){
+  if(currentStatusKey==='dispute'||currentStatusKey==='refund')return'纠纷责任扣分申诉';
+  if(currentStatusKey==='cancel')return'取消订单扣分申诉';
+  return'订单相关信用分申诉';
+}
+const appealHref='credit-appeal.html?'+buildQuery({
+  orderId:orderId,
+  orderTitle:currentTaskName,
+  orderStatus:currentStatus.title,
+  orderTime:currentType.time,
+  orderAmount:currentType.amount,
+  orderLocation:getSharedLocationText(),
+  detailLink:detailHref,
+  backLink:detailHref,
+  appealTitle:getAppealTitleByStatus()
+});
+
+const actionMap={
+  chat:()=>location.href=chatHref,
+  appeal:()=>location.href=appealHref,
+  applicants:()=>location.href=applicantsHref({}),
+  urgentTop:()=>location.href=buildPageLink('order-urgent-top.html',{
+    orderId:orderId,
+    urgentEnabled:currentUrgentTop&&currentUrgentTop.enabled?'1':'',
+    urgentKm:currentUrgentTop&&currentUrgentTop.km,
+    urgentDuration:currentUrgentTop&&currentUrgentTop.durationHours,
+    urgentFee:currentFinance&&currentFinance.topFee,
+    urgentCreatedAt:currentUrgentTop&&currentUrgentTop.createdAt,
+    urgentExpiresAt:currentUrgentTop&&currentUrgentTop.expiresAt,
+    urgentNextKm:currentUrgentTop&&currentUrgentTop.nextKm,
+    urgentNextFee:currentUrgentTop&&currentUrgentTop.nextFee,
+    urgentNextDuration:currentUrgentTop&&currentUrgentTop.nextDurationHours,
+    urgentNextStartsAt:currentUrgentTop&&currentUrgentTop.nextStartsAt,
+    urgentNextExpiresAt:currentUrgentTop&&currentUrgentTop.nextExpiresAt,
+    urgentPrevKm:currentUrgentTop&&currentUrgentTop.previousKm,
+    urgentPrevDuration:currentUrgentTop&&currentUrgentTop.previousDurationHours,
+    urgentChangedRange:currentUrgentTop&&currentUrgentTop.changedRange?'1':''
+  }),
+  modifyTask:()=>location.href=buildPageLink('publish-items.html',{
+    project:type,
+    orderId:orderId,
+    mode:'edit',
+    detailDescription:currentTaskDetail.detailDescription,
+    taskRequirements:currentTaskDetail.taskRequirements,
+    detailImages:JSON.stringify(currentTaskDetail.detailImages||[])
+  }),
+  wallet:()=>location.href='wallet.html',
+  rating:()=>location.href=buildPageLink('rating.html',{status:currentStatusKey,chatName:currentProvider&&currentProvider.name||'服务者'}),
+  back:()=>location.href='order-list.html?'+buildQuery({role:returnRole,status:returnStatus}),
+  cancelConfirm:()=>location.href=buildPageLink('order-cancel.html',{mode:'confirm',detailStatus:currentStatusKey}),
+  cancelView:()=>location.href=buildPageLink('order-cancel.html',{mode:'view',detailStatus:currentStatusKey}),
+  disputeApply:()=>location.href=buildPageLink('dispute.html',{mode:'apply',detailStatus:currentStatusKey}),
+  disputeView:()=>location.href=buildPageLink('dispute.html',{mode:'view',detailStatus:currentStatusKey}),
+  publish:()=>location.href=buildPageLink('publish-items.html',{project:type,mode:'clone',orderId:orderId}),
+  sos:()=>openSosDialog(),
+  confirmComplete:()=>{
+    BanxingCompletionConfirm.markConfirmed(flowMeta);
+    alert('你已确认服务完成，订单已进入待评价。');
+    location.href=buildPageLink('order-detail.html',{status:'review'});
+  },
+  'scroll-records':()=>document.getElementById('recordSection').scrollIntoView({behavior:'smooth',block:'start'}),
+  'scroll-vouchers':()=>document.getElementById('voucherSection').scrollIntoView({behavior:'smooth',block:'start'}),
+  'scroll-review':()=>document.getElementById('reviewSection').scrollIntoView({behavior:'smooth',block:'start'})
+};
+
+function splitDetailActions(actions){
+  const inlineKeys=['disputeApply','appeal','cancelView'];
+  return {
+    bottom:actions.filter(action=>!inlineKeys.includes(action.key)),
+    inline:actions.filter(action=>inlineKeys.includes(action.key))
+  };
+}
+
+const splitActions=splitDetailActions(currentActions);
+const bottomBar=document.getElementById('bottomBar');
+
+bottomBar.innerHTML=splitActions.bottom.map(action=>`
+  <button class="${action.kind||''}" data-key="${action.key}">${action.label}</button>
+`).join('');
+if(!splitActions.bottom.length){
+  bottomBar.style.display='none';
+}
+
+document.querySelectorAll('#bottomBar button').forEach(button=>{
+  button.addEventListener('click',()=>{
+    const handler=actionMap[button.dataset.key];
+    if(handler)handler();
+  });
+});
+
+const auxActionSection=document.getElementById('auxActionSection');
+if(splitActions.inline.length){
+  auxActionSection.style.display='block';
+  document.getElementById('auxActionList').innerHTML=splitActions.inline.map(action=>`
+    <button type="button" data-key="${action.key}">${action.label}</button>
+  `).join('');
+  document.querySelectorAll('#auxActionList button').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const handler=actionMap[button.dataset.key];
+      if(handler)handler();
+    });
+  });
+}
+
+if(currentStatusKey==='serving'){
+  const sosButton=document.getElementById('sosButton');
+  sosButton.style.display='block';
+  sosButton.addEventListener('click',openSosDialog);
+}
+if(currentStatusKey==='confirm'){
+  const sosButton=document.getElementById('sosButton');
+  sosButton.style.display='block';
+  sosButton.addEventListener('click',openSosDialog);
+}
+
+function clearSosTimer(){
+  if(sosTimer){
+    clearInterval(sosTimer);
+    sosTimer=null;
+  }
+}
+
+function closeSosDialog(){
+  clearSosTimer();
+  document.getElementById('sosMask').classList.remove('show');
+}
+
+function triggerSos(){
+  clearSosTimer();
+  document.getElementById('sosMask').classList.remove('show');
+  appendSosRecord();
+  renderSosInlineAlert();
+  alert('SOS 已触发，平台安全团队和紧急联系人将立即收到报警提醒。');
+}
+
+function openSosDialog(){
+  sosCountdown=5;
+  document.getElementById('sosCount').textContent=sosCountdown;
+  document.getElementById('sosMask').classList.add('show');
+  clearSosTimer();
+  sosTimer=setInterval(()=>{
+    sosCountdown-=1;
+    if(sosCountdown<=0){
+      triggerSos();
+      return;
+    }
+    document.getElementById('sosCount').textContent=sosCountdown;
+  },1000);
+}
+
+document.getElementById('sosCancelBtn').addEventListener('click',closeSosDialog);
+document.getElementById('sosTriggerBtn').addEventListener('click',triggerSos);
+document.getElementById('sosMask').addEventListener('click',event=>{
+  if(event.target===document.getElementById('sosMask')){
+    closeSosDialog();
+  }
+});
+</script>
+</body>
+</html>

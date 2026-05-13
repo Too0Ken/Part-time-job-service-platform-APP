@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>动态 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:78px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.header{position:sticky;top:0;z-index:25;background:#fff;padding:14px 16px 12px;border-bottom:1px solid #eee;text-align:center}
+.header h1{font-size:20px;color:#1a1a2e}
+.feed-tabs-wrap{padding:12px 16px 8px;background:#f5f6fa}
+.feed-tabs{display:flex;gap:10px}
+.feed-tabs button{flex:1;height:40px;border-radius:20px;border:1px solid #e7ebf3;background:#fff;color:#667085;font-size:14px;font-weight:600;cursor:pointer}
+.feed-tabs button.active{background:#4A6CF7;border-color:#4A6CF7;color:#fff}
+.section{background:#fff;margin:12px 16px;border-radius:18px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.status-list{display:grid;gap:10px;margin-top:12px}
+.status-card{padding:14px;border-radius:16px;background:#f8faff;border:1px solid #edf0f5}
+.status-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.status-top strong{font-size:14px;color:#1a1a2e;line-height:1.6}
+.status-badge{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.status-badge.published{background:#e8fff1;color:#14a44d}
+.status-badge.manual_review{background:#fff7e6;color:#fa8c16}
+.status-badge.removed{background:#fff1f0;color:#ff4d4f}
+.status-meta{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.feed-list{padding-bottom:8px}
+.card{background:#fff;margin:0 16px 12px;border-radius:18px;padding:16px;cursor:pointer}
+.card-head{display:flex;align-items:flex-start;gap:12px}
+.avatar{width:42px;height:42px;border-radius:16px;background:#eef2ff;color:#4A6CF7;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none;overflow:hidden}
+.avatar-link{text-decoration:none;color:inherit}
+.card-main{flex:1;min-width:0}
+.name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.name-row strong{font-size:15px;color:#1a1a2e}
+.credit-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:#f0fff4;color:#14a44d;font-size:11px;font-weight:700}
+.time-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#98a2b3}
+.head-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;align-self:flex-start}
+.follow-btn{height:34px;border:none;border-radius:17px;font-size:12px;cursor:pointer}
+.follow-btn{padding:0 12px;background:#eef2ff;color:#4A6CF7;font-weight:700;white-space:nowrap;flex-shrink:0}
+.follow-btn.following{background:#f3f4f6;color:#667085}
+.content{margin-top:14px;font-size:14px;color:#1a1a2e;line-height:1.8;word-break:break-word}
+.image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.image-grid.two{grid-template-columns:repeat(2,1fr)}
+.image-grid.one{grid-template-columns:1fr}
+.image-tile{aspect-ratio:1/1;border-radius:14px;padding:12px;display:flex;align-items:flex-end;font-size:12px;font-weight:700;color:#1a1a2e}
+.video-tile{margin-top:12px;border-radius:14px;background:#111827;color:#fff;padding:16px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.video-tile span{font-size:12px;color:rgba(255,255,255,.72);font-weight:400}
+.order-tag{margin-top:12px;padding:12px 14px;border-radius:14px;background:#f8faff;border:1px solid #edf0f5}
+.order-tag strong{display:block;font-size:13px;color:#1a1a2e}
+.order-tag span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.actions{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #f2f4f7}
+.action-btn{flex:1;min-width:0;height:36px;border:none;border-radius:18px;background:#f5f7fb;color:#667085;font-size:13px;cursor:pointer;padding:0 10px}
+.action-btn.active{background:#eef2ff;color:#4A6CF7;font-weight:700}
+.empty{margin:16px;background:#fff;border-radius:18px;padding:36px 18px;text-align:center}
+.empty strong{display:block;font-size:18px;color:#1a1a2e}
+.empty p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:8px}
+.load-state{padding:8px 16px 0;text-align:center;font-size:12px;color:#98a2b3}
+.bottom-tab{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:375px;background:#fff;display:flex;border-top:1px solid #eee;z-index:30;overflow:visible}
+.bottom-tab a{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 0 10px;text-decoration:none;font-size:10px;color:#999}
+.bottom-tab a.active{color:#4A6CF7}
+.bottom-tab .tab-icon{font-size:22px;margin-bottom:2px}
+.bottom-tab .publish-tab{flex:none;width:72px;height:72px;border-radius:50%;background:#4A6CF7;color:#fff;justify-content:center;padding:0;transform:translateY(-18px);box-shadow:0 12px 28px rgba(74,108,247,.28);font-size:10px;font-weight:700;line-height:1.2}
+.bottom-tab .publish-tab .tab-icon{font-size:24px;margin-bottom:2px}
+.floating-publish{position:fixed;left:50%;transform:translateX(58px);bottom:90px;height:44px;padding:0 16px;border-radius:22px;background:#4A6CF7;color:#fff;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;z-index:35;box-shadow:0 12px 28px rgba(74,108,247,.28)}
+.mask{position:fixed;top:0;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:375px;height:100vh;background:rgba(15,23,42,.36);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.mask.show{display:flex}
+.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 22px;max-height:82vh;overflow:auto}
+.sheet-handle{width:48px;height:4px;border-radius:2px;background:#d0d5dd;margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:700;color:#1a1a2e;text-align:center}
+.reason-list{display:grid;gap:10px;margin-top:16px}
+.reason-btn{padding:12px 14px;border:1px solid #e8ecf4;border-radius:14px;background:#fff;color:#1a1a2e;font-size:14px;text-align:left;cursor:pointer}
+.reason-btn.active{border-color:#4A6CF7;background:#eef2ff;color:#4A6CF7;font-weight:700}
+.sheet-actions{display:flex;gap:10px;margin-top:16px}
+.sheet-actions button{flex:1;height:42px;border:none;border-radius:21px;font-size:14px;cursor:pointer}
+.sheet-actions .ghost{background:#f3f4f6;color:#667085}
+.sheet-actions .primary{background:#4A6CF7;color:#fff}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(19,194,194,.94)}
+.toast.warn{background:rgba(250,140,22,.94)}
+@media (max-width:360px){
+  .feed-tabs-wrap{padding:12px 12px 8px}
+  .section,.card,.empty{margin-left:12px;margin-right:12px}
+  .actions{gap:8px}
+  .action-btn{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+
+<div class="header">
+  <h1>动态</h1>
+</div>
+
+<div class="feed-tabs-wrap">
+  <div class="feed-tabs">
+    <button type="button" data-view="recommend" class="active">推荐</button>
+    <button type="button" data-view="following">关注</button>
+  </div>
+</div>
+
+<div class="feed-list" id="feedList"></div>
+<div class="load-state" id="loadState"></div>
+<a class="floating-publish" href="moment-publish.html">发动态</a>
+
+<div class="bottom-tab">
+  <a href="index.html"><span class="tab-icon">🧭</span>首页</a>
+  <a href="moments.html" class="active"><span class="tab-icon">🫧</span>动态</a>
+  <a href="publish-items.html" class="publish-tab"><span class="tab-icon">⊕</span>发布任务</a>
+  <a href="messages.html"><span class="tab-icon">💬</span>消息</a>
+  <a href="profile.html"><span class="tab-icon">👤</span>我的</a>
+</div>
+
+<div class="toast" id="pageToast"></div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="moments-data.js"></script>
+<script src="publish-flow-config.js"></script>
+<script src="publish-launcher.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const publishResult=params.get('published')||'';
+const initialView=params.get('view');
+let activeView=initialView==='following'?'following':'recommend';
+let visibleCount=15;
+let toastTimer;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function showToast(text,type){
+  clearTimeout(toastTimer);
+  const toast=document.getElementById('pageToast');
+  toast.textContent=text;
+  toast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    toast.className='toast';
+  },2200);
+}
+
+function getActiveFeed(){
+  return BanxingMoments.getFeed(activeView);
+}
+
+function renderImages(images){
+  if(!images||!images.length)return '';
+  const cls=images.length===1?'one':(images.length===2?'two':'');
+  return '<div class="image-grid '+cls+'">'+images.map(function(image){
+    return '<div class="image-tile" style="background:'+escapeHtml(image.color)+'">'+escapeHtml(image.label)+'</div>';
+  }).join('')+'</div>';
+}
+
+function renderVideo(video){
+  if(!video)return '';
+  return '<div class="video-tile">🎬 '+escapeHtml(video.label||'视频')+'<span>视频</span></div>';
+}
+
+function resolveOrderInfo(order){
+  if(!order||!order.title)return null;
+  const matched=order.id?BanxingMoments.getCompletedOrders().find(function(item){return item.id===order.id;}):null;
+  return {
+    title:order.title||matched&&matched.title||'',
+    serviceName:order.serviceName||matched&&matched.serviceName||order.title||matched&&matched.title||'',
+    taskTime:BanxingTimeUtils.formatTaskTime(order.taskTime||order.time||order.finishedAt||matched&&matched.taskTime||matched&&matched.finishedAt)||''
+  };
+}
+
+function renderOrderTag(order){
+  const info=resolveOrderInfo(order);
+  if(!info||!info.serviceName)return '';
+  return (
+    '<div class="order-tag">'+
+      '<strong>'+escapeHtml(info.serviceName)+'</strong>'+
+      (info.taskTime?'<span>任务时间：'+escapeHtml(info.taskTime)+'</span>':'')+
+    '</div>'
+  );
+}
+
+function getUserHomeHref(authorId){
+  return 'applicant-detail.html?'+new URLSearchParams({
+    mode:'user',
+    userId:authorId,
+    backHref:'moments.html?view='+activeView
+  }).toString();
+}
+
+function getDetailHref(postId,focus){
+  const query=new URLSearchParams({id:postId,view:activeView});
+  if(focus)query.set('focus',focus);
+  return 'moment-detail.html?'+query.toString();
+}
+
+function renderFeed(){
+  const list=getActiveFeed();
+  const visible=list.slice(0,visibleCount);
+  const currentUser=BanxingMoments.getCurrentUser();
+  document.querySelectorAll('[data-view]').forEach(function(node){
+    node.classList.toggle('active',node.dataset.view===activeView);
+  });
+  if(!visible.length){
+    document.getElementById('feedList').innerHTML=
+      '<div class="empty"><strong>'+(activeView==='following'?'还没有关注动态':'暂无可展示动态')+'</strong><p>'+(activeView==='following'?'':'当前没有符合条件的动态，稍后再来看看。')+'</p></div>';
+    document.getElementById('loadState').textContent='';
+    return;
+  }
+  document.getElementById('feedList').innerHTML=visible.map(function(post){
+    const isMine=post.authorId===currentUser.id;
+    const isFollowing=BanxingMoments.listFollowing().some(function(item){return item.id===post.authorId;});
+    return (
+      '<div class="card" data-detail="'+escapeHtml(post.id)+'">'+
+        '<div class="card-head">'+
+          '<a class="avatar avatar-link" data-user-link="1" href="'+escapeHtml(getUserHomeHref(post.authorId))+'">'+escapeHtml(post.author&&post.author.avatar||'?')+'</a>'+
+          '<div class="card-main">'+
+            '<div class="name-row"><strong>'+escapeHtml(post.author&&post.author.name||'伴行用户')+'</strong><span class="credit-pill">⭐ '+escapeHtml(post.author&&post.author.credit||0)+'分</span></div>'+
+            '<div class="time-row"><span>'+escapeHtml(post.timeLabel)+'</span></div>'+
+          '</div>'+
+          '<div class="head-actions">'+
+            (isMine?'':'<button class="follow-btn '+(isFollowing?'following':'')+'" type="button" data-follow="'+escapeHtml(post.authorId)+'">'+escapeHtml(isFollowing?'已关注':'关注')+'</button>')+
+          '</div>'+
+        '</div>'+
+        '<div class="content">'+escapeHtml(post.text)+'</div>'+
+        renderImages(post.images)+
+        renderVideo(post.video)+
+        renderOrderTag(post.order)+
+        '<div class="actions">'+
+          '<button class="action-btn '+(post.likedByMe?'active':'')+'" type="button" data-like="'+escapeHtml(post.id)+'">👍 '+escapeHtml(post.likedByMe?'已点赞 ':'点赞 ')+escapeHtml(post.likes)+'</button>'+
+          '<button class="action-btn" type="button" data-comment="'+escapeHtml(post.id)+'">💬 评论 '+escapeHtml(post.commentCount)+'</button>'+
+        '</div>'+
+      '</div>'
+    );
+  }).join('');
+  document.getElementById('loadState').textContent=visible.length<list.length?'下拉继续加载更多动态':'已经到底了';
+}
+
+function renderAll(){
+  renderFeed();
+}
+
+function openMask(id){
+  document.getElementById(id).classList.add('show');
+}
+
+function closeMask(id){
+  document.getElementById(id).classList.remove('show');
+}
+
+function bindStaticEvents(){
+  document.querySelectorAll('[data-view]').forEach(function(button){
+    button.addEventListener('click',function(){
+      activeView=button.dataset.view;
+      visibleCount=15;
+      renderFeed();
+    });
+  });
+
+  document.getElementById('feedList').addEventListener('click',function(event){
+    const userLink=event.target.closest('[data-user-link]');
+    const likeBtn=event.target.closest('[data-like]');
+    const commentBtn=event.target.closest('[data-comment]');
+    const followBtn=event.target.closest('[data-follow]');
+    const card=event.target.closest('[data-detail]');
+    if(userLink){
+      location.href=userLink.getAttribute('href');
+      return;
+    }
+    if(likeBtn){
+      const result=BanxingMoments.toggleLike(likeBtn.dataset.like);
+      renderFeed();
+      if(result)showToast(result.likedByMe?'已点赞':'已取消点赞','success');
+      return;
+    }
+    if(commentBtn){
+      location.href=getDetailHref(commentBtn.dataset.comment,'comment');
+      return;
+    }
+    if(followBtn){
+      const result=BanxingMoments.toggleFollow(followBtn.dataset.follow);
+      visibleCount=15;
+      renderFeed();
+      showToast(result.followed?'已关注，对方动态会优先展示':'已取消关注');
+      return;
+    }
+    if(card){
+      location.href=getDetailHref(card.dataset.detail,'');
+    }
+  });
+
+  window.addEventListener('scroll',function(){
+    const list=getActiveFeed();
+    if(window.innerHeight+window.scrollY<document.body.offsetHeight-120)return;
+    if(visibleCount>=list.length)return;
+    visibleCount+=15;
+    renderFeed();
+  });
+}
+
+renderAll();
+bindStaticEvents();
+
+if(publishResult==='passed'){
+  showToast('动态已发布并通过 AI 审核','success');
+}
+if(publishResult==='manual_review'){
+  showToast('动态已进入人工审核，审核通过后展示','warn');
+}
+if(publishResult==='removed'){
+  showToast('动态审核未通过，可在消息通知里查看失败原因','warn');
+}
+</script>
+</body>
+</html>

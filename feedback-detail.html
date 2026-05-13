@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>反馈详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.title{font-size:16px;font-weight:700;color:#1a1a2e}
+.sub{font-size:12px;color:#98a2b3;margin-top:6px}
+.section{margin-top:14px}
+.label{font-size:12px;color:#98a2b3;margin-bottom:8px}
+.content{font-size:14px;color:#1a1a2e;line-height:1.8}
+.meta-list{display:grid;gap:10px}
+.meta-item{padding:12px;border-radius:14px;background:#f8faff}
+.meta-item strong{display:block;font-size:13px;color:#667085}
+.meta-item span{display:block;font-size:14px;color:#1a1a2e;line-height:1.7;margin-top:5px}
+.attach-list{display:flex;gap:8px;flex-wrap:wrap}
+.attach-list span{min-width:72px;height:72px;padding:8px;border-radius:12px;background:#EEF2FF;color:#4A6CF7;font-size:11px;display:flex;align-items:center;justify-content:center;text-align:center}
+.tag{display:inline-flex;padding:5px 10px;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="feedback-history.html" class="back">←</a><span class="title">反馈详情</span><span class="placeholder"></span></div>
+
+<div class="card" id="detailCard"></div>
+
+<script>
+const FEEDBACK_STORAGE_KEY='banxing.feedbackRecords';
+const params=new URLSearchParams(location.search);
+const targetId=params.get('id')||'';
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function normalizeRecord(item,index){
+  return {
+    id:(item&&item.id)||('feedback-'+index),
+    type:(item&&item.type)==='订单申诉'?'订单问题':((item&&item.type)||'其他问题'),
+    content:(item&&item.content)||'',
+    contact:(item&&item.contact)||'未填写',
+    time:(item&&item.time)||'刚刚',
+    status:(item&&item.status)||'已收到',
+    attachments:Array.isArray(item&&item.attachments)?item.attachments:[]
+  };
+}
+
+let records=[];
+function seedRecords(){
+  try{
+    const list=JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY)||'[]');
+    if(Array.isArray(list)&&list.length)return list.map(normalizeRecord);
+  }catch(error){}
+  const seeds=[
+    {id:'feedback-1001',type:'产品建议',content:'建议在订单退款完成后，消息里直接展示退款金额和优惠券退回情况。',contact:'138****8821',time:'4月14日 18:22',status:'已收到',attachments:['截图 1']},
+    {id:'feedback-1002',type:'功能异常',content:'实名认证完成后，“我的”页刷新不及时，需要重新进入页面。',contact:'微信：banxing_user',time:'4月10日 10:08',status:'处理中',attachments:[]},
+    {id:'feedback-1003',type:'订单问题',content:'希望订单页能把退款原因和处理进度展示得更清楚。',contact:'135****2234',time:'4月7日 09:45',status:'已回复',attachments:['截图 1','截图 2']}
+  ];
+  localStorage.setItem(FEEDBACK_STORAGE_KEY,JSON.stringify(seeds));
+  return seeds.map(normalizeRecord);
+}
+records=seedRecords();
+
+const current=records.find(function(item){return item.id===targetId;})||normalizeRecord({
+  id:'not-found',
+  type:'反馈不存在',
+  content:'当前反馈记录不存在，可能已被清空。',
+  contact:'-',
+  time:'-',
+  status:'未找到',
+  attachments:[]
+},0);
+
+document.getElementById('detailCard').innerHTML=
+  '<div class="title">'+escapeHtml(current.type)+'</div>'+
+  '<div class="sub">'+escapeHtml(current.time)+'</div>'+
+  '<div class="section"><span class="tag">'+escapeHtml(current.status)+'</span></div>'+
+  '<div class="section"><div class="label">反馈内容</div><div class="content">'+escapeHtml(current.content)+'</div></div>'+
+  '<div class="section"><div class="label">补充信息</div><div class="meta-list">'+
+    '<div class="meta-item"><strong>反馈编号</strong><span>'+escapeHtml(current.id)+'</span></div>'+
+    '<div class="meta-item"><strong>联系方式</strong><span>'+escapeHtml(current.contact)+'</span></div>'+
+  '</div></div>'+
+  '<div class="section"><div class="label">附件</div><div class="attach-list">'+
+    (current.attachments.length?current.attachments.map(function(item){return '<span>'+escapeHtml(item)+'</span>';}).join(''):'<span>无附件</span>')+
+  '</div></div>';
+</script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>上传打卡 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#4A6CF7;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:12px}
+.nav{height:44px;background:#4A6CF7;display:flex;align-items:center;padding:0 16px;gap:12px}
+.nav .back{font-size:20px;color:#fff;text-decoration:none}
+.nav .title{font-size:16px;font-weight:600;color:#fff;flex:1;text-align:center}
+.timer-card{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);margin:16px;border-radius:16px;padding:24px;text-align:center;color:#fff}
+.timer-card .timer{font-size:42px;font-weight:700;margin-bottom:4px}
+.timer-card .label{font-size:13px;opacity:.85}
+.timer-card .tips{font-size:11px;opacity:.76;margin-top:8px;line-height:1.6}
+.checkin-card,.tip-card{background:#fff;margin:16px;border-radius:12px;padding:16px}
+.checkin-card h3{font-size:15px;font-weight:600;color:#1a1a2e}
+.sub-title{font-size:13px;color:#666;margin:12px 0 8px}
+.text-input{width:100%;min-height:108px;border:1px solid #d9deeb;border-radius:12px;padding:12px 14px;font-size:14px;color:#1a1a2e;line-height:1.7;resize:none;outline:none}
+.text-input:focus{border-color:#4A6CF7;box-shadow:0 0 0 3px rgba(74,108,247,.12)}
+.upload-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.upload-btn{width:68px;height:68px;border:1px dashed #d0d5dd;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#98a2b3;cursor:pointer;background:#fafbff;font-size:11px;line-height:1.4}
+.upload-btn:active{border-color:#4A6CF7;color:#4A6CF7}
+.upload-btn .icon{font-size:22px;margin-bottom:2px}
+.upload-btn.disabled{opacity:.45;cursor:not-allowed}
+.upload-btn span{font-size:13px}
+.history-note{font-size:12px;color:#8c8c8c;margin-bottom:10px}
+.photo-list{display:flex;gap:8px;flex-wrap:wrap}
+.photo-list .item{width:68px;height:68px;border-radius:12px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4A6CF7;position:relative;padding:8px;text-align:center;line-height:1.4}
+.photo-list .item .time{position:absolute;bottom:4px;left:4px;right:4px;text-align:center;font-size:9px;color:#666;background:rgba(255,255,255,.9);border-radius:999px;padding:1px 0}
+.tip-card{font-size:13px;color:#5f6675;line-height:1.8}
+.tip-card strong{color:#1a1a2e}
+.submit-area{padding:16px}
+.submit-btn{display:block;width:100%;height:48px;background:#4A6CF7;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.submit-btn:active{opacity:.85}
+.sos-float{position:fixed;top:92px;right:16px;width:44px;height:44px;background:#FF4D4F;color:#fff;border:none;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(255,77,79,.5);z-index:20}
+.sos-mask{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.sos-mask.show{display:flex}
+.sos-dialog{width:calc(100% - 24px);margin-bottom:16px;background:linear-gradient(180deg,#FF5A5F 0%,#FF3B30 100%);border-radius:24px;padding:20px 18px;color:#fff;box-shadow:0 18px 40px rgba(255,59,48,.28)}
+.sos-dialog h3{font-size:18px;margin-bottom:8px}
+.sos-dialog p{font-size:13px;line-height:1.7;color:rgba(255,255,255,.92)}
+.sos-count{display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);font-size:30px;font-weight:800;margin:18px auto 14px}
+.sos-actions{display:flex;gap:10px;margin-top:16px}
+.sos-actions button{flex:1;height:46px;border:none;border-radius:23px;font-size:15px;cursor:pointer}
+.sos-actions .cancel{background:rgba(255,255,255,.16);color:#fff}
+.sos-actions .trigger{background:#fff;color:#FF3B30;font-weight:700}
+</style>
+</head>
+<body>
+<div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+<div class="nav">
+  <a href="fuwuzhe_order-detail.html" class="back" id="backLink">←</a>
+  <span class="title">上传打卡</span>
+  <span></span>
+</div>
+<button class="sos-float" id="sosBtn">🆘 SOS</button>
+
+<div class="timer-card">
+  <div class="timer">00:45:32</div>
+  <div class="label">服务已进行时长</div>
+ 
+</div>
+
+<div class="checkin-card">
+  <h3>本次服务打卡</h3>
+  <div class="sub-title">文字说明</div>
+  <textarea class="text-input" id="progressText" placeholder="例如：已到达服务地点，完成喂食和换水，猫咪状态稳定。"></textarea>
+
+  <div class="sub-title">打卡图片 / 视频</div>
+  <div class="history-note" id="historyNote">当前订单已累计 0 条打卡记录</div>
+  <div class="upload-actions">
+    <div class="upload-btn" id="uploadImageBtn">
+      <div class="icon">📷</div>
+      <span>上传图片</span>
+    </div>
+    <div class="upload-btn" id="uploadVideoBtn">
+      <div class="icon">🎬</div>
+      <span>上传视频</span>
+    </div>
+  </div>
+  <div class="history-note">最多上传 5 张图片和 1 个视频</div>
+  <div class="photo-list" id="photoList"></div>
+</div>
+
+
+<div class="submit-area">
+  <button class="submit-btn" id="submitBtn">上传本次打卡并返回</button>
+</div>
+<div class="sos-mask" id="sosMask">
+  <div class="sos-dialog">
+    <h3>确认触发 SOS 报警</h3>
+    <p>平台将立即记录当前订单、定位信息，并同步通知平台安全团队和你的紧急联系人。若为误触，请在倒计时结束前取消。</p>
+    <div class="sos-count" id="sosCount">5</div>
+    <div class="sos-actions">
+      <button class="cancel" id="sosCancelBtn" type="button">取消</button>
+      <button class="trigger" id="sosTriggerBtn" type="button">立即触发</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'accepted';
+const status=params.get('status')||'serving';
+const type=params.get('type')||'cat';
+const id=params.get('id')||'a1';
+const returnRole=params.get('returnRole')||'accepted';
+const returnStatus=params.get('returnStatus')||'all';
+const EVIDENCE_KEY='mockOrderEvidenceV2';
+const SOS_STORAGE_KEY='banxing.sosRecords';
+let sosCountdown=5;
+let sosTimer=null;
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach((value,key)=>{
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(([key,val])=>{
+    next[key]=val;
+  });
+  (removeKeys||[]).forEach(key=>{
+    delete next[key];
+  });
+  return next;
+}
+
+function readEvidenceStore(){
+  try{
+    return JSON.parse(localStorage.getItem(EVIDENCE_KEY)||'{}');
+  }catch(error){
+    return {};
+  }
+}
+
+function saveEvidenceStore(store){
+  localStorage.setItem(EVIDENCE_KEY,JSON.stringify(store));
+}
+
+function orderStoreKey(){
+  return [type,id].join(':');
+}
+
+function normalizeEntry(item){
+  const images=Array.isArray(item&&item.images)?item.images.filter(Boolean):[];
+  const videos=Array.isArray(item&&item.videos)?item.videos.filter(Boolean):[];
+  return {
+    time:(item&&item.time)||'刚刚',
+    text:(item&&item.text)||(item&&item.desc)||'',
+    images,
+    videos
+  };
+}
+
+const typeMeta={
+  cat:{
+    records:[
+      {time:'14:05',text:'已到达服务地点，在门口完成签到并确认可正常入户。',images:['门口照片']},
+      {time:'14:20',text:'已完成喂食、换水和猫砂清理，猫咪状态稳定。',images:['喂食照片','清理照片']},
+      {time:'15:26',text:'服务结束前补充了猫咪状态照片，并确认门锁已复位。',images:['猫咪状态照片']}
+    ]
+  },
+  outdoor:{
+    records:[
+      {time:'16:55',text:'已到达集合点，和发布者确认本次陪跑路线与配速。',images:['集合点照片']},
+      {time:'17:35',text:'已完成中段陪同、补水提醒和节奏调整。',images:['途中照片']},
+      {time:'18:12',text:'服务结束，双方已在终点完成确认。',images:['结束点照片']}
+    ]
+  },
+  health:{
+    records:[
+      {time:'09:02',text:'已到达医院并完成到院签到。',images:['到院照片']},
+      {time:'09:48',text:'候诊过程中已同步排队进度和陪同情况。',images:['候诊照片']},
+      {time:'10:35',text:'已完成取药并同步医嘱重点信息。',images:['取药照片']}
+    ]
+  },
+  wedding:{
+    records:[
+      {time:'07:28',text:'已到达婚礼现场并完成到场确认。',images:['到场照片']},
+      {time:'09:10',text:'已完成迎宾、流程配合和现场物品照看。',images:['现场照片']},
+      {time:'12:05',text:'已确认现场交接完成，服务顺利结束。',images:['交接照片']}
+    ]
+  }
+};
+
+function nowText(){
+  const now=new Date();
+  return (now.getMonth()+1)+'月'+now.getDate()+'日 '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+function appendSosRecord(){
+  let records=[];
+  try{
+    records=JSON.parse(localStorage.getItem(SOS_STORAGE_KEY)||'[]');
+    if(!Array.isArray(records))records=[];
+  }catch(error){
+    records=[];
+  }
+  records.unshift({
+    id:'SOS-'+Date.now(),
+    time:nowText(),
+    status:'处理中',
+    role:'服务者',
+    source:'上传打卡',
+    orderId:id.toUpperCase(),
+    orderTitle:type,
+    location:'服务进行中定位已同步',
+    contacts:'已通知平台安全团队、紧急联系人',
+    desc:'服务者在上传打卡页触发 SOS，系统已同步当前服务订单和页面来源。',
+    timeline:'平台已受理，等待回访'
+  });
+  localStorage.setItem(SOS_STORAGE_KEY,JSON.stringify(records));
+}
+
+function getOrderEvidence(){
+  const defaults={
+    progressRecords:(typeMeta[type]||typeMeta.cat).records.map(normalizeEntry),
+    completionProofs:[]
+  };
+  const saved=readEvidenceStore()[orderStoreKey()];
+  if(!saved)return defaults;
+  return {
+    progressRecords:Array.isArray(saved.progressRecords)?saved.progressRecords.map(normalizeEntry):defaults.progressRecords,
+    completionProofs:Array.isArray(saved.completionProofs)?saved.completionProofs.map(normalizeEntry):defaults.completionProofs
+  };
+}
+
+function setOrderEvidence(nextEvidence){
+  const store=readEvidenceStore();
+  store[orderStoreKey()]=nextEvidence;
+  saveEvidenceStore(store);
+}
+
+const detailHref='fuwuzhe_order-detail.html?'+buildQuery(currentParams({owner,status,type,id,returnRole,returnStatus}));
+document.getElementById('backLink').href=detailHref;
+
+const orderEvidence=getOrderEvidence();
+document.getElementById('historyNote').textContent='当前订单已累计 '+orderEvidence.progressRecords.length+' 条打卡记录';
+
+const draftImages=[];
+let draftVideo='';
+const photoList=document.getElementById('photoList');
+
+function renderDraftImages(){
+  photoList.innerHTML=draftImages.map(item=>`
+    <div class="item">${item.label}<div class="time">${item.time}</div></div>
+  `).join('')+(draftVideo?`<div class="item">${draftVideo}<div class="time">刚刚</div></div>`:'');
+  document.getElementById('uploadImageBtn').classList.toggle('disabled',draftImages.length>=5);
+  document.getElementById('uploadVideoBtn').classList.toggle('disabled',!!draftVideo);
+}
+
+document.getElementById('uploadImageBtn').addEventListener('click',()=>{
+  if(draftImages.length>=5)return;
+  draftImages.push({
+    label:'打卡图片 '+(draftImages.length+1),
+    time:'刚刚'
+  });
+  renderDraftImages();
+});
+
+document.getElementById('uploadVideoBtn').addEventListener('click',()=>{
+  if(draftVideo)return;
+  draftVideo='打卡视频 1';
+  renderDraftImages();
+});
+
+document.getElementById('submitBtn').addEventListener('click',()=>{
+  const text=document.getElementById('progressText').value.trim();
+  if(!text&&!draftImages.length&&!draftVideo){
+    alert('请至少输入文字说明、上传图片或上传视频。');
+    return;
+  }
+  const nextRecord=normalizeEntry({
+    time:'刚刚',
+    text:text||'已补充本次服务打卡图片或视频。',
+    images:draftImages.map(item=>item.label),
+    videos:draftVideo?[draftVideo]:[]
+  });
+  orderEvidence.progressRecords.push(nextRecord);
+  setOrderEvidence(orderEvidence);
+  alert('本次打卡已上传，并已同步到订单详情页。');
+  location.href=detailHref;
+});
+
+function clearSosTimer(){
+  if(sosTimer){
+    clearInterval(sosTimer);
+    sosTimer=null;
+  }
+}
+
+function closeSosDialog(){
+  clearSosTimer();
+  document.getElementById('sosMask').classList.remove('show');
+}
+
+function triggerSos(){
+  clearSosTimer();
+  document.getElementById('sosMask').classList.remove('show');
+  appendSosRecord();
+  alert('SOS 已触发，平台安全团队和紧急联系人将立即收到报警提醒。');
+}
+
+function openSosDialog(){
+  sosCountdown=5;
+  document.getElementById('sosCount').textContent=sosCountdown;
+  document.getElementById('sosMask').classList.add('show');
+  clearSosTimer();
+  sosTimer=setInterval(()=>{
+    sosCountdown-=1;
+    if(sosCountdown<=0){
+      triggerSos();
+      return;
+    }
+    document.getElementById('sosCount').textContent=sosCountdown;
+  },1000);
+}
+
+document.getElementById('sosBtn').addEventListener('click',openSosDialog);
+document.getElementById('sosCancelBtn').addEventListener('click',closeSosDialog);
+document.getElementById('sosTriggerBtn').addEventListener('click',triggerSos);
+document.getElementById('sosMask').addEventListener('click',event=>{
+  if(event.target===document.getElementById('sosMask')){
+    closeSosDialog();
+  }
+});
+renderDraftImages();
+</script>
+</body>
+</html>

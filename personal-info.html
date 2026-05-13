@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>个人信息 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:88px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:18px;padding:18px}
+.field{margin-top:16px}
+.field:first-child{margin-top:0}
+.field label{display:block;font-size:13px;color:#667085;margin-bottom:8px}
+.field input,.field textarea,.picker-trigger{width:100%;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;font-size:14px;color:#1a1a2e;outline:none;background:#fff}
+.field textarea{min-height:90px;resize:none}
+.field input:focus,.field textarea:focus,.picker-trigger:focus{border-color:#4A6CF7}
+.picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;text-align:left}
+.picker-value{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picker-trigger span:last-child{color:#98a2b3;font-size:16px}
+.picker-trigger.empty .picker-value{color:#98a2b3}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:11px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.chip-editor{padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
+.chip-list{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:8px 10px;border-radius:999px;background:#eef2ff;color:#4A6CF7;font-size:12px;font-weight:600;word-break:break-word}
+.chip button{border:none;background:none;color:inherit;font-size:13px;cursor:pointer;line-height:1}
+.chip.empty{background:#f5f7fb;color:#98a2b3;font-weight:500}
+.image-uploader{padding:12px;border:1px solid #e5e7eb;border-radius:16px;background:#fff}
+.image-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.image-upload-btn{width:110px;height:74px;border:1px dashed #d0d5dd;border-radius:14px;background:#fff;color:#667085;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.image-upload-btn .icon{font-size:22px;line-height:1}
+.image-upload-btn span{font-size:12px;font-weight:700;margin-top:4px}
+.image-upload-btn small{font-size:11px;color:#98a2b3;margin-top:2px}
+.image-upload-btn.disabled{opacity:.45;cursor:not-allowed}
+.image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.image-card{border:1px solid #edf0f5;border-radius:14px;overflow:hidden;background:#fff;position:relative}
+.image-thumb{aspect-ratio:1/1;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.image-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.image-name{padding:8px 10px;font-size:11px;color:#667085;line-height:1.5;word-break:break-word}
+.image-remove{position:absolute;top:6px;right:6px;width:22px;height:22px;border:none;border-radius:11px;background:rgba(255,77,79,.94);color:#fff;font-size:0;cursor:pointer}
+.image-remove::after{content:'×';font-size:12px;font-weight:700}
+.input-row{display:flex;gap:8px;margin-top:12px}
+.input-row input{flex:1;min-width:0;margin:0}
+.add-btn{width:68px;flex-shrink:0;border:none;border-radius:12px;background:#4A6CF7;color:#fff;font-size:13px;cursor:pointer}
+.option-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.option-btn{min-height:42px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;color:#667085;font-size:13px;font-weight:600;padding:0 10px;cursor:pointer}
+.option-btn.active{border-color:#4A6CF7;background:#eef2ff;color:#4A6CF7}
+.option-btn.disabled{border-color:#edf0f5;background:#f5f7fb;color:#c0c4cc;cursor:not-allowed}
+.save-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:375px;background:#fff;padding:10px 16px 12px;border-top:1px solid #eee}
+.save-btn{width:100%;height:46px;border:none;border-radius:23px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.mask{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:375px;height:100vh;background:rgba(15,23,42,.36);display:none;align-items:flex-end;justify-content:center;z-index:40}
+.mask.show{display:flex}
+.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 22px;max-height:78vh;overflow:auto}
+.sheet-handle{width:48px;height:4px;border-radius:2px;background:#d0d5dd;margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:700;color:#1a1a2e;text-align:center}
+.sheet-preview{margin-top:12px;padding:12px 14px;border-radius:14px;background:#f8faff;font-size:13px;color:#4A6CF7;font-weight:600;text-align:center}
+.picker-columns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.picker-column{background:#f8faff;border-radius:16px;padding:10px 8px;min-height:280px;display:flex;flex-direction:column}
+.picker-label{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:10px}
+.picker-options{display:grid;gap:8px;overflow:auto;padding-right:2px}
+.picker-option{width:100%;padding:10px 10px;border-radius:12px;border:1px solid #e5e7eb;background:#fff;color:#667085;font-size:13px;cursor:pointer;text-align:left;line-height:1.5}
+.picker-option.active{border-color:#4A6CF7;background:#eef2ff;color:#4A6CF7;font-weight:700}
+.sheet-actions{display:flex;gap:10px;margin-top:18px}
+.sheet-actions button{flex:1;height:44px;border:none;border-radius:22px;font-size:14px;cursor:pointer}
+.sheet-actions .ghost{background:#f3f4f6;color:#667085}
+.sheet-actions .primary{background:#4A6CF7;color:#fff}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:50;max-width:320px;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:360px){
+  .card{margin:12px}
+  .grid,.option-grid{grid-template-columns:1fr}
+  .input-row{flex-wrap:wrap}
+  .add-btn{width:100%;height:42px}
+  .picker-columns{grid-template-columns:82px 1fr 1fr;gap:8px}
+  .picker-column{padding:10px 6px}
+}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="profile.html" class="back">←</a>
+  <span class="title">个人信息</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="card">
+  <div class="grid">
+    <div class="field">
+      <label>身高</label>
+      <input id="heightInput" placeholder="例如：172cm">
+    </div>
+    <div class="field">
+      <label>体重</label>
+      <input id="weightInput" placeholder="例如：58kg">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>常驻城市</label>
+    <button class="picker-trigger" id="cityTrigger" type="button">
+      <span class="picker-value" id="cityValue">请选择常驻城市</span>
+      <span>›</span>
+    </button>
+    <div class="hint">使用抽屉选择省 / 市 / 区，主页将按完整地区展示。</div>
+  </div>
+
+  <div class="field">
+    <label>个人简介</label>
+    <textarea id="bioInput" maxlength="60" placeholder="例如：可接喂猫、陪诊、短时上门服务，沟通及时，接受临时单。"></textarea>
+    <div class="hint">会显示在用户昵称下方，建议填写服务特点和沟通风格，最多 60 字。</div>
+  </div>
+
+  <div class="field">
+    <label>个人图片</label>
+    <div class="image-uploader">
+      <div class="image-row">
+        <button class="image-upload-btn" id="personalImagesBtn" type="button">
+          <span class="icon">🖼️</span>
+          <span>上传图片</span>
+          <small id="personalImagesCount">0/6</small>
+        </button>
+        <input id="personalImagesInput" type="file" accept="image/*" multiple hidden>
+      </div>
+      <div class="image-grid" id="personalImagesGrid"></div>
+    </div>
+    <div class="hint">可上传生活照、服务记录图、证书照片等，用户主页和“我的”页都会展示。</div>
+  </div>
+
+  <div class="field">
+    <label>服务方向</label>
+    <div class="chip-editor">
+      <div class="chip-list" id="serviceDirectionList"></div>
+      <div class="input-row">
+        <input id="serviceDirectionInput" placeholder="输入关键词后点击添加">
+        <button class="add-btn" id="serviceDirectionAddBtn" type="button">添加</button>
+      </div>
+    </div>
+    <div class="hint">最多添加 5 个关键词，主页将按“关键词｜关键词”拼接显示。</div>
+  </div>
+
+  <div class="field">
+    <label>可接时段</label>
+    <div class="option-grid" id="availableTimeOptions"></div>
+    <div class="hint">可多选，用于在用户主页中快速展示你的接单时间。</div>
+  </div>
+
+  <div class="field">
+    <label>个人标签</label>
+    <div class="chip-editor">
+      <div class="chip-list" id="personalTagsList"></div>
+      <div class="input-row">
+        <input id="personalTagsInput" placeholder="输入关键词后点击添加">
+        <button class="add-btn" id="personalTagsAddBtn" type="button">添加</button>
+      </div>
+    </div>
+    <div class="hint">最多添加 5 个关键词，建议填写风格、特长或服务习惯。</div>
+  </div>
+</div>
+
+<div class="save-bar">
+  <button class="save-btn" id="saveBtn" type="button">保存个人信息</button>
+</div>
+
+<div class="mask" id="cityMask">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">选择常驻城市</div>
+    <div class="sheet-preview" id="cityPreview"></div>
+
+    <div class="picker-columns">
+      <div class="picker-column">
+        <div class="picker-label">省份</div>
+        <div class="picker-options" id="provinceOptions"></div>
+      </div>
+      <div class="picker-column">
+        <div class="picker-label">城市</div>
+        <div class="picker-options" id="cityOptions"></div>
+      </div>
+      <div class="picker-column">
+        <div class="picker-label">区 / 县</div>
+        <div class="picker-options" id="districtOptions"></div>
+      </div>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="ghost" id="cityCancelBtn" type="button">取消</button>
+      <button class="primary" id="cityConfirmBtn" type="button">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">已保存</div>
+
+<script>
+const storageKey='sharedProfileState';
+const CITY_DATA={
+  '北京市':{'北京市':['海淀区','朝阳区','西城区','丰台区']},
+  '上海市':{'上海市':['浦东新区','徐汇区','闵行区','静安区']},
+  '广东省':{
+    '广州市':['天河区','海珠区','番禺区','白云区'],
+    '深圳市':['南山区','福田区','宝安区','龙岗区']
+  },
+  '浙江省':{
+    '杭州市':['西湖区','滨江区','余杭区','拱墅区'],
+    '宁波市':['鄞州区','海曙区','江北区','慈溪市']
+  },
+  '江苏省':{
+    '南京市':['鼓楼区','建邺区','江宁区','玄武区'],
+    '苏州市':['工业园区','姑苏区','吴中区','相城区']
+  },
+  '四川省':{
+    '成都市':['高新区','武侯区','锦江区','青羊区']
+  }
+};
+const AVAILABLE_TIME_OPTIONS=['工作日全天','工作日白天','工作日晚间','周末全天','周末白天','周末晚间'];
+const AVAILABLE_TIME_GROUPS=[
+  {full:'工作日全天',parts:['工作日白天','工作日晚间']},
+  {full:'周末全天',parts:['周末白天','周末晚间']}
+];
+const savedProfile=JSON.parse(localStorage.getItem(storageKey)||'null')||{};
+
+function uniqueList(list,max){
+  const limit=typeof max==='number'?max:Infinity;
+  return (Array.isArray(list)?list:[])
+    .map(function(item){return String(item||'').trim();})
+    .filter(Boolean)
+    .filter(function(item,index,source){return source.indexOf(item)===index;})
+    .slice(0,limit);
+}
+
+function splitKeywords(value,max){
+  if(Array.isArray(value))return uniqueList(value,max);
+  if(typeof value==='string'){
+    return uniqueList(value.split(/[｜|/、,，]+/),max);
+  }
+  return [];
+}
+
+function normalizeAvailableTime(value){
+  return sanitizeAvailableTimeSelection(splitKeywords(value,AVAILABLE_TIME_OPTIONS.length).filter(function(item){
+    return AVAILABLE_TIME_OPTIONS.includes(item);
+  }));
+}
+
+function sanitizeAvailableTimeSelection(list){
+  let next=uniqueList(list,AVAILABLE_TIME_OPTIONS.length).filter(function(item){
+    return AVAILABLE_TIME_OPTIONS.includes(item);
+  });
+  AVAILABLE_TIME_GROUPS.forEach(function(group){
+    if(!next.includes(group.full))return;
+    next=next.filter(function(item){
+      return item===group.full||!group.parts.includes(item);
+    });
+  });
+  return next;
+}
+
+function getFirstProvince(){
+  return Object.keys(CITY_DATA)[0];
+}
+
+function getCitiesByProvince(province){
+  return Object.keys(CITY_DATA[province]||{});
+}
+
+function getDistrictsByCity(province,city){
+  return (CITY_DATA[province]&&CITY_DATA[province][city])||[];
+}
+
+function normalizeCitySelection(selection){
+  const fallbackProvince=getFirstProvince();
+  const province=CITY_DATA[selection&&selection.province]?selection.province:fallbackProvince;
+  const cities=getCitiesByProvince(province);
+  const city=cities.includes(selection&&selection.city)?selection.city:cities[0];
+  const districts=getDistrictsByCity(province,city);
+  const district=districts.includes(selection&&selection.district)?selection.district:districts[0];
+  return {province:province,city:city,district:district};
+}
+
+function inferCitySelection(cityText){
+  const source=String(cityText||'').trim();
+  if(!source)return normalizeCitySelection({province:'北京市',city:'北京市',district:'海淀区'});
+  const provinces=Object.keys(CITY_DATA);
+  let matchedProvince='';
+  for(let i=0;i<provinces.length;i++){
+    const province=provinces[i];
+    const cities=getCitiesByProvince(province);
+    for(let j=0;j<cities.length;j++){
+      const city=cities[j];
+      const directCityName=province===city?city.replace(/市$/,''):city;
+      const districts=getDistrictsByCity(province,city);
+      for(let k=0;k<districts.length;k++){
+        const district=districts[k];
+        if(
+          source.includes(district.replace(/区|县|市$/,''))
+        ){
+          return normalizeCitySelection({province:province,city:city,district:district});
+        }
+        if(source.includes(district))return normalizeCitySelection({province:province,city:city,district:district});
+      }
+      if(source.includes(city)||source.includes(directCityName)){
+        return normalizeCitySelection({province:province,city:city,district:districts[0]});
+      }
+    }
+    if(source.includes(province))matchedProvince=province;
+  }
+  if(matchedProvince){
+    return normalizeCitySelection({province:matchedProvince});
+  }
+  return normalizeCitySelection({province:'北京市',city:'北京市',district:'海淀区'});
+}
+
+function formatCityDisplay(selection){
+  const values=[selection.province,selection.city,selection.district].filter(Boolean);
+  return values.filter(function(item,index){
+    return index===0||item!==values[index-1];
+  }).join(' · ');
+}
+
+function joinWithDivider(list){
+  return uniqueList(list).join('｜');
+}
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function normalizeProfileImages(list){
+  return (Array.isArray(list)?list:[])
+    .map(function(item,index){
+      if(typeof item==='string'){
+        const name=String(item||'').trim()||('图片'+(index+1));
+        return {id:'img-'+index,name:name,dataUrl:''};
+      }
+      return {
+        id:String(item&&item.id||'img-'+index),
+        name:String(item&&item.name||item&&item.label||'').trim()||('图片'+(index+1)),
+        dataUrl:String(item&&item.dataUrl||item&&item.src||'').trim()
+      };
+    })
+    .filter(function(item){return item.name||item.dataUrl;})
+    .slice(0,6);
+}
+
+function buildPersonalInfo(source){
+  const base=source&&typeof source==='object'?source:{};
+  return {
+    height:String(base.height||'172cm').trim(),
+    weight:String(base.weight||'58kg').trim(),
+    citySelection:base.citySelection&&typeof base.citySelection==='object'
+      ?normalizeCitySelection(base.citySelection)
+      :inferCitySelection(base.city||'北京 · 海淀'),
+    bio:String(base.bio||'可接喂猫、陪诊、短时上门服务，沟通及时，接受临时单。').trim(),
+    serviceDirection:splitKeywords(base.serviceDirectionText||base.serviceDirection||['上门喂猫','陪诊','短时上门'],5),
+    availableTime:normalizeAvailableTime(base.availableTimeText||base.availableTime||['工作日晚间','周末全天']),
+    personalTags:splitKeywords(base.personalTagsText||base.personalTags||['细心记录','守时稳定','沟通及时'],5),
+    profileImages:normalizeProfileImages(base.profileImages||base.images||[])
+  };
+}
+
+const formState=buildPersonalInfo(savedProfile.personalInfo||{});
+let cityDraft=normalizeCitySelection(formState.citySelection);
+const toast=document.getElementById('toast');
+const heightInput=document.getElementById('heightInput');
+const weightInput=document.getElementById('weightInput');
+const bioInput=document.getElementById('bioInput');
+const personalImagesBtn=document.getElementById('personalImagesBtn');
+const personalImagesInput=document.getElementById('personalImagesInput');
+const personalImagesGrid=document.getElementById('personalImagesGrid');
+const personalImagesCount=document.getElementById('personalImagesCount');
+const cityTrigger=document.getElementById('cityTrigger');
+const cityValue=document.getElementById('cityValue');
+const cityMask=document.getElementById('cityMask');
+
+heightInput.value=formState.height;
+weightInput.value=formState.weight;
+bioInput.value=formState.bio;
+
+function renderProfileImages(){
+  const reachedLimit=formState.profileImages.length>=6;
+  personalImagesBtn.classList.toggle('disabled',reachedLimit);
+  personalImagesBtn.disabled=reachedLimit;
+  personalImagesCount.textContent=formState.profileImages.length+'/6';
+  personalImagesGrid.innerHTML=formState.profileImages.length?formState.profileImages.map(function(item){
+    return `
+      <div class="image-card">
+        <button class="image-remove" type="button" data-remove-image="${escapeHtml(item.id)}">删除</button>
+        <div class="image-thumb">${item.dataUrl?'<img alt="'+escapeHtml(item.name)+'" src="'+escapeHtml(item.dataUrl)+'">':'<span>'+escapeHtml(item.name)+'</span>'}</div>
+        <div class="image-name">${escapeHtml(item.name)}</div>
+      </div>
+    `;
+  }).join(''):'<div class="hint">尚未上传图片</div>';
+}
+
+function showToast(text){
+  toast.textContent=text;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer=setTimeout(function(){
+    toast.classList.remove('show');
+  },1800);
+}
+
+function renderCityValue(){
+  cityValue.textContent=formatCityDisplay(formState.citySelection);
+  cityTrigger.classList.toggle('empty',!cityValue.textContent);
+}
+
+function renderChipGroup(type){
+  const list=type==='serviceDirection'?formState.serviceDirection:formState.personalTags;
+  const mount=document.getElementById(type+'List');
+  if(!list.length){
+    mount.innerHTML='<span class="chip empty">暂未添加关键词</span>';
+    return;
+  }
+  mount.innerHTML=list.map(function(item,index){
+    return '<span class="chip">'+item+'<button type="button" data-remove="'+type+'" data-index="'+index+'">×</button></span>';
+  }).join('');
+}
+
+function renderAvailableTimeOptions(){
+  document.getElementById('availableTimeOptions').innerHTML=AVAILABLE_TIME_OPTIONS.map(function(item){
+    const active=formState.availableTime.includes(item);
+    const disabled=isTimeOptionDisabled(item);
+    return '<button class="option-btn '+(active?'active ':'')+(disabled?'disabled':'')+'" type="button" data-time-option="'+item+'" '+(disabled?'disabled':'')+'>'+item+'</button>';
+  }).join('');
+}
+
+function isTimeOptionDisabled(option){
+  if(formState.availableTime.includes(option))return false;
+  return AVAILABLE_TIME_GROUPS.some(function(group){
+    const fullSelected=formState.availableTime.includes(group.full);
+    if(option===group.full)return false;
+    if(group.parts.includes(option))return fullSelected;
+    return false;
+  });
+}
+
+function toggleAvailableTime(value){
+  const active=formState.availableTime.includes(value);
+  if(active){
+    formState.availableTime=formState.availableTime.filter(function(item){return item!==value;});
+    return;
+  }
+  AVAILABLE_TIME_GROUPS.forEach(function(group){
+    if(value===group.full){
+      formState.availableTime=formState.availableTime.filter(function(item){
+        return !group.parts.includes(item);
+      });
+      return;
+    }
+    if(group.parts.includes(value)){
+      formState.availableTime=formState.availableTime.filter(function(item){return item!==group.full;});
+    }
+  });
+  formState.availableTime=sanitizeAvailableTimeSelection(formState.availableTime.concat([value]));
+}
+
+function renderCitySheet(){
+  const provinces=Object.keys(CITY_DATA);
+  const cities=getCitiesByProvince(cityDraft.province);
+  const districts=getDistrictsByCity(cityDraft.province,cityDraft.city);
+  document.getElementById('cityPreview').textContent=formatCityDisplay(cityDraft);
+  document.getElementById('provinceOptions').innerHTML=provinces.map(function(item){
+    return '<button class="picker-option '+(item===cityDraft.province?'active':'')+'" type="button" data-province="'+item+'">'+item+'</button>';
+  }).join('');
+  document.getElementById('cityOptions').innerHTML=cities.map(function(item){
+    return '<button class="picker-option '+(item===cityDraft.city?'active':'')+'" type="button" data-city="'+item+'">'+item+'</button>';
+  }).join('');
+  document.getElementById('districtOptions').innerHTML=districts.map(function(item){
+    return '<button class="picker-option '+(item===cityDraft.district?'active':'')+'" type="button" data-district="'+item+'">'+item+'</button>';
+  }).join('');
+}
+
+function openCityDrawer(){
+  cityDraft=normalizeCitySelection(formState.citySelection);
+  renderCitySheet();
+  cityMask.classList.add('show');
+}
+
+function closeCityDrawer(){
+  cityMask.classList.remove('show');
+}
+
+function addKeyword(type){
+  const input=document.getElementById(type+'Input');
+  const value=String(input.value||'').trim();
+  const list=type==='serviceDirection'?formState.serviceDirection:formState.personalTags;
+  if(!value){
+    showToast('请输入关键词');
+    return;
+  }
+  if(list.includes(value)){
+    showToast('该关键词已添加');
+    return;
+  }
+  if(list.length>=5){
+    showToast('最多添加 5 个关键词');
+    return;
+  }
+  list.push(value);
+  input.value='';
+  renderChipGroup(type);
+}
+
+function removeKeyword(type,index){
+  const list=type==='serviceDirection'?formState.serviceDirection:formState.personalTags;
+  list.splice(index,1);
+  renderChipGroup(type);
+}
+
+renderCityValue();
+renderChipGroup('serviceDirection');
+renderChipGroup('personalTags');
+renderAvailableTimeOptions();
+renderProfileImages();
+
+cityTrigger.addEventListener('click',openCityDrawer);
+document.getElementById('cityCancelBtn').addEventListener('click',closeCityDrawer);
+document.getElementById('cityConfirmBtn').addEventListener('click',function(){
+  formState.citySelection=normalizeCitySelection(cityDraft);
+  renderCityValue();
+  closeCityDrawer();
+});
+
+cityMask.addEventListener('click',function(event){
+  if(event.target===event.currentTarget)closeCityDrawer();
+});
+
+document.getElementById('provinceOptions').addEventListener('click',function(event){
+  const button=event.target.closest('[data-province]');
+  if(!button)return;
+  const province=button.dataset.province;
+  const nextCity=getCitiesByProvince(province)[0];
+  const nextDistrict=getDistrictsByCity(province,nextCity)[0];
+  cityDraft=normalizeCitySelection({province:province,city:nextCity,district:nextDistrict});
+  renderCitySheet();
+});
+
+document.getElementById('cityOptions').addEventListener('click',function(event){
+  const button=event.target.closest('[data-city]');
+  if(!button)return;
+  const city=button.dataset.city;
+  cityDraft=normalizeCitySelection({
+    province:cityDraft.province,
+    city:city,
+    district:getDistrictsByCity(cityDraft.province,city)[0]
+  });
+  renderCitySheet();
+});
+
+document.getElementById('districtOptions').addEventListener('click',function(event){
+  const button=event.target.closest('[data-district]');
+  if(!button)return;
+  cityDraft=normalizeCitySelection({
+    province:cityDraft.province,
+    city:cityDraft.city,
+    district:button.dataset.district
+  });
+  renderCitySheet();
+});
+
+['serviceDirection','personalTags'].forEach(function(type){
+  document.getElementById(type+'AddBtn').addEventListener('click',function(){
+    addKeyword(type);
+  });
+  document.getElementById(type+'Input').addEventListener('keydown',function(event){
+    if(event.key!=='Enter')return;
+    event.preventDefault();
+    addKeyword(type);
+  });
+  document.getElementById(type+'List').addEventListener('click',function(event){
+    const button=event.target.closest('[data-remove="'+type+'"]');
+    if(!button)return;
+    removeKeyword(type,Number(button.dataset.index));
+  });
+});
+
+document.getElementById('availableTimeOptions').addEventListener('click',function(event){
+  const button=event.target.closest('[data-time-option]');
+  if(!button)return;
+  const value=button.dataset.timeOption;
+  if(isTimeOptionDisabled(value))return;
+  toggleAvailableTime(value);
+  renderAvailableTimeOptions();
+});
+
+personalImagesBtn.addEventListener('click',function(){
+  if(formState.profileImages.length>=6)return;
+  personalImagesInput.click();
+});
+
+personalImagesInput.addEventListener('change',function(event){
+  const files=Array.from(event.target.files||[]).slice(0,6-formState.profileImages.length);
+  if(!files.length){
+    showToast(formState.profileImages.length>=6?'图片已达到上限':'请选择图片');
+    event.target.value='';
+    return;
+  }
+  let pending=files.length;
+  files.forEach(function(file){
+    const reader=new FileReader();
+    reader.onload=function(loadEvent){
+      formState.profileImages.push({
+        id:'img-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+        name:(file.name||'图片').replace(/\.[^.]+$/,'').slice(0,18)||'图片',
+        dataUrl:loadEvent.target.result
+      });
+      pending-=1;
+      if(pending<=0){
+        renderProfileImages();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value='';
+});
+
+personalImagesGrid.addEventListener('click',function(event){
+  const removeBtn=event.target.closest('[data-remove-image]');
+  if(!removeBtn)return;
+  formState.profileImages=formState.profileImages.filter(function(item){
+    return item.id!==removeBtn.dataset.removeImage;
+  });
+  renderProfileImages();
+});
+
+document.getElementById('saveBtn').addEventListener('click',function(){
+  formState.height=heightInput.value.trim();
+  formState.weight=weightInput.value.trim();
+  formState.bio=bioInput.value.trim();
+  formState.serviceDirection=uniqueList(formState.serviceDirection,5);
+  formState.availableTime=sanitizeAvailableTimeSelection(formState.availableTime);
+  formState.personalTags=uniqueList(formState.personalTags,5);
+  const nextProfile=Object.assign({},savedProfile,{
+    personalInfo:{
+      height:formState.height,
+      weight:formState.weight,
+      city:formatCityDisplay(formState.citySelection),
+      citySelection:normalizeCitySelection(formState.citySelection),
+      bio:formState.bio,
+      serviceDirection:formState.serviceDirection,
+      serviceDirectionText:joinWithDivider(formState.serviceDirection),
+      availableTime:formState.availableTime,
+      availableTimeText:joinWithDivider(formState.availableTime),
+      personalTags:formState.personalTags,
+      personalTagsText:joinWithDivider(formState.personalTags),
+      profileImages:formState.profileImages
+    }
+  });
+  localStorage.setItem(storageKey,JSON.stringify(nextProfile));
+  showToast('个人信息已保存');
+});
+</script>
+</body>
+</html>

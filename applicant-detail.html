@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>用户主页 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:88px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:20}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.hero{background:linear-gradient(135deg,#FF6B35,#FF9A6C);padding:22px 16px 30px;color:#fff}
+.hero-top{display:flex;gap:14px;align-items:flex-start}
+.avatar{width:72px;height:72px;border-radius:24px;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;border:2px solid rgba(255,255,255,.42);flex-shrink:0}
+.hero-info{flex:1;min-width:0}
+.name-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.name{font-size:21px;font-weight:700}
+.name-side{display:flex;align-items:center;gap:8px;margin-left:auto}
+.credit{font-size:26px;font-weight:800;white-space:nowrap}
+.credit small{display:block;font-size:11px;font-weight:500;opacity:.85;text-align:right}
+.hero-desc{font-size:12px;line-height:1.7;opacity:.92;margin-top:8px;word-break:break-word}
+.hero-actions{display:none;align-items:center}
+.hero-icon-btn{height:32px;min-width:32px;padding:0 9px;border:none;border-radius:16px;background:rgba(255,255,255,.16);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:15px;cursor:pointer}
+.hero-icon-btn .text{display:none;font-size:11px;font-weight:700;letter-spacing:.2px}
+.hero-icon-btn.active{background:rgba(255,255,255,.28)}
+.hero-icon-btn.active .text{display:inline}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;margin:-16px 16px 10px;border-radius:16px;box-shadow:0 10px 24px rgba(17,24,39,.08);position:relative;z-index:2}
+.stats .item{text-align:center;padding:14px 6px}
+.stats .item:not(:last-child){border-right:1px solid #f2f4f7}
+.stats .num{font-size:18px;font-weight:800;color:#1a1a2e}
+.stats .label{font-size:11px;color:#98a2b3;margin-top:4px}
+.main-tabs{display:flex;gap:10px;padding:2px 16px 10px}
+.main-tab{flex:1;height:40px;border:none;border-radius:20px;background:#fff;color:#667085;font-size:14px;font-weight:700;cursor:pointer}
+.main-tab.active{background:#4A6CF7;color:#fff}
+.panel{display:none}
+.panel.show{display:block}
+.card{background:#fff;margin:10px 16px;border-radius:16px;padding:16px}
+.card .title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.cert-row{display:flex;gap:8px;flex-wrap:wrap}
+.cert-row span{padding:6px 10px;border-radius:999px;font-size:12px;background:#fff7e8;color:#c77700}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.info-item{background:#f8fafc;border-radius:12px;padding:12px}
+.info-item .label{font-size:11px;color:#98a2b3}
+.info-item .value{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.6;margin-top:5px;word-break:break-word}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.media-card{border:1px solid #edf0f5;border-radius:14px;overflow:hidden;background:#fff}
+.media-thumb{aspect-ratio:1/1;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.media-name{padding:8px 10px;font-size:11px;color:#667085;line-height:1.5;word-break:break-word}
+.review-tabs{display:flex;gap:8px;margin-bottom:12px}
+.review-tab{height:34px;padding:0 14px;border:none;border-radius:17px;background:#f5f7fb;color:#667085;font-size:13px;cursor:pointer}
+.review-tab.active{background:#eef2ff;color:#4A6CF7;font-weight:700}
+.review-group{display:grid;gap:10px}
+.review{border:1px solid #f2f2f2;border-radius:14px;padding:14px}
+.review.good{background:#f6ffed;border-color:#d9f7be}
+.review.bad{background:#fff7e6;border-color:#ffe7ba}
+.review .top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:#667085}
+.review .score{font-weight:700}
+.review.good .score{color:#52c41a}
+.review.bad .score{color:#fa8c16}
+.review .text{font-size:13px;color:#344054;line-height:1.7;margin-top:8px}
+.moment-list{display:grid;gap:10px;padding-bottom:8px}
+.moment-card{border:1px solid #f1f3f5;border-radius:14px;padding:14px;background:#fff}
+.moment-card.link{cursor:pointer}
+.moment-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#98a2b3}
+.moment-text{font-size:13px;color:#344054;line-height:1.8;margin-top:8px}
+.image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.image-grid.two{grid-template-columns:repeat(2,1fr)}
+.image-grid.one{grid-template-columns:1fr}
+.image-tile{aspect-ratio:1/1;border-radius:12px;padding:10px;display:flex;align-items:flex-end;font-size:11px;font-weight:700;color:#1a1a2e}
+.video-tile{margin-top:12px;border-radius:14px;background:#111827;color:#fff;padding:14px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.video-tile span{font-size:12px;color:rgba(255,255,255,.72);font-weight:400}
+.order-tag{margin-top:12px;padding:12px;border-radius:12px;background:#f8faff;border:1px solid #edf0f5}
+.order-tag strong{display:block;font-size:13px;color:#1a1a2e}
+.order-tag span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.moment-empty,.review-empty{padding:10px 0 4px;font-size:13px;color:#98a2b3;line-height:1.8;text-align:center}
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:375px;background:#fff;padding:10px 16px;border-top:1px solid #eee;display:flex;gap:10px}
+.bottom-bar button{flex:1;height:46px;border-radius:23px;font-size:14px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666}
+.bottom-bar button.primary{background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;border:none}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(19,194,194,.94)}
+@media (max-width:360px){
+  .card{margin:10px 12px}
+  .main-tabs{padding:2px 12px 10px}
+  .info-grid{grid-template-columns:1fr}
+  .review-tabs{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="applicants.html" class="back" id="backLink">←</a>
+  <span class="title" id="pageTitle">用户主页</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="avatar" id="avatar">王</div>
+    <div class="hero-info">
+      <div class="name-row">
+        <div class="name" id="name">王小明</div>
+        <div class="name-side">
+          <div class="credit"><span id="credit">92</span><small>信用分</small></div>
+          <div class="hero-actions" id="heroActions" style="display:none"></div>
+        </div>
+      </div>
+      <div class="hero-desc" id="heroDesc"></div>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="item"><div class="num" id="doneCount">32</div><div class="label">完成订单</div></div>
+  <div class="item"><div class="num" id="goodRate">96%</div><div class="label">好评率</div></div>
+  <div class="item"><div class="num" id="goodCount">28</div><div class="label">好评数</div></div>
+  <div class="item"><div class="num" id="badCount">1</div><div class="label">差评数</div></div>
+</div>
+
+<div class="main-tabs">
+  <button class="main-tab active" type="button" data-tab="profile">用户信息</button>
+  <button class="main-tab" type="button" data-tab="moments">动态</button>
+</div>
+
+<div class="panel show" id="profilePanel">
+  <div class="card">
+    <div class="title">认证信息</div>
+    <div class="cert-row" id="certStatus"></div>
+  </div>
+
+  <div class="card" id="galleryCard" style="display:none">
+    <div class="title">主页图片</div>
+    <div id="galleryGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="title">个人信息</div>
+    <div class="info-grid" id="infoGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="title">技能证书</div>
+    <div class="cert-row" id="skills"></div>
+  </div>
+
+  <div class="card">
+    <div class="title">评价反馈</div>
+    <div class="review-tabs">
+      <button class="review-tab active" type="button" data-review-filter="all">全部评论</button>
+      <button class="review-tab" type="button" data-review-filter="good">好评</button>
+      <button class="review-tab" type="button" data-review-filter="bad">差评</button>
+    </div>
+    <div class="review-group" id="reviewList"></div>
+  </div>
+</div>
+
+<div class="panel" id="momentsPanel">
+  <div class="card">
+    <div class="title">用户动态</div>
+    <div class="moment-list" id="momentList"></div>
+  </div>
+</div>
+
+<div class="bottom-bar" id="actionBar">
+  <button id="backButton">返回上一页</button>
+  <button class="primary" id="primaryButton">选中该服务者</button>
+</div>
+
+<div class="toast" id="pageToast"></div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="moments-data.js"></script>
+<script>
+const params=new URLSearchParams(window.location.search);
+const mode=params.get('mode')==='user'?'user':'applicant';
+const legacyId=params.get('id')||'';
+const applicantId=params.get('applicant')||(['wang','liu','chen'].includes(legacyId)?legacyId:'wang');
+const userId=params.get('userId')||params.get('authorId')||'';
+const orderId=params.get('orderId')||((params.get('applicant')&&legacyId)?legacyId:'p2');
+const owner=params.get('owner')||'published';
+const status=params.get('status')||'applying';
+const type=params.get('type')||'cat';
+const provider=params.get('provider')||'';
+const applicants=params.get('applicants')||'3';
+const returnRole=params.get('returnRole')||'published';
+const returnStatus=params.get('returnStatus')||'all';
+const source=params.get('source')||'applicants';
+const orderTitle=params.get('title')||'帮忙喂猫3天（含铲屎陪玩）';
+const orderTime=BanxingTimeUtils.formatTaskTime(params.get('time')||'2026年4月19日 14:00')||'2026/04/19 14:00';
+const orderPrice=params.get('price')||'¥120';
+const initialMainTab=params.get('tab')==='moments'?'moments':'profile';
+let activeTab=initialMainTab;
+let activeReviewFilter='all';
+let toastTimer;
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(function(entry){
+    const key=entry[0];
+    const val=entry[1];
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function showToast(text,type){
+  clearTimeout(toastTimer);
+  const toast=document.getElementById('pageToast');
+  toast.textContent=text;
+  toast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    toast.className='toast';
+  },2200);
+}
+
+function normalizeReviewScore(rawScore,fallbackType){
+  const parsed=parseFloat(rawScore);
+  let score=Math.round(parsed);
+  if(!Number.isFinite(score))score=fallbackType==='bad'?2:5;
+  score=Math.max(1,Math.min(5,score));
+  if(fallbackType==='bad'&&score>2)score=2;
+  if(fallbackType==='good'&&score<3)score=3;
+  return score.toFixed(1);
+}
+
+function getReviewType(score){
+  return parseFloat(score)>=3?'good':'bad';
+}
+
+function resolveOrderInfo(order){
+  if(!order||!(order.serviceName||order.title))return null;
+  const matched=order.id?BanxingMoments.getCompletedOrders().find(function(item){return item.id===order.id;}):null;
+  return {
+    id:order.id||matched&&matched.id||'',
+    serviceName:order.serviceName||matched&&matched.serviceName||order.title||matched&&matched.title||'',
+    taskTime:BanxingTimeUtils.formatTaskTime(order.taskTime||order.time||order.finishedAt||matched&&matched.taskTime||matched&&matched.finishedAt)||''
+  };
+}
+
+function orderTagHtml(order){
+  const info=resolveOrderInfo(order);
+  if(!info||!info.serviceName)return '';
+  return (
+    '<div class="order-tag">'+
+      '<strong>'+escapeHtml(info.serviceName)+'</strong>'+
+      (info.taskTime?'<span>任务时间：'+escapeHtml(info.taskTime)+'</span>':'')+
+    '</div>'
+  );
+}
+
+function renderImages(images){
+  if(!images||!images.length)return '';
+  const cls=images.length===1?'one':(images.length===2?'two':'');
+  return '<div class="image-grid '+cls+'">'+images.map(function(image){
+    return '<div class="image-tile" style="background:'+escapeHtml(image.color||'#eef2ff')+'">'+escapeHtml(image.label||'图片')+'</div>';
+  }).join('')+'</div>';
+}
+
+function renderMediaGrid(images){
+  if(!Array.isArray(images)||!images.length)return '';
+  return '<div class="media-grid">'+images.map(function(item,index){
+    const source=typeof item==='string'?{name:item,dataUrl:''}:item||{};
+    const name=source.name||('图片'+(index+1));
+    const thumb=source.dataUrl
+      ?'<img alt="'+escapeHtml(name)+'" src="'+escapeHtml(source.dataUrl)+'">'
+      :'<span>'+escapeHtml(name)+'</span>';
+    return '<div class="media-card"><div class="media-thumb">'+thumb+'</div><div class="media-name">'+escapeHtml(name)+'</div></div>';
+  }).join('')+'</div>';
+}
+
+function renderVideo(video){
+  if(!video)return '';
+  return '<div class="video-tile">🎬 '+escapeHtml(video.label||'视频')+'<span>视频</span></div>';
+}
+
+function getCurrentUserPageHref(){
+  return 'applicant-detail.html?'+buildQuery({
+    mode:'user',
+    userId:userId||'me',
+    tab:'moments',
+    backHref:resolveBackHref()
+  });
+}
+
+function getMomentDetailHref(momentId){
+  return 'moment-detail.html?'+buildQuery({
+    id:momentId,
+    backHref:getCurrentUserPageHref()
+  });
+}
+
+function getCurrentPageHref(extra){
+  const query=new URLSearchParams(window.location.search);
+  Object.entries(extra||{}).forEach(function(entry){
+    const key=entry[0];
+    const val=entry[1];
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+    else query.delete(key);
+  });
+  return 'applicant-detail.html?'+query.toString();
+}
+
+function getMomentPreviewHref(item,profile){
+  return 'moment-detail.html?'+buildQuery({
+    preview:JSON.stringify({
+      authorId:profile.id||'',
+      author:{
+        name:profile.name||'伴行用户',
+        avatar:profile.avatar||'伴',
+        credit:profile.credit||'0'
+      },
+      timeLabel:item.time||'刚刚',
+      text:item.text||'',
+      images:item.images||[],
+      order:item.order||null
+    }),
+    backHref:getCurrentPageHref({tab:'moments'})
+  });
+}
+
+function publishedDetailHref(extra){
+  return 'order-detail.html?'+buildQuery({
+    owner:'published',
+    status,
+    type,
+    id:orderId,
+    provider,
+    applicants,
+    returnRole,
+    returnStatus,
+    title:orderTitle,
+    time:orderTime,
+    price:orderPrice,
+    ...extra
+  });
+}
+
+function acceptedDetailHref(extra){
+  return 'fuwuzhe_order-detail.html?'+buildQuery({
+    owner:'accepted',
+    status,
+    type,
+    id:orderId,
+    returnRole,
+    returnStatus,
+    ...extra
+  });
+}
+
+function applicantsHref(extra){
+  return 'applicants.html?'+buildQuery({
+    owner:'published',
+    status,
+    type,
+    id:orderId,
+    provider,
+    applicants,
+    returnRole,
+    returnStatus,
+    title:orderTitle,
+    time:orderTime,
+    price:orderPrice,
+    ...extra
+  });
+}
+
+const applicantProfiles={
+  wang:{
+    avatar:'王',
+    name:'王小明',
+    credit:'92',
+    heroDesc:'擅长宠物照护和连续服务记录，做事细心，反馈也比较及时。',
+    doneCount:'32',
+    goodRate:'96%',
+    goodCount:'28',
+    badCount:'1',
+    certs:['实名已完成','学历已完成','技能证书已核验','紧急联系人已绑定'],
+    info:[
+      ['学校 / 年级','北京林业大学 · 大二'],
+      ['专业','动物医学'],
+      ['服务城市','北京 · 海淀 / 朝阳'],
+      ['接单偏好','喂猫 / 陪诊 / 短时上门'],
+      ['服务时段','工作日晚间 / 周末全天'],
+      ['个人标签','细心记录 / 守时稳定']
+    ],
+    skills:['宠物护理师证书','红十字救护员证','陪诊服务培训证','宠物急救培训证'],
+    goodReviews:[
+      ['张小花','5.0','喂猫很细心，门口打卡和猫咪状态反馈都很完整，沟通也很顺畅。'],
+      ['李女士','5.0','遇到猫咪不吃饭会主动确认，处理细致，很放心。'],
+      ['赵同学','4.9','到达准时，过程反馈很及时，整体体验很好。']
+    ],
+    badReviews:[
+      ['陈女士','3.8','有一次回复消息稍晚，希望高峰期也能更快同步进度。']
+    ],
+    moments:[
+      {time:'4月14日',text:'今天的上门喂猫连单结束后，我把三天的进门、补粮、换砂记录整理成了一页简表，回看特别清楚。',images:[{label:'服务记录',color:'#dbeafe'}],order:{serviceName:'上门喂猫｜2天｜海淀区',taskTime:'2026-03-15 10:00'},meta:'图文动态'},
+      {time:'4月9日',text:'陪诊类任务我会把排队、取药、复诊提醒拆成三段同步，这样家属回看时更安心。',images:[],order:{serviceName:'健康陪诊｜3小时｜海淀区',taskTime:'2026-04-10 09:00'},meta:'服务心得'}
+    ]
+  },
+  liu:{
+    avatar:'刘',
+    name:'刘同学',
+    credit:'85',
+    heroDesc:'擅长路线规划、节奏控制和户外陪同，偏好体能类任务。',
+    doneCount:'18',
+    goodRate:'89%',
+    goodCount:'15',
+    badCount:'2',
+    certs:['实名已完成','学历已完成','户外技能认证已核验'],
+    info:[
+      ['学校 / 年级','北京体育大学 · 研一'],
+      ['专业','运动训练'],
+      ['服务城市','北京 · 海淀 / 朝阳'],
+      ['接单偏好','户外任务 / 跑步陪同 / 爬山'],
+      ['服务时段','晨间任务 / 周末长单'],
+      ['个人标签','路线熟悉 / 节奏稳定']
+    ],
+    skills:['社会体育指导员证','户外运动指导员证','红十字救护员证','体适能教练证'],
+    goodReviews:[
+      ['周先生','5.0','准时到达，路线节奏控制得很好，过程很专业。'],
+      ['王阿姨','4.8','很会照顾体能差异，走走停停安排得比较合理。']
+    ],
+    badReviews:[
+      ['陈女士','3.6','有时候讲解太专业，普通用户不太容易第一时间听懂。'],
+      ['高先生','3.9','户外任务结束后反馈再详细一点会更好。']
+    ],
+    moments:[
+      {time:'4月12日',text:'陪跑任务里最有效的一件事，还是提前把补给点和返程点讲清楚，现场就不会乱。',images:[{label:'路线提示',color:'#fef3c7'}],order:{serviceName:'户外任务｜1小时｜朝阳区',taskTime:'2026-04-12 07:30'},meta:'户外复盘'},
+      {time:'4月7日',text:'今天又把一条雨天备选路线走了一遍，新手接户外单真的要把撤退方案想在前面。',images:[],order:{serviceName:'户外任务｜半天｜海淀区',taskTime:'2026-04-07 08:00'},meta:'技能分享'}
+    ]
+  },
+  chen:{
+    avatar:'陈',
+    name:'陈学长',
+    credit:'63',
+    heroDesc:'在校生，擅长梳理排班节奏和校园类短时任务安排。',
+    doneCount:'56',
+    goodRate:'98%',
+    goodCount:'53',
+    badCount:'1',
+    certs:['实名已完成','婚庆技能认证已核验','紧急联系人已绑定'],
+    info:[
+      ['学校 / 年级','中国传媒大学 · 博二'],
+      ['专业','艺术管理'],
+      ['服务城市','北京 · 朝阳 / 海淀'],
+      ['接单偏好','婚庆协助 / 活动执行 / 迎宾流程'],
+      ['服务时段','周末全天 / 晚场活动'],
+      ['个人标签','现场执行 / 流程稳定']
+    ],
+    skills:['婚礼策划师证书','礼仪培训师证书','活动执行管理证书','现场安全员培训证'],
+    goodReviews:[
+      ['林先生','5.0','婚礼当天配合度很高，执行很稳，现场氛围把控也不错。'],
+      ['许小姐','5.0','应变很快，物品管理细致，值得再次合作。'],
+      ['高女士','4.9','经验丰富，婚礼流程跟得很顺。']
+    ],
+    badReviews:[
+      ['杨小姐','3.7','回复速度偶尔偏慢，如果能更及时同步会更安心。']
+    ],
+    moments:[
+      {time:'4月11日',text:'婚礼现场最怕信息断层，我会把最后版流程和联系人放进一个小卡片里，谁来问都能迅速同步。',images:[{label:'流程卡片',color:'#fee2e2'},{label:'现场分工',color:'#f3e8ff'}],order:{serviceName:'婚庆协助｜半天｜海淀区',taskTime:'2026-04-10 08:00'},meta:'婚庆经验'},
+      {time:'4月5日',text:'今天把礼仪培训证和活动执行证书补齐了，后面婚庆单会更容易说明自己的专业背景。',images:[],order:null,meta:'资料更新'}
+    ]
+  }
+};
+
+const userProfiles={
+  zhang:{
+    avatar:'张',
+    name:'张小花',
+    credit:'94',
+    heroDesc:'宠物服务爱好者 · 常驻海淀 · 擅长连续跟进服务记录',
+    doneCount:'38',
+    goodRate:'97%',
+    goodCount:'34',
+    badCount:'1',
+    certs:['实名已完成','学历已完成','紧急联系人已绑定'],
+    info:[
+      ['常驻城市','北京 · 海淀'],
+      ['服务方向','上门喂猫 / 短时上门'],
+      ['可接时段','工作日晚间 / 周末全天'],
+      ['个人标签','细致记录 / 宠物熟悉 / 沟通稳定']
+    ],
+    skills:['宠物护理基础培训','门锁与喂养流程记录'],
+    goodReviews:[
+      ['李女士','5.0','每次都会把补粮和猫咪状态记录得很清楚。'],
+      ['周同学','4.9','连单服务很稳定，沟通也让人放心。']
+    ],
+    badReviews:[
+      ['匿名用户','3.9','高峰时段回复稍慢，但后续有补充说明。']
+    ]
+  },
+  li:{
+    avatar:'李',
+    name:'李明',
+    credit:'88',
+    heroDesc:'跑团领队 · 常驻海淀 / 朝阳 · 擅长路线规划与节奏控制',
+    doneCount:'24',
+    goodRate:'95%',
+    goodCount:'21',
+    badCount:'1',
+    certs:['实名已完成','技能证书已核验'],
+    info:[
+      ['常驻城市','北京 · 海淀 / 朝阳'],
+      ['服务方向','陪跑 / 户外陪同 / 路线指引'],
+      ['可接时段','清晨任务 / 周末长单'],
+      ['个人标签','配速稳定 / 熟悉路线 / 补给细致']
+    ],
+    skills:['户外路线规划','运动节奏陪同'],
+    goodReviews:[
+      ['王阿姨','5.0','节奏把控得很好，过程很安心。'],
+      ['高先生','4.8','会主动提醒补给和天气变化。']
+    ],
+    badReviews:[
+      ['匿名用户','3.8','专业术语稍多，希望再通俗一点。']
+    ]
+  },
+  wang:{
+    avatar:'王',
+    name:'王阿姨',
+    credit:'95',
+    heroDesc:'陪诊经验丰富 · 常驻海淀 · 擅长流程提醒与医嘱整理',
+    doneCount:'42',
+    goodRate:'98%',
+    goodCount:'39',
+    badCount:'1',
+    certs:['实名已完成','紧急联系人已绑定'],
+    info:[
+      ['常驻城市','北京 · 海淀'],
+      ['服务方向','陪诊 / 排队取药 / 医嘱整理'],
+      ['可接时段','工作日全天 / 周末半日'],
+      ['个人标签','细致耐心 / 流程熟悉 / 沟通温和']
+    ],
+    skills:['陪诊流程整理','医嘱重点回传'],
+    goodReviews:[
+      ['张先生','5.0','陪诊过程非常细致，家里老人很安心。'],
+      ['刘女士','4.9','取药和复诊提醒都整理得很清楚。']
+    ],
+    badReviews:[
+      ['匿名用户','4.0','高峰期排队时间较长，但有及时解释。']
+    ]
+  },
+  zhou:{
+    avatar:'周',
+    name:'周老师',
+    credit:'91',
+    heroDesc:'活动教练 · 常驻朝阳 · 擅长路线规划和安全提示',
+    doneCount:'19',
+    goodRate:'94%',
+    goodCount:'17',
+    badCount:'1',
+    certs:['实名已完成','技能证书已核验'],
+    info:[
+      ['常驻城市','北京 · 朝阳'],
+      ['服务方向','户外路线规划 / 任务复盘'],
+      ['可接时段','周末全天'],
+      ['个人标签','路线清晰 / 安全意识强']
+    ],
+    skills:['路线规划','安全提醒'],
+    goodReviews:[
+      ['李明','5.0','路线建议很靠谱，提前量给得足。']
+    ],
+    badReviews:[
+      ['匿名用户','3.9','内容偏专业，第一次看需要适应。']
+    ]
+  },
+  chen:{
+    avatar:'陈',
+    name:'陈同学',
+    credit:'72',
+    heroDesc:'在校生 · 常驻海淀 · 会分享排班和兼职节奏',
+    doneCount:'14',
+    goodRate:'93%',
+    goodCount:'12',
+    badCount:'1',
+    certs:['实名已完成','学历已完成'],
+    info:[
+      ['常驻城市','北京 · 海淀'],
+      ['服务方向','校园类任务 / 短时兼职'],
+      ['可接时段','课余 / 周末'],
+      ['个人标签','时间管理 / 排班清晰']
+    ],
+    skills:['排班规划','校园兼职协调'],
+    goodReviews:[
+      ['周同学','5.0','时间安排得很清楚，合作顺畅。']
+    ],
+    badReviews:[
+      ['匿名用户','3.8','经验还在积累中，但态度很好。']
+    ]
+  },
+  qiao:{
+    avatar:'乔',
+    name:'乔女士',
+    credit:'84',
+    heroDesc:'婚礼活动从业者 · 常驻朝阳 · 擅长现场执行经验分享',
+    doneCount:'27',
+    goodRate:'95%',
+    goodCount:'24',
+    badCount:'1',
+    certs:['实名已完成'],
+    info:[
+      ['常驻城市','北京 · 朝阳'],
+      ['服务方向','婚庆 / 现场执行 / 迎宾流程'],
+      ['可接时段','周末全天 / 晚场'],
+      ['个人标签','现场执行 / 节奏清晰']
+    ],
+    skills:['现场流程衔接','婚礼物料统筹'],
+    goodReviews:[
+      ['孙先生','5.0','现场经验很足，沟通顺畅。']
+    ],
+    badReviews:[
+      ['匿名用户','3.9','高峰场次回复偏慢。']
+    ]
+  },
+  sun:{
+    avatar:'孙',
+    name:'孙先生',
+    credit:'89',
+    heroDesc:'活动组织者 · 常驻朝阳 · 重视效率和流程管理',
+    doneCount:'31',
+    goodRate:'96%',
+    goodCount:'28',
+    badCount:'1',
+    certs:['实名已完成'],
+    info:[
+      ['常驻城市','北京 · 朝阳'],
+      ['服务方向','活动执行 / 多人协作任务'],
+      ['可接时段','工作日 / 周末'],
+      ['个人标签','效率导向 / 协作清晰']
+    ],
+    skills:['流程模板整理','多人协作分工'],
+    goodReviews:[
+      ['乔女士','5.0','时间表和联系人整理得很清楚。']
+    ],
+    badReviews:[
+      ['匿名用户','4.0','反馈较直接，但整体靠谱。']
+    ]
+  },
+  han:{
+    avatar:'韩',
+    name:'韩小姐',
+    credit:'58',
+    heroDesc:'生活内容分享为主 · 正在恢复信用分',
+    doneCount:'6',
+    goodRate:'83%',
+    goodCount:'5',
+    badCount:'1',
+    certs:['实名已完成'],
+    info:[
+      ['常驻城市','北京 · 海淀'],
+      ['服务方向','生活分享 / 短时任务'],
+      ['当前状态','正在补信用分'],
+      ['个人标签','生活记录']
+    ],
+    skills:['暂无额外技能认证'],
+    goodReviews:[
+      ['匿名用户','4.5','沟通态度不错。']
+    ],
+    badReviews:[
+      ['匿名用户','3.5','履约稳定性还有提升空间。']
+    ]
+  }
+};
+
+const userProfileExtras={
+  zhang:{
+    school:'北京林业大学 · 动物医学专业',
+    academicYear:'大二',
+    bio:'宠物服务爱好者，擅长连续跟进服务记录和宠物状态反馈。',
+    skillCertificates:['宠物护理师证书','宠物急救培训证']
+  },
+  li:{
+    school:'北京体育大学 · 运动训练专业',
+    academicYear:'研一',
+    bio:'跑团领队，擅长路线规划、节奏控制和户外任务陪同。',
+    skillCertificates:['社会体育指导员证','红十字救护员证']
+  },
+  wang:{
+    school:'首都医科大学 · 护理学专业',
+    academicYear:'研二',
+    bio:'陪诊经验丰富，擅长流程提醒、取药协助和医嘱整理。',
+    skillCertificates:['陪诊服务培训证','红十字救护员证']
+  },
+  zhou:{
+    school:'北京体育大学 · 户外运动专业',
+    academicYear:'研二',
+    bio:'活动教练，重视路线规划和风险提示，分享内容偏实操。',
+    skillCertificates:['户外运动指导员证','红十字救护员证']
+  },
+  chen:{
+    school:'中国传媒大学 · 行政管理专业',
+    academicYear:'大三',
+    bio:'在校生，擅长梳理排班节奏和校园类短时任务安排。',
+    skillCertificates:['校园活动组织培训证','项目执行培训证']
+  },
+  qiao:{
+    school:'中央戏剧学院 · 艺术管理专业',
+    academicYear:'研二',
+    bio:'婚礼活动从业者，擅长现场执行、流程衔接和迎宾统筹。',
+    skillCertificates:['婚礼策划师证书','礼仪培训师证书']
+  },
+  sun:{
+    school:'北京联合大学 · 会展经济与管理专业',
+    academicYear:'大四',
+    bio:'活动组织者，重视效率和流程管理，协作意识比较强。',
+    skillCertificates:['活动执行管理证书','现场安全员培训证']
+  },
+  han:{
+    school:'北京城市学院 · 市场营销专业',
+    academicYear:'大三',
+    bio:'以生活和短时任务内容为主，正在逐步恢复信用分表现。',
+    skillCertificates:[]
+  }
+};
+
+function readListValue(value,max){
+  const limit=typeof max==='number'?max:Infinity;
+  const list=Array.isArray(value)?value:String(value||'').split(/[｜|/、,，]+/);
+  return list
+    .map(function(item){return String(item||'').trim();})
+    .filter(Boolean)
+    .filter(function(item,index,source){return source.indexOf(item)===index;})
+    .slice(0,limit);
+}
+
+function joinInfoList(value,fallback){
+  const list=readListValue(value);
+  return list.length?list.join('｜'):(fallback||'待补充');
+}
+
+function getInfoValue(infoRows,label){
+  const matched=(Array.isArray(infoRows)?infoRows:[]).find(function(item){
+    return Array.isArray(item)&&item[0]===label;
+  });
+  return matched&&matched[1]?matched[1]:'';
+}
+
+function inferAcademicYear(eduProfile){
+  const explicit=eduProfile&&(eduProfile.grade||eduProfile.year||eduProfile.academicYear);
+  if(explicit)return String(explicit).trim();
+  const level=String(eduProfile&&eduProfile.level||'').trim();
+  if(level.indexOf('博')>-1)return '博一';
+  if(level.indexOf('硕')>-1||level.indexOf('研')>-1)return '研一';
+  if(level.indexOf('本科')>-1)return '大二';
+  return '';
+}
+
+function buildInfoRows(config){
+  const rows=[
+    ['学校',config.school||'待补充'],
+    ['学年',config.academicYear||'待补充'],
+    ['常驻城市',config.city||'待补充'],
+    ['服务方向',joinInfoList(config.serviceDirection,'待补充')],
+    ['可接时段',joinInfoList(config.availableTime,'待补充')],
+    ['个人标签',joinInfoList(config.personalTags,'待补充')]
+  ];
+  if(config.height||config.weight){
+    rows.push(['身高 / 体重',[config.height,config.weight].filter(Boolean).join(' / ')||'待补充']);
+  }
+  return rows;
+}
+
+function buildNormalizedUserProfile(authorId,base,author){
+  const extra=userProfileExtras[authorId]||{};
+  return {
+    avatar:base.avatar||author&&author.avatar||'伴',
+    name:base.name||author&&author.name||'伴行用户',
+    credit:String(base.credit||author&&author.credit||0),
+    heroDesc:extra.bio||author&&author.bio||base.heroDesc||'这个用户还没有补充个人简介',
+    doneCount:base.doneCount||'12',
+    goodRate:base.goodRate||'95%',
+    goodCount:base.goodCount||'10',
+    badCount:base.badCount||'0',
+    certs:Array.isArray(base.certs)&&base.certs.length?base.certs:['实名已完成'],
+    info:buildInfoRows({
+      school:extra.school,
+      academicYear:extra.academicYear,
+      city:getInfoValue(base.info,'常驻城市'),
+      serviceDirection:getInfoValue(base.info,'服务方向'),
+      availableTime:getInfoValue(base.info,'可接时段'),
+      personalTags:getInfoValue(base.info,'个人标签')
+    }),
+    skillCertificates:extra.skillCertificates&&extra.skillCertificates.length
+      ?extra.skillCertificates
+      :['暂无技能证书认证'],
+    profileImages:Array.isArray(base.profileImages)?base.profileImages:[],
+    goodReviews:base.goodReviews||[],
+    badReviews:base.badReviews||[]
+  };
+}
+
+function buildCurrentUserProfile(){
+  const me=BanxingMoments.getCurrentUser();
+  const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+  const savedProfile=JSON.parse(localStorage.getItem('sharedProfileState')||'null')||{};
+  const personalInfo=Object.assign({
+    height:'',
+    weight:'',
+    city:'北京 · 海淀',
+    bio:'伴行认证用户 · 可在这里查看自己的公开动态与资料信息',
+    serviceDirection:[],
+    serviceDirectionText:'',
+    availableTime:[],
+    availableTimeText:'',
+    personalTags:[],
+    personalTagsText:'',
+    profileImages:[]
+  },savedProfile.personalInfo||{});
+  const schoolParts=[
+    authState.eduProfile&&authState.eduProfile.school,
+    authState.eduProfile&&authState.eduProfile.major
+  ].filter(Boolean);
+  const academicYear=inferAcademicYear(authState.eduProfile);
+  const skillCertList=Array.isArray(authState.skillCertInfos)&&authState.skillCertInfos.length
+    ?authState.skillCertInfos
+    :(authState.skillCertInfo?[authState.skillCertInfo]:[]);
+  const skillCertificates=authState.skillCertVerified&&skillCertList.length
+    ?skillCertList.map(function(item){return [item.type,item.issuer].filter(Boolean).join(' · ');})
+    :[];
+  return {
+    avatar:me.avatar,
+    name:me.name,
+    credit:String(me.credit),
+    heroDesc:personalInfo.bio||'伴行认证用户 · 可在这里查看自己的公开动态与资料信息',
+    doneCount:'26',
+    goodRate:'96%',
+    goodCount:'22',
+    badCount:'1',
+    certs:[
+      me.auth.real?'实名已完成':'实名未完成',
+      me.auth.edu?'学历已完成':'学历未完成',
+      authState.emergencyContactBound?'紧急联系人已绑定':'紧急联系人未绑定',
+      me.auth.skill?'技能证书已核验':'技能证书未核验'
+    ],
+    info:buildInfoRows({
+      school:schoolParts.join(' · ')||(me.auth.edu?'学历已认证':'待补充'),
+      academicYear:academicYear,
+      city:personalInfo.city||'待补充',
+      serviceDirection:personalInfo.serviceDirectionText||personalInfo.serviceDirection,
+      availableTime:personalInfo.availableTimeText||personalInfo.availableTime,
+      personalTags:personalInfo.personalTagsText||personalInfo.personalTags,
+      height:personalInfo.height,
+      weight:personalInfo.weight
+    }),
+    profileImages:Array.isArray(personalInfo.profileImages)?personalInfo.profileImages:[],
+    skillCertificates:skillCertificates.length?skillCertificates:['暂无技能证书认证'],
+    goodReviews:[
+      ['系统样例','5.0','履约稳定，记录完整。']
+    ],
+    badReviews:[
+      ['系统样例','4.0','偶尔高峰期回复略慢。']
+    ]
+  };
+}
+
+function getActiveProfile(){
+  if(mode==='user'){
+    if(userId==='me')return buildCurrentUserProfile();
+    const author=BanxingMoments.getAuthorById(userId);
+    const base=userProfiles[userId]||{};
+    return buildNormalizedUserProfile(userId,base,author);
+  }
+  return applicantProfiles[applicantId]||applicantProfiles.wang;
+}
+
+function getMomentPosts(){
+  if(mode==='user'){
+    return BanxingMoments.getAuthorPosts(userId==='me'?BanxingMoments.getCurrentUser().id:userId).map(function(post){
+      return {
+        id:post.id,
+        time:post.timeLabel,
+        text:post.text,
+        images:post.images,
+        video:post.video,
+        order:post.order?{
+          id:post.order.id||'',
+          serviceName:post.order.serviceName,
+          taskTime:BanxingTimeUtils.formatTaskTime(post.order.taskTime||post.order.time||post.order.finishedAt)||post.order.taskTime||post.order.time||post.order.finishedAt,
+          title:post.order.title,
+          time:BanxingTimeUtils.formatTaskTime(post.order.time||post.order.finishedAt)||post.order.time||post.order.finishedAt
+        }:null,
+        meta:'',
+        href:post.id?getMomentDetailHref(post.id):''
+      };
+    });
+  }
+  const profile=getActiveProfile();
+  return (profile.moments||[]).map(function(item){
+    return Object.assign({},item,{
+      href:item.href||getMomentPreviewHref(item,profile)
+    });
+  });
+}
+
+function renderTop(profile){
+  document.getElementById('pageTitle').textContent='用户主页';
+  document.title='用户主页 - 伴行';
+  document.getElementById('avatar').textContent=profile.avatar;
+  document.getElementById('name').textContent=profile.name;
+  document.getElementById('credit').textContent=profile.credit;
+  document.getElementById('heroDesc').textContent=profile.heroDesc;
+  document.getElementById('doneCount').textContent=profile.doneCount;
+  document.getElementById('goodRate').textContent=profile.goodRate;
+  document.getElementById('goodCount').textContent=profile.goodCount;
+  document.getElementById('badCount').textContent=profile.badCount;
+  const heroActions=document.getElementById('heroActions');
+  if(mode==='user'&&profile.id&&profile.id!=='me'){
+    const blocked=BanxingMoments.listBlocked().some(function(item){return item.id===profile.id;});
+    heroActions.style.display='flex';
+    heroActions.innerHTML='<button class="hero-icon-btn '+(blocked?'active':'')+'" type="button" title="'+escapeHtml(blocked?'取消拉黑':'拉黑用户')+'" aria-label="'+escapeHtml(blocked?'取消拉黑':'拉黑用户')+'" data-block-user="'+escapeHtml(profile.id)+'"><span class="icon">⊘</span><span class="text">'+escapeHtml(blocked?'已拉黑':'')+'</span></button>';
+  }else{
+    heroActions.style.display='none';
+    heroActions.innerHTML='';
+  }
+}
+
+function renderProfileInfo(profile){
+  document.getElementById('certStatus').innerHTML=profile.certs.map(function(tag){
+    return '<span>'+escapeHtml(tag)+'</span>';
+  }).join('');
+  document.getElementById('skills').innerHTML=(profile.skillCertificates||profile.skills||[]).map(function(tag){
+    return '<span>'+escapeHtml(tag)+'</span>';
+  }).join('');
+  const mediaGrid=renderMediaGrid(profile.profileImages||[]);
+  document.getElementById('galleryCard').style.display=mediaGrid?'block':'none';
+  document.getElementById('galleryGrid').innerHTML=mediaGrid;
+  document.getElementById('infoGrid').innerHTML=profile.info.map(function(item){
+    return '<div class="info-item"><div class="label">'+escapeHtml(item[0])+'</div><div class="value">'+escapeHtml(item[1])+'</div></div>';
+  }).join('');
+}
+
+function getReviewRows(profile){
+  const good=(profile.goodReviews||[]).map(function(item){
+    const score=normalizeReviewScore(item[1],'good');
+    return {type:getReviewType(score),name:item[0],score:score,text:item[2]};
+  });
+  const bad=(profile.badReviews||[]).map(function(item){
+    const score=normalizeReviewScore(item[1],'bad');
+    return {type:getReviewType(score),name:item[0],score:score,text:item[2]};
+  });
+  if(activeReviewFilter==='good')return good;
+  if(activeReviewFilter==='bad')return bad;
+  return good.concat(bad);
+}
+
+function renderReviews(profile){
+  document.querySelectorAll('[data-review-filter]').forEach(function(node){
+    node.classList.toggle('active',node.dataset.reviewFilter===activeReviewFilter);
+  });
+  const rows=getReviewRows(profile);
+  document.getElementById('reviewList').innerHTML=rows.length?rows.map(function(item){
+    return (
+      '<div class="review '+item.type+'">'+
+        '<div class="top"><span>'+escapeHtml(item.name)+'</span><span class="score">'+escapeHtml(item.type==='good'?'好评 ':'差评 ')+escapeHtml(item.score)+'分</span></div>'+
+        '<div class="text">'+escapeHtml(item.text)+'</div>'+
+      '</div>'
+    );
+  }).join(''):'<div class="review-empty">当前筛选下还没有评价内容</div>';
+}
+
+function renderMoments(){
+  const list=getMomentPosts();
+  document.getElementById('momentList').innerHTML=list.length?list.map(function(item){
+    return (
+      '<div class="moment-card '+(item.href?'link':'')+'"'+(item.href?' data-href="'+escapeHtml(item.href)+'"':'')+'>'+
+        '<div class="moment-top"><span>'+escapeHtml(item.time||'刚刚')+'</span></div>'+
+        '<div class="moment-text">'+escapeHtml(item.text||'')+'</div>'+
+        renderImages(item.images)+
+        renderVideo(item.video)+
+        orderTagHtml(item.order)+
+      '</div>'
+    );
+  }).join(''):'<div class="moment-empty">暂时还没有可展示的动态内容</div>';
+}
+
+function renderTabs(){
+  document.querySelectorAll('[data-tab]').forEach(function(node){
+    node.classList.toggle('active',node.dataset.tab===activeTab);
+  });
+  document.getElementById('profilePanel').classList.toggle('show',activeTab==='profile');
+  document.getElementById('momentsPanel').classList.toggle('show',activeTab==='moments');
+}
+
+function resolveBackHref(){
+  if(mode==='user')return params.get('backHref')||'moments.html';
+  return owner==='accepted'
+    ? acceptedDetailHref()
+    : (source==='applicants'?applicantsHref():publishedDetailHref());
+}
+
+function bindBottomActions(profile){
+  const bar=document.getElementById('actionBar');
+  if(mode==='user'){
+    bar.style.display='none';
+    document.body.style.paddingBottom='24px';
+    return;
+  }
+  const backHref=resolveBackHref();
+  document.getElementById('backButton').onclick=function(){
+    location.href=backHref;
+  };
+  const canChoose=owner==='published'&&source==='applicants'&&!provider;
+  const primaryButton=document.getElementById('primaryButton');
+  if(canChoose){
+    primaryButton.textContent='选中该服务者';
+    primaryButton.onclick=function(){
+      location.href=publishedDetailHref({status:'ready',provider:profile.id||applicantId});
+    };
+  }else{
+    primaryButton.textContent='返回订单详情';
+    primaryButton.onclick=function(){
+      location.href=(owner==='accepted'?acceptedDetailHref():publishedDetailHref());
+    };
+  }
+}
+
+function renderAll(){
+  const profile=getActiveProfile();
+  profile.id=mode==='user'?(userId||'me'):(applicantId||'wang');
+  renderTop(profile);
+  renderProfileInfo(profile);
+  renderReviews(profile);
+  renderMoments();
+  renderTabs();
+  bindBottomActions(profile);
+  document.getElementById('backLink').href=resolveBackHref();
+}
+
+document.querySelector('.main-tabs').addEventListener('click',function(event){
+  const button=event.target.closest('[data-tab]');
+  if(!button)return;
+  activeTab=button.dataset.tab||'profile';
+  renderTabs();
+});
+
+document.querySelector('.review-tabs').addEventListener('click',function(event){
+  const button=event.target.closest('[data-review-filter]');
+  if(!button)return;
+  activeReviewFilter=button.dataset.reviewFilter||'all';
+  renderReviews(getActiveProfile());
+});
+
+document.getElementById('momentList').addEventListener('click',function(event){
+  const card=event.target.closest('[data-href]');
+  if(!card)return;
+  location.href=card.dataset.href;
+});
+
+document.getElementById('heroActions').addEventListener('click',function(event){
+  const button=event.target.closest('[data-block-user]');
+  if(!button)return;
+  const result=BanxingMoments.toggleBlock(button.dataset.blockUser);
+  renderAll();
+  showToast(result.blocked?'已拉黑，对方动态和任务将不再展示':'已取消拉黑','success');
+});
+
+renderAll();
+</script>
+</body>
+</html>

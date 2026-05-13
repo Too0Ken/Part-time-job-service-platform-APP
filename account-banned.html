@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>账号已封禁 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;flex:1;text-align:center}
+.nav .placeholder{width:24px}
+.hero{margin:16px;padding:20px;border-radius:18px;background:linear-gradient(135deg,#FFF1F0,#fff);border:1px solid #FFD6D4}
+.badge{display:inline-flex;padding:5px 10px;border-radius:999px;background:#FF4D4F;color:#fff;font-size:11px;font-weight:700;margin-bottom:12px}
+.hero h1{font-size:20px;line-height:1.4;margin-bottom:8px}
+.hero p{font-size:13px;color:#6b7280;line-height:1.7}
+.card{background:#fff;margin:12px 16px;border-radius:16px;padding:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:12px}
+.info-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #f0f2f5;font-size:13px}
+.info-row:last-child{border-bottom:0}
+.info-row span:first-child{color:#8c8c8c}
+.info-row span:last-child{color:#1a1a2e;text-align:right;line-height:1.6}
+.notice{font-size:13px;color:#6b7280;line-height:1.8}
+.actions{padding:4px 16px;display:grid;gap:12px}
+.primary,.secondary{height:46px;border-radius:23px;font-size:15px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.primary{background:#4A6CF7;color:#fff;border:none}
+.secondary{background:#fff;color:#4A6CF7;border:1px solid #DDE6FF}
+.appeal-status{margin-top:12px;padding:12px;border-radius:12px;background:#F8FAFF;border:1px solid #DDE6FF;font-size:12px;color:#4A6CF7;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="login.html" class="back">←</a>
+  <span class="title">账号状态</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="hero">
+  <div class="badge">账号已封禁</div>
+  <h1>当前账号暂时无法使用平台服务</h1>
+  <p>你仍可登录查看封禁原因、提交解封申诉并查看平台处理结果。</p>
+</div>
+
+<div class="card">
+  <div class="card-title">封禁信息</div>
+  <div class="info-row"><span>封禁单号</span><span>BAN-3031</span></div>
+  <div class="info-row"><span>封禁类型</span><span>永久封禁</span></div>
+  <div class="info-row"><span>封禁原因</span><span>线下跳单 + 多次被举报</span></div>
+  <div class="info-row"><span>到期时间</span><span>永久，可提交材料复核</span></div>
+  <div class="appeal-status" id="appealStatus"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">解封申诉说明</div>
+  <div class="notice">如你认为封禁依据有误，可提交聊天记录、订单凭证、现场照片或其他材料。平台将在 3 个工作日内处理，结果会通过消息中心同步。</div>
+</div>
+
+<div class="card">
+  <div class="card-title">资金与提现处理</div>
+  <div class="notice">封禁期间不能提现；已提交且仍在处理中的提现申请将进入平台复核。若复核拒绝，金额会退回冻结余额并生成冲正流水；解封后需重新发起提现。</div>
+</div>
+
+<div class="actions">
+  <a class="primary" id="appealAction" href="account-ban-appeal.html?from=login">提交解封申诉</a>
+  <a class="secondary" href="fuwuzhe_home.html">去首页</a>
+</div>
+<script>
+const BAN_APPEAL_STORAGE_KEY='banxing.banAppeals';
+function readAppeals(){
+  try{
+    const list=JSON.parse(localStorage.getItem(BAN_APPEAL_STORAGE_KEY)||'[]');
+    return Array.isArray(list)?list:[];
+  }catch(error){
+    return [];
+  }
+}
+const latest=readAppeals()[0];
+const activeAppeal=readAppeals().find(function(item){
+  return ['pending','reviewing'].includes(item.status);
+});
+document.getElementById('appealStatus').textContent=latest
+  ? '最近申诉：'+latest.statusText+' · '+latest.time+(activeAppeal?'。审核期间暂不可重复提交或补充材料。':'')
+  : '当前暂无进行中的解封申诉。';
+if(activeAppeal){
+  document.getElementById('appealAction').textContent='查看申诉进度';
+}
+</script>
+</body>
+</html>

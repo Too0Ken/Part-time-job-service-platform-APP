@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>纠纷 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:20px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:20px}
+.card .label{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.summary-title{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.status-tag{padding:5px 12px;border-radius:999px;background:#FFF1F0;color:#FF4D4F;font-size:12px;font-weight:600}
+.summary-desc{font-size:13px;color:#5f6675;line-height:1.7;margin-top:10px}
+.info-list{display:grid;gap:10px}
+.info-row{display:flex;justify-content:space-between;gap:14px;font-size:13px;color:#666}
+.info-row .val{color:#1a1a2e;font-weight:600;text-align:right}
+.evidence-list{display:grid;gap:12px;margin:16px}
+.evidence-group{display:grid;gap:8px}
+.evidence-group-title{font-size:13px;font-weight:700;color:#1a1a2e;padding:0 2px}
+.evidence-card{background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:14px}
+.evidence-title{font-size:14px;font-weight:700;color:#1a1a2e}
+.evidence-desc{font-size:13px;color:#5f6675;line-height:1.7;margin-top:8px}
+.evidence-meta{display:grid;gap:10px}
+.evidence-meta-row{display:grid;gap:4px}
+.evidence-meta-label{font-size:12px;color:#8c8c8c}
+.evidence-meta-value{font-size:13px;color:#333;line-height:1.7}
+.evidence-tag{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#FFF1F0;color:#FF4D4F;font-size:11px;margin-top:10px}
+.image-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.image-grid .img{width:76px;height:76px;border-radius:10px;background:#FFF5F5;border:1px solid #FFD9D9;display:flex;align-items:center;justify-content:center;font-size:11px;color:#FF4D4F;text-align:center;padding:6px;line-height:1.4}
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.type-item{padding:12px;border:2px solid #eee;border-radius:10px;text-align:center;cursor:pointer;font-size:13px;color:#666}
+.type-item.selected{border-color:#FF4D4F;color:#FF4D4F;background:#FFF1F0}
+.type-item .icon{font-size:24px;margin-bottom:4px}
+.field{margin-top:16px}
+.field textarea,.field input{width:100%;border:1px solid #e8e8e8;border-radius:8px;padding:10px;font-size:14px;outline:none;background:#fff}
+.field textarea{height:100px;resize:none}
+.field-helper{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.upload{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.upload .add,.upload .preview{width:68px;height:68px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4}
+.upload .add{border:1px dashed #d0d5dd;background:#fafbff;color:#98a2b3;font-size:22px;cursor:pointer}
+.upload .preview{background:#FFF1F0;color:#FF4D4F;font-size:10px;padding:6px}
+.tip{background:#FFF1F0;padding:12px 16px;font-size:12px;color:#FF4D4F;line-height:1.6;margin:0 16px;border-radius:8px}
+.submit-btn{display:block;width:calc(100% - 32px);margin:24px auto 0;height:48px;background:#FF4D4F;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.submit-btn:active{opacity:.85}
+.secondary-btn{display:block;width:calc(100% - 32px);margin:14px auto 0;height:44px;background:#fff;color:#FF4D4F;border:1px solid #FFD9D9;border-radius:22px;font-size:15px;font-weight:500;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="order-list.html" class="back" id="backLink">←</a>
+  <span class="title" id="pageTitle">纠纷详情</span>
+  <span class="placeholder"></span>
+</div>
+
+<div id="viewMode" style="display:none">
+  <div class="card">
+    <div class="summary-title">
+      <div class="label" style="margin:0">当前纠纷状态</div>
+      <span class="status-tag" id="viewStatusTag">平台处理中</span>
+    </div>
+    <div class="summary-desc" id="summaryDesc"></div>
+    <div class="info-list" style="margin-top:14px" id="summaryInfo"></div>
+  </div>
+
+  <div class="evidence-list" id="evidenceList"></div>
+</div>
+
+<div id="applyMode" style="display:none">
+  <div class="card">
+    <div class="label">请选择纠纷类型</div>
+    <div class="type-grid">
+      <div class="type-item selected" data-reason="服务未完成" onclick="toggleType(this)"><div class="icon">⏰</div>服务未完成</div>
+      <div class="type-item" data-reason="质量不符" onclick="toggleType(this)"><div class="icon">📋</div>质量不符</div>
+      <div class="type-item" data-reason="对方爽约" onclick="toggleType(this)"><div class="icon">🚫</div>对方爽约</div>
+      <div class="type-item" data-reason="安全事故" onclick="toggleType(this)"><div class="icon">⚠️</div>安全事故</div>
+      <div class="type-item" data-reason="金额争议" onclick="toggleType(this)"><div class="icon">💰</div>金额争议</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">详细描述</div>
+    <div class="field"><textarea placeholder="请详细描述遇到的问题，以便平台更快核验处理。"></textarea></div>
+    <div class="label" style="margin-top:16px">上传证据</div>
+    <div class="upload" id="uploadRow">
+      <div class="add" id="addImage">🖼️</div>
+      <div class="add" id="addVideo">🎬</div>
+    </div>
+    <div class="field-helper">最多上传 5 张图片和 1 个视频</div>
+  </div>
+
+  <div class="tip">提交纠纷后，订单资金将被锁定。订单中的服务打卡记录和完成服务凭证会自动同步到仲裁材料，无需手动重复提交。</div>
+  <button class="submit-btn" id="submitBtn">提交纠纷申请</button>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const mode=params.get('mode')||((params.get('detailStatus')||params.get('status'))==='dispute'?'view':'apply');
+const counterpartyMode=params.get('counterparty')==='1'||params.get('disputeSource')==='counterparty'||mode==='respond';
+const respondMode=mode==='respond';
+const evidenceExpired=params.get('evidenceExpired')==='1'||params.get('frozen')==='1';
+const type=params.get('type')||'cat';
+const orderId=(params.get('id')||'p1').toUpperCase();
+const detailStatus=params.get('detailStatus')||params.get('status')||'dispute';
+const returnRole=params.get('returnRole')||owner;
+const returnStatus=params.get('returnStatus')||'all';
+const provider=params.get('provider')||'';
+const applicants=params.get('applicants')||'';
+const queryPrice=params.get('price')||'¥0.00';
+const queryCoupon=params.get('coupon')||'¥0.00';
+const queryInsuranceFee=params.get('insuranceFee')||'¥0.00';
+const queryRefund=params.get('refund')||'';
+const disputeResult=params.get('disputeResult')||'';
+const disputeRejected=disputeResult==='rejected'||params.get('rejected')==='1';
+const sourceStatus=params.get('sourceStatus')||params.get('restoredStatus')||detailStatus;
+const storageKey=(counterpartyMode?'disputeEvidence_':'disputeDraft_')+owner+'_'+orderId.toLowerCase();
+const myEvidenceSubmitted=params.get('evidenceSubmitted')==='1'||params.get('myEvidenceSubmitted')==='1';
+let uploadedImages=[];
+let uploadedVideo='';
+
+const statusLabelMap={
+  waiting:'待接单',
+  applying:'已申请',
+  ready:'待服务',
+  serving:'服务中',
+  confirm:'待确认完成',
+  review:'已完成',
+  done:'已评价',
+  dispute:'纠纷中',
+  refund:'已退款',
+  cancel:'已取消'
+};
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach((value,key)=>{
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(([key,val])=>{
+    next[key]=val;
+  });
+  (removeKeys||[]).forEach(key=>{
+    delete next[key];
+  });
+  return next;
+}
+
+function detailPage(){
+  return owner==='accepted'?'fuwuzhe_order-detail.html':'order-detail.html';
+}
+
+function detailHref(statusValue){
+  return detailPage()+'?'+buildQuery(currentParams({
+    owner,
+    status:statusValue,
+    type,
+    id:orderId.toLowerCase(),
+    provider,
+    applicants,
+    returnRole,
+    returnStatus
+  },['mode','detailStatus']));
+}
+
+function parseMoney(text){
+  return Number(String(text||'').replace(/[^\d.]/g,''))||0;
+}
+
+function formatMoney(amount){
+  return '¥'+(Number(amount)||0).toFixed(2);
+}
+
+function nowFullText(){
+  const now=new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+}
+
+function getActualRefundAmount(draft){
+  const presetByOrderId={
+    P4:'¥480.00',
+    P8:'¥15.00',
+    A5:'¥20.00'
+  };
+  if(detailStatus==='refund'){
+    if(queryRefund&&parseMoney(queryRefund)>0)return formatMoney(parseMoney(queryRefund));
+    if(presetByOrderId[orderId])return presetByOrderId[orderId];
+    return '¥0.00';
+  }
+  return '待平台判定';
+}
+
+document.getElementById('backLink').href=mode==='view'?detailHref(detailStatus):detailHref(detailStatus);
+
+const summaryMeta={
+};
+
+const defaultDrafts={
+  cat:{reasons:['服务未完成'],description:'我认为本次上门喂猫服务未完整覆盖约定内容，现场情况与任务要求存在差异，请平台协助核验。',images:['门口情况','服务现场']},
+  outdoor:{reasons:['质量不符'],description:'本次户外陪同过程中，实际服务与约定内容存在偏差，请平台帮助核对处理。',images:['集合点现场','结束现场']},
+  health:{reasons:['服务未完成'],description:'陪诊过程中部分约定内容未按预期完成，我已补充文字说明，请平台核验。',images:['到院现场','取药窗口']},
+  wedding:{reasons:['质量不符'],description:'婚庆现场协助内容与原约定存在差异，已附上现场图片供平台参考。',images:['现场照片1','现场照片2']}
+};
+
+const counterpartyDrafts={
+  cat:{reasons:['质量不符'],description:'对方反馈现场服务过程与约定不一致，并提交了现场图片供平台核验。',images:['对方现场图1','对方现场图2'],video:''},
+  outdoor:{reasons:['对方爽约'],description:'对方反馈集合时间与实际到达时间存在争议，并提交了集合点照片。',images:['集合点照片','行程截图'],video:''},
+  health:{reasons:['服务未完成'],description:'对方反馈陪诊流程中部分环节未完成，并提交了医院现场材料。',images:['医院现场图','窗口排队图'],video:''},
+  wedding:{reasons:['质量不符'],description:'对方反馈婚庆协助内容与约定存在差异，并提交了现场照片。',images:['婚礼现场图1','婚礼现场图2'],video:''}
+};
+
+function getSavedDraft(){
+  try{
+    const saved=localStorage.getItem(storageKey);
+    if(saved)return JSON.parse(saved);
+  }catch(error){}
+  return null;
+}
+
+function loadDraft(){
+  const saved=getSavedDraft();
+  if(saved)return saved;
+  return defaultDrafts[type]||defaultDrafts.cat;
+}
+
+function saveDraft(data){
+  try{localStorage.setItem(storageKey,JSON.stringify(data));}catch(error){}
+}
+
+function emptyEvidence(){
+  return {reasons:[],description:'',images:[],video:''};
+}
+
+function renderEvidenceCards(evidence,options){
+  const data=evidence||emptyEvidence();
+  const submitted=!!(options&&options.submitted);
+  const emptyText=options&&options.emptyText||'暂未提交证据';
+  if(!submitted){
+    return `
+      <div class="evidence-card">
+        <div class="evidence-title">${emptyText}</div>
+        <div class="evidence-desc">当前还没有该方提交的纠纷类型、详细描述、图片或视频材料。</div>
+        <div class="evidence-tag">未提交</div>
+      </div>
+    `;
+  }
+  return `
+    <div class="evidence-card">
+      <div class="evidence-meta">
+        <div class="evidence-meta-row">
+          <div class="evidence-meta-label">纠纷类型</div>
+          <div class="evidence-meta-value">${(data.reasons&&data.reasons.length?data.reasons:['未选择']).join(' / ')}</div>
+        </div>
+        <div class="evidence-meta-row">
+          <div class="evidence-meta-label">详细描述</div>
+          <div class="evidence-meta-value">${data.description||'未填写详细描述'}</div>
+        </div>
+        <div class="evidence-meta-row">
+          <div class="evidence-meta-label">图片</div>
+          <div class="image-grid">${(data.images&&data.images.length?data.images:['未上传图片']).map(name=>'<div class="img">'+name+'</div>').join('')}</div>
+        </div>
+        <div class="evidence-meta-row">
+          <div class="evidence-meta-label">视频</div>
+          <div class="image-grid"><div class="img">${data.video||'未上传视频'}</div></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEvidenceGroup(title,html){
+  return `
+    <div class="evidence-group">
+      <div class="evidence-group-title">${title}</div>
+      ${html}
+    </div>
+  `;
+}
+
+function renderEvidence(draft){
+  const savedDraft=myEvidenceSubmitted?getSavedDraft():null;
+  const mySubmitted=counterpartyMode?myEvidenceSubmitted:true;
+  const myEvidence=mySubmitted?(savedDraft||draft):emptyEvidence();
+  const otherEvidence=counterpartyDrafts[type]||counterpartyDrafts.cat;
+  const myGroup=renderEvidenceGroup('我提交的证据',renderEvidenceCards(myEvidence,{submitted:mySubmitted,emptyText:'我尚未提交证据'}));
+  const otherGroup=renderEvidenceGroup('对方提交的证据',renderEvidenceCards(otherEvidence,{submitted:true}));
+  document.getElementById('evidenceList').innerHTML=[
+    counterpartyMode?otherGroup+myGroup:myGroup+otherGroup
+  ].join('');
+}
+
+if(mode==='view'){
+  document.getElementById('pageTitle').textContent='纠纷详情';
+  document.getElementById('viewMode').style.display='block';
+  const draft=loadDraft();
+  const actualRefundAmount=getActualRefundAmount(draft);
+  const isRefundResolved=detailStatus==='refund';
+  const restoredStatusLabel=statusLabelMap[sourceStatus]||statusLabelMap[draft.sourceStatus]||'原状态';
+  document.getElementById('viewStatusTag').textContent=disputeRejected?'已驳回':(isRefundResolved?'已退款':'平台处理中');
+  document.getElementById('summaryDesc').textContent=disputeRejected
+    ?'本次纠纷退款处理已被平台驳回，订单已恢复为'+restoredStatusLabel+'。你提交过的证据仍完整保留，可继续在本页查看。'
+    :counterpartyMode?'对方已发起纠纷，平台已锁定订单资金。请及时补充你的说明和证据，超时未补充将按现有材料处理。':summaryMeta[type]||summaryMeta.cat;
+  document.getElementById('summaryInfo').innerHTML=[
+    ['订单号',orderId],
+    ['当前状态',disputeRejected?restoredStatusLabel:(isRefundResolved?'已退款':'纠纷中')],
+    ['发起方',counterpartyMode?'对方发起':'我方发起'],
+    ['原订单状态',restoredStatusLabel],
+    ['发起时间',draft.createdAt||'昨天 18:40'],
+    ['当前阶段',disputeRejected?'退款已驳回，订单已恢复':(isRefundResolved?'纠纷已处理':(evidenceExpired?'补证窗口已关闭':'等待平台核验'))]
+  ].concat(isRefundResolved?[['实际退款金额',actualRefundAmount]]:[]).map(item=>'<div class="info-row"><span>'+item[0]+'</span><span class="val">'+item[1]+'</span></div>').join('');
+  renderEvidence(draft);
+  if(counterpartyMode&&!myEvidenceSubmitted&&!isRefundResolved&&!evidenceExpired&&!disputeRejected){
+    const btn=document.createElement('button');
+    btn.className='secondary-btn';
+    btn.textContent='提交我的证据';
+    btn.onclick=()=>{location.href='dispute.html?'+buildQuery(currentParams({mode:'respond',counterparty:'1',detailStatus:'dispute'}));};
+    document.getElementById('viewMode').appendChild(btn);
+  }
+  if(counterpartyMode&&!isRefundResolved&&evidenceExpired&&!disputeRejected){
+    const note=document.createElement('div');
+    note.className='tip';
+    note.style.marginTop='14px';
+    note.textContent='补证时限已超过 24 小时，当前不可再提交证据，平台工作人员将按现有材料裁定。';
+    document.getElementById('viewMode').appendChild(note);
+  }
+}else{
+  document.getElementById('pageTitle').textContent=respondMode?'提交证据':'申请纠纷';
+  document.getElementById('applyMode').style.display='block';
+  const uploadRow=document.getElementById('uploadRow');
+  const descInput=document.querySelector('#applyMode textarea');
+  const addImage=document.getElementById('addImage');
+  const addVideo=document.getElementById('addVideo');
+  const defaultDraft=loadDraft();
+  const canApplyDispute=respondMode ? detailStatus==='dispute'&&!evidenceExpired : ['serving','confirm'].includes(detailStatus);
+  const selectedReason=(defaultDraft.reasons&&defaultDraft.reasons[0])||'服务未完成';
+  document.querySelectorAll('.type-item').forEach(item=>{
+    item.classList.toggle('selected',item.dataset.reason===selectedReason);
+  });
+  descInput.value=defaultDraft.description||'';
+  document.getElementById('submitBtn').textContent=respondMode?'提交我的证据':'提交纠纷申请';
+  if(respondMode){
+    document.querySelector('.tip').textContent='你提交的证据会与对方材料、订单聊天、打卡记录和完成凭证一起进入平台裁定。';
+  }
+  if(!canApplyDispute){
+    document.querySelector('.tip').textContent='当前订单状态为“'+(statusLabelMap[detailStatus]||detailStatus)+'”，正式流程中不允许新发起纠纷；此页仅保留原型预览。';
+  }
+  uploadedImages=[...(defaultDraft.images||[])];
+  uploadedVideo=defaultDraft.video||'';
+  renderUploadPreview();
+  addImage.addEventListener('click',()=>{
+    if(uploadedImages.length>=5)return;
+    uploadedImages.push('申诉图片'+(uploadedImages.length+1));
+    renderUploadPreview();
+  });
+  addVideo.addEventListener('click',()=>{
+    if(uploadedVideo)return;
+    uploadedVideo='申诉视频 1';
+    renderUploadPreview();
+  });
+  document.getElementById('submitBtn').addEventListener('click',()=>{
+    if(!canApplyDispute){
+      alert(respondMode?'当前状态暂不支持补充证据。':'只有服务中或待确认完成订单可以发起纠纷。');
+      location.href=detailHref(detailStatus);
+      return;
+    }
+    const reasons=[...document.querySelectorAll('.type-item.selected')].map(item=>item.dataset.reason);
+    const draft={
+      reasons:reasons.length?reasons:['服务未完成'],
+      description:descInput.value.trim()||(respondMode?'已补充证据，等待平台核验处理。':'已提交纠纷申请，等待平台核验处理。'),
+      images:uploadedImages,
+      video:uploadedVideo,
+      sourceStatus:detailStatus,
+      createdAt:nowFullText()
+    };
+    saveDraft(draft);
+    alert(respondMode?'证据已提交，平台将合并双方材料处理':'纠纷申请已提交，订单资金已锁定');
+    location.href='dispute.html?'+buildQuery(currentParams({
+      owner,
+      mode:'view',
+      counterparty:counterpartyMode?'1':'',
+      status:'dispute',
+      type,
+      id:orderId.toLowerCase(),
+      provider,
+      applicants,
+      detailStatus:'dispute',
+      evidenceSubmitted:respondMode?'1':'',
+      returnRole,
+      returnStatus
+    }));
+  });
+
+  function renderUploadPreview(){
+    uploadRow.querySelectorAll('.preview').forEach(node=>node.remove());
+    uploadedImages.forEach(name=>{
+      const item=document.createElement('div');
+      item.className='preview';
+      item.textContent=name;
+      uploadRow.insertBefore(item,addImage);
+    });
+    if(uploadedVideo){
+      const item=document.createElement('div');
+      item.className='preview';
+      item.textContent=uploadedVideo;
+      uploadRow.insertBefore(item,addVideo);
+    }
+    addImage.style.opacity=uploadedImages.length>=5?'0.45':'1';
+    addVideo.style.opacity=uploadedVideo?'0.45':'1';
+  }
+}
+
+function toggleType(el){
+  document.querySelectorAll('.type-item').forEach(item=>item.classList.remove('selected'));
+  el.classList.add('selected');
+}
+</script>
+</body>
+</html>

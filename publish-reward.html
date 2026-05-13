@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>任务酬劳 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:24px}
+.title{font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.desc{font-size:13px;color:#999;margin-bottom:20px;line-height:1.6}
+.field label{display:block;font-size:14px;color:#666;margin-bottom:8px}
+.money-box{position:relative}
+.money-box .currency{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:22px;font-weight:700;color:#FF6B35}
+.money-box input{width:100%;height:54px;border:1px solid #e8e8e8;border-radius:12px;padding:0 16px 0 40px;font-size:26px;font-weight:700;color:#1a1a2e;outline:none}
+.money-box input:focus{border-color:#FF6B35;box-shadow:0 0 0 3px rgba(255,107,53,.08)}
+.hint{margin-top:12px;padding:12px 14px;background:#FFF7E6;border-radius:10px;font-size:13px;line-height:1.7;color:#8c6b2f}
+.hint .recommend{color:#FF6B35;font-weight:700;cursor:pointer}
+.hint .recommend:active{opacity:.75}
+.hint .sub{display:block;margin-top:4px;font-size:12px;color:#b07a2f}
+.tips{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.tips span{padding:6px 10px;background:#f5f6fa;border-radius:999px;font-size:12px;color:#666}
+.note{margin:16px 16px 0;padding:14px;background:#fff;border-radius:12px;font-size:12px;line-height:1.7;color:#999}
+.next-btn{display:block;width:calc(100% - 32px);margin:20px auto 24px;height:48px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.next-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">任务酬劳</span><span class="placeholder"></span></div>
+<div class="card">
+  <div class="title" id="pageTitle">设置任务酬劳</div>
+  <div class="desc">你可以自由填写任务酬劳，平台不会限制非推荐区间的价格。</div>
+  <div class="field">
+    <label>任务酬劳</label>
+    <div class="money-box">
+      <span class="currency">¥</span>
+      <input id="rewardInput" type="number" inputmode="decimal" placeholder="请输入金额">
+    </div>
+  </div>
+  <div class="hint" id="rewardHint"></div>
+  <div class="tips" id="rewardTips"></div>
+</div>
+<div class="note">发布者可点击推荐价快速填入，也可继续自行修改；系统不会拒绝非推荐区间的出价，推荐价仅用于帮助你更快匹配服务者。</div>
+<button class="next-btn" onclick="saveAndNext()">下一步</button>
+<script>
+const params=new URLSearchParams(window.location.search);
+const type=params.get('type')||'waimao';
+const highRiskTypes=['waimao','paopao'];
+if(highRiskTypes.includes(type)&&!sessionStorage.getItem('publishSafetyConfirmed:'+type))location.replace('publish-safety.html?type='+type);
+const draft=JSON.parse(localStorage.getItem('publishDraft')||'{}');
+const config={
+  waimao:{recommend:'120',range:'¥90-¥150',count:'86',tips:['可按猫咪数量和用药需求上浮','节假日上门可适度提高酬劳']},
+  paopao:{recommend:'88',range:'¥60-¥120',count:'52',tips:['可按难度、距离和时长上浮','节假日或清晨档可适度提高']},
+  peizhen:{recommend:'158',range:'¥120-¥200',count:'41',tips:['医院排队高峰时段建议适度加价','含医嘱记录或取药代取可适当上浮']},
+  hunqing:{recommend:'560',range:'¥400-¥800',count:'23',tips:['彩排、跟妆或全日陪同可显著上浮','重要日期建议预留更高预算锁定档期']}
+};
+const info=config[type]||config.waimao;
+document.getElementById('backLink').href='publish-credit.html?type='+type;
+document.getElementById('rewardInput').value=draft.reward||info.recommend;
+document.getElementById('rewardHint').innerHTML='💡 定价参考：'+info.range+'，建议出价约 <span class="recommend" onclick="fillRecommend()">¥'+info.recommend+'</span><span class="sub">点击推荐价格可一键填入，仍可继续修改，系统不强制定价。</span>';
+document.getElementById('rewardTips').innerHTML=info.tips.map(text=>'<span>'+text+'</span>').join('');
+function fillRecommend(){
+  const input=document.getElementById('rewardInput');
+  input.value=info.recommend;
+  input.focus();
+}
+function saveAndNext(){
+  draft.type=type;
+  draft.reward=document.getElementById('rewardInput').value||info.recommend;
+  localStorage.setItem('publishDraft',JSON.stringify(draft));
+  location.href='publish-remark.html?type='+type;
+}
+</script>
+</body>
+</html>

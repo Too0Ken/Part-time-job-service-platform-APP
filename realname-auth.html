@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>实名认证 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:24px}
+.title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.desc{font-size:13px;color:#999;margin-bottom:22px;line-height:1.7}
+.api-box{border:1px solid #E6F4FF;background:#F6FBFF;border-radius:12px;padding:16px}
+.api-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.api-top h3{font-size:15px;color:#1a1a2e}
+.api-status{font-size:12px;padding:3px 10px;border-radius:999px;background:#fff1f0;color:#ff4d4f}
+.api-status.done{background:#f6ffed;color:#52c41a}
+.api-desc{font-size:12px;color:#666;line-height:1.7}
+.info-panel{display:none;margin-top:14px;border-top:1px dashed #dbeafe;padding-top:14px}
+.info-panel.active{display:block}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item{background:#fff;border-radius:10px;padding:12px}
+.info-item .label{font-size:12px;color:#999}
+.info-item .value{font-size:14px;color:#1a1a2e;font-weight:600;margin-top:4px}
+.face-area{width:140px;height:140px;border:2px dashed #d9d9d9;border-radius:18px;margin:20px auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;cursor:pointer;transition:.2s}
+.face-area.ready{border-color:#4A6CF7;color:#4A6CF7;background:#F6F9FF}
+.face-area.done{border-color:#52C41A;color:#52C41A;background:#F6FFED}
+.face-area .icon{font-size:38px;margin-bottom:8px}
+.face-area span{font-size:13px}
+.step-note{margin:16px 16px 0;padding:12px 14px;background:#fff;border-radius:12px;font-size:12px;color:#666;line-height:1.7}
+.actions{display:flex;gap:10px;padding:0 16px 24px}
+.actions button{flex:1;height:48px;border:none;border-radius:24px;font-size:15px;cursor:pointer}
+.api-btn{background:#EEF2FF;color:#4A6CF7}
+.submit-btn{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff}
+.submit-btn:disabled{background:#d9d9d9;color:#fff;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="auth-center.html" class="back">←</a>
+  <span class="title">实名认证</span>
+  <span class="placeholder"></span>
+</div>
+<div class="card">
+  <div class="api-box">
+    <div class="api-top">
+      <h3>官方实名 API 核验</h3>
+      <span class="api-status" id="apiStatus">未调用</span>
+    </div>
+    <div class="info-panel" id="identityPanel">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">真实姓名</div><div class="value" id="realnameValue">王小明</div></div>
+        <div class="info-item"><div class="label">身份证号</div><div class="value" id="idValue">1101**********1023</div></div>
+        <div class="info-item"><div class="label">签发状态</div><div class="value">公安实名接口已核验</div></div>
+        <div class="info-item"><div class="label">返回时间</div><div class="value" id="apiTime">2026-04-01 09:41</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="face-area" id="faceArea" onclick="runFaceCheck()">
+    <div class="icon" id="faceIcon">🙂</div>
+    <span id="faceText">请先调用实名 API</span>
+  </div>
+</div>
+<div class="actions">
+  <button class="api-btn" onclick="fetchIdentity()">调用实名 API</button>
+  <button class="submit-btn" id="submitBtn" disabled onclick="submitRealname()">认证通过，下一步</button>
+</div>
+<script>
+const params=new URLSearchParams(location.search);
+const source=params.get('source')||'auth';
+const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+let identityLoaded=false;
+let faceChecked=false;
+if(source==='apply'){
+  document.getElementById('realnameDesc').innerHTML='接单前需先完成实名认证。<br>系统将通过实名 API 自动拉取身份信息，你只需要做人脸识别。';
+}
+if(source==='publish'){
+  document.getElementById('realnameDesc').innerHTML='发布任务前需先完成实名认证。<br>系统将调用官方实名 API 自动填充身份信息，无需手动录入。';
+}
+function fetchIdentity(){
+  identityLoaded=true;
+  authState.realnameProfile={name:'王小明',maskedId:'1101**********1023',verifiedBy:'公安实名API'};
+  localStorage.setItem('authState',JSON.stringify(authState));
+  document.getElementById('apiStatus').textContent='已获取';
+  document.getElementById('apiStatus').className='api-status done';
+  document.getElementById('apiTime').textContent=new Date().toLocaleString('zh-CN',{hour12:false});
+  document.getElementById('identityPanel').classList.add('active');
+  document.getElementById('faceArea').classList.add('ready');
+  document.getElementById('faceText').textContent='点击进行人脸识别';
+}
+function runFaceCheck(){
+  if(!identityLoaded)return;
+  faceChecked=true;
+  document.getElementById('faceArea').className='face-area done';
+  document.getElementById('faceIcon').textContent='✅';
+  document.getElementById('faceText').textContent='人脸识别通过';
+  document.getElementById('submitBtn').disabled=false;
+}
+function submitRealname(){
+  authState.realnameVerified=true;
+  localStorage.setItem('authState',JSON.stringify(authState));
+  if(source==='publish'){
+    location.href='publish-items.html';
+    return;
+  }
+  if(source==='apply'){
+    const type=params.get('type')||'cat';
+    const isHighRisk=type==='cat'||type==='outdoor';
+    if(isHighRisk&&!authState.eduVerified){
+      location.href='edu-auth.html?source=apply&type='+type;
+      return;
+    }
+    if(!authState.emergencyContactBound){
+      location.href='emergency-contact.html?source=apply&type='+type;
+      return;
+    }
+    location.href='safety-notice.html?type='+type;
+    return;
+  }
+  location.href='auth-center.html';
+}
+</script>
+</body>
+</html>

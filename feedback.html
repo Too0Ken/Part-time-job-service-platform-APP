@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>意见反馈 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:96px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:18px}
+.mode-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px;font-weight:600;margin-bottom:10px}
+.title{font-size:16px;font-weight:700;color:#1a1a2e}
+.desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:8px}
+.section-label{font-size:13px;color:#667085;margin:16px 0 8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:999px;background:#f5f6fa;color:#667085;font-size:12px;cursor:pointer}
+.chip.active{background:#EEF2FF;color:#4A6CF7}
+.text-input,.input{width:100%;border:1px solid #d9deeb;border-radius:12px;padding:12px 14px;font-size:14px;color:#1a1a2e;outline:none;background:#fff}
+.text-input{min-height:120px;resize:none;line-height:1.7}
+.text-input:focus,.input:focus{border-color:#4A6CF7;box-shadow:0 0 0 3px rgba(74,108,247,.12)}
+.upload-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.upload-list .add,.upload-item{width:68px;height:68px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.4}
+.upload-list .add{border:1px dashed #d0d5dd;background:#fafbff;color:#98a2b3;cursor:pointer;font-size:22px}
+.upload-item{background:#EEF2FF;color:#4A6CF7;padding:6px}
+.submit-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;padding:10px 16px 12px;border-top:1px solid #eee}
+.submit-actions{display:flex;gap:10px}
+.history-btn,.submit-btn{height:46px;border:none;border-radius:23px;font-size:15px;cursor:pointer}
+.history-btn{flex:0 0 126px;background:#EEF2FF;color:#4A6CF7;text-decoration:none;display:flex;align-items:center;justify-content:center;font-weight:600}
+.submit-btn{flex:1;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;font-weight:600}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">意见反馈</span><span class="placeholder"></span></div>
+
+<div class="card">
+
+  <div class="section-label">反馈类型</div>
+  <div class="chips" id="typeChips">
+    <span class="chip active" data-type="功能异常">功能异常</span>
+    <span class="chip" data-type="产品建议">产品建议</span>
+    <span class="chip" data-type="订单问题">订单问题</span>
+    <span class="chip" data-type="认证问题">认证问题</span>
+    <span class="chip" data-type="其他问题">其他问题</span>
+  </div>
+
+  <div class="section-label">反馈内容</div>
+  <textarea class="text-input" id="feedbackText" placeholder="请尽量描述清楚您的问题"></textarea>
+
+  <div class="section-label">联系方式</div>
+  <input class="input" id="contactInput" placeholder="输入手机号或微信，便于平台回访">
+
+  <div class="section-label">补充截图/视频</div>
+  <div class="upload-list" id="uploadList"></div>
+</div>
+
+<div class="submit-bar">
+  <div class="submit-actions">
+    <a href="feedback-history.html" class="history-btn">历史记录</a>
+    <button class="submit-btn" id="submitBtn" type="button">提交反馈</button>
+  </div>
+</div>
+<div class="toast" id="toast">提交成功</div>
+
+<script>
+const FEEDBACK_STORAGE_KEY='banxing.feedbackRecords';
+const feedbackText=document.getElementById('feedbackText');
+const contactInput=document.getElementById('contactInput');
+const uploadList=document.getElementById('uploadList');
+const toast=document.getElementById('toast');
+let currentType='功能异常';
+const uploads=[];
+
+function normalizeType(type){
+  return type==='订单申诉'?'订单问题':(type||'其他问题');
+}
+
+function normalizeRecord(item,index){
+  return {
+    id:(item&&item.id)||('feedback-'+index),
+    type:normalizeType(item&&item.type),
+    content:(item&&item.content)||'',
+    contact:(item&&item.contact)||'未填写',
+    time:(item&&item.time)||'刚刚',
+    status:(item&&item.status)||'已收到',
+    attachments:Array.isArray(item&&item.attachments)?item.attachments:[]
+  };
+}
+
+function readRecords(){
+  try{
+    const list=JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY)||'[]');
+    return Array.isArray(list)?list.map(normalizeRecord):[];
+  }catch(error){
+    return [];
+  }
+}
+
+function saveRecords(list){
+  localStorage.setItem(FEEDBACK_STORAGE_KEY,JSON.stringify(list));
+}
+
+function seedRecords(){
+  const existing=readRecords();
+  if(existing.length)return existing;
+  const seeds=[
+    {id:'feedback-1001',type:'产品建议',content:'建议在订单退款完成后，消息里直接展示退款金额和优惠券退回情况。',contact:'138****8821',time:'4月14日 18:22',status:'已收到',attachments:['截图 1']},
+    {id:'feedback-1002',type:'功能异常',content:'实名认证完成后，“我的”页刷新不及时，需要重新进入页面。',contact:'微信：banxing_user',time:'4月10日 10:08',status:'处理中',attachments:[]},
+    {id:'feedback-1003',type:'订单问题',content:'希望订单页能把退款原因和处理进度展示得更清楚。',contact:'135****2234',time:'4月7日 09:45',status:'已回复',attachments:['截图 1','截图 2']}
+  ];
+  saveRecords(seeds);
+  return seeds.map(normalizeRecord);
+}
+
+function showToast(text){
+  toast.textContent=text;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer=setTimeout(function(){
+    toast.classList.remove('show');
+  },1800);
+}
+
+function renderUploads(){
+  uploadList.innerHTML=uploads.map(function(item){
+    return '<div class="upload-item">'+item+'</div>';
+  }).join('')+'<button class="add" type="button" id="uploadBox">＋</button>';
+}
+
+function activateType(type){
+  currentType=type;
+  document.querySelectorAll('#typeChips .chip').forEach(function(item){
+    item.classList.toggle('active',item.dataset.type===type);
+  });
+}
+
+seedRecords();
+renderUploads();
+
+document.querySelectorAll('#typeChips .chip').forEach(function(chip){
+  chip.addEventListener('click',function(){
+    activateType(chip.dataset.type);
+  });
+});
+
+uploadList.addEventListener('click',function(event){
+  if(!event.target.closest('#uploadBox'))return;
+  uploads.push('截图 '+(uploads.length+1));
+  renderUploads();
+});
+
+document.getElementById('submitBtn').addEventListener('click',function(){
+  const content=feedbackText.value.trim();
+  if(!content){
+    showToast('请先填写反馈内容');
+    return;
+  }
+  const records=seedRecords();
+  records.unshift(normalizeRecord({
+    id:'feedback-'+Date.now(),
+    type:currentType,
+    content:content,
+    contact:contactInput.value.trim()||'未填写',
+    time:'刚刚',
+    status:'已收到',
+    attachments:uploads.slice()
+  },0));
+  saveRecords(records);
+  feedbackText.value='';
+  contactInput.value='';
+  uploads.length=0;
+  renderUploads();
+  showToast('反馈已提交，我们会尽快处理');
+});
+</script>
+</body>
+</html>

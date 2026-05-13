@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>发布成功 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#fff;max-width:375px;margin:0 auto;min-height:100vh;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:20}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.content{display:flex;flex-direction:column;align-items:center;padding:56px 30px 36px;text-align:center}
+.success-icon{width:80px;height:80px;background:linear-gradient(135deg,#FF6B35,#FF8F65);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;color:#fff;margin-bottom:20px;box-shadow:0 8px 20px rgba(255,107,53,.3)}
+h2{font-size:20px;color:#1a1a2e;margin-bottom:8px}
+p{font-size:14px;color:#8c8c8c;line-height:1.7;margin-bottom:24px}
+.card{width:100%;background:#f5f6fa;border-radius:16px;padding:16px;text-align:left;margin-bottom:24px}
+.row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #eee;font-size:13px}
+.row:last-child{border-bottom:none}
+.label{color:#98a2b3}
+.val{color:#1a1a2e;font-weight:600;text-align:right;line-height:1.7}
+.val.highlight{color:#FF6B35;font-weight:800}
+.btn-primary,.btn-secondary{display:block;width:100%;height:48px;border-radius:24px;font-size:16px;cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;border:none;font-weight:700;margin-bottom:12px}
+.btn-secondary{background:#fff;color:#FF6B35;border:1px solid #FF6B35}
+.share-tip{margin-top:22px;padding:12px;background:#FFF7E6;border-radius:10px;font-size:13px;color:#FA8C16;line-height:1.7}
+.share-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.share-modal.active{display:flex}
+.share-sheet{width:100%;max-width:375px;background:#fff;border-radius:24px 24px 0 0;padding:16px 16px 20px}
+.share-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.share-head h3{font-size:16px;color:#1a1a2e}
+.share-close{border:none;background:none;font-size:20px;color:#999;cursor:pointer}
+.share-card{background:linear-gradient(135deg,#fff8f3,#fff1e8);border:1px solid #ffd8c2;border-radius:18px;padding:16px;overflow:hidden;cursor:pointer}
+.share-top{display:flex;align-items:center;justify-content:flex-start;gap:12px}
+.share-top>div:last-child{flex:1;min-width:0}
+.share-icon{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.share-type{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:6px;line-height:1.45;word-break:break-word}
+.share-meta{display:grid;gap:8px;margin-top:12px;font-size:13px;color:#7a5a47;line-height:1.5}
+.share-meta-row{display:flex;align-items:flex-start;gap:8px}
+.share-meta-label{color:#9b725d;white-space:nowrap}
+.share-meta-value{flex:1;min-width:0;color:#4f3325;word-break:break-word}
+.share-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:14px;border-top:1px dashed #ffd6bf}
+.share-insurance{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;background:#e8fff1;color:#199c55}
+.share-cta{border:none;background:transparent;font-size:13px;font-weight:700;color:#FF6B35;white-space:nowrap;cursor:pointer}
+.share-actions{display:flex;gap:10px;margin-top:16px}
+.share-actions button{flex:1;height:40px;border:none;border-radius:20px;font-size:14px;cursor:pointer}
+.ghost-btn{background:#f3f4f6;color:#4b5563}
+.primary-btn{background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">发布成功</span><span class="placeholder"></span></div>
+<div class="content">
+  <div class="success-icon">🎉</div>
+  <h2>发布成功</h2>
+  <p>平台会把任务推给符合条件的服务者，请耐心等待</p>
+
+  <div class="card">
+    <div class="row"><span class="label">任务类型</span><span class="val" id="taskType"></span></div>
+    <div class="row"><span class="label">时间安排</span><span class="val" id="taskTime"></span></div>
+    <div class="row"><span class="label">接单有效期</span><span class="val" id="taskValidity"></span></div>
+    <div class="row"><span class="label">任务金额</span><span class="val" id="taskReward"></span></div>
+    <div class="row"><span class="label">保险费</span><span class="val" id="taskInsuranceFee"></span></div>
+    <div class="row"><span class="label">急单置顶费</span><span class="val" id="taskTopFee"></span></div>
+    <div class="row"><span class="label">优惠券抵扣</span><span class="val" id="taskCoupon"></span></div>
+    <div class="row"><span class="label">实付金额</span><span class="val highlight" id="taskPaid"></span></div>
+    <div class="row"><span class="label">支付方式</span><span class="val" id="taskPayment"></span></div>
+  </div>
+
+  <button class="btn-primary" id="shareBtn">🖼️ 转发任务得奖励</button>
+  <button class="btn-secondary" id="viewApplicantsBtn">查看接单申请</button>
+
+
+
+<div class="share-modal" id="shareModal">
+  <div class="share-sheet">
+    <div class="share-head">
+      <h3>转发任务</h3>
+      <button class="share-close" id="shareCloseBtn" type="button">×</button>
+    </div>
+    <div class="share-card" id="shareCard" role="button" tabindex="0" aria-label="查看任务详情">
+      <div class="share-top">
+        <div class="share-icon" id="shareIcon"></div>
+        <div style="flex:1">
+          <div class="share-type" id="shareType"></div>
+        </div>
+      </div>
+      <div class="share-meta">
+        <div class="share-meta-row"><span class="share-meta-label">时间</span><span class="share-meta-value" id="shareTime"></span></div>
+        <div class="share-meta-row"><span class="share-meta-label">位置</span><span class="share-meta-value" id="shareLocation"></span></div>
+      </div>
+      <div class="share-footer">
+        <div class="share-insurance" id="shareInsurance"></div>
+        <button class="share-cta" id="shareDetailLink" type="button">点击查看详情 →</button>
+      </div>
+    </div>
+    <div class="share-actions">
+      <button class="ghost-btn" id="previewCloseBtn" type="button">取消</button>
+      <button class="primary-btn" id="generateBtn" type="button">生成分享卡片</button>
+    </div>
+  </div>
+</div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="publish-flow-config.js"></script>
+<script>
+const PUBLISHED_ORDER_KEY='banxing.latestPublishedOrder';
+const latestOrder=JSON.parse(localStorage.getItem(PUBLISHED_ORDER_KEY)||'null');
+const draft=PublishFlowConfig.readDraft();
+const project=PublishFlowConfig.getProject(PublishFlowConfig.resolveProjectKey(draft.projectKey||''))||PublishFlowConfig.projects[0];
+document.getElementById('backLink').href='publish-confirm.html?project='+encodeURIComponent(project.key);
+const effective=latestOrder||{
+  id:'p000001',
+  typeKey:project.orderTypeKey,
+  title:draft.listTitle||PublishFlowConfig.createTaskTitle(project,draft.taskActions,{
+    durationText:draft.durationText,
+    roughLocation:draft.roughLocation||draft.locationSummary
+  }),
+  time:draft.scheduleSummary||'待补充',
+  location:draft.roughLocation||'待确认',
+  insurance:draft.insuranceSummary||'未购保险',
+  validityLabel:draft.validityLabel||PublishFlowConfig.getValidityLabel(draft.validityHours||12),
+  finance:{
+    reward:'¥0.00',
+    insuranceFee:'¥0.00',
+    topFee:'¥0.00',
+    coupon:'¥0.00',
+    paid:'¥0.00',
+    paymentMethod:draft.paymentMethod==='wechat'?'微信支付':'平台余额'
+  }
+};
+
+function getMaskedLocationText(text){
+  const source=String(text||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{exactVisible:false}).text||source;
+}
+
+function getShareTitle(){
+  return effective.title||draft.listTitle||PublishFlowConfig.createTaskTitle(project,draft.taskActions,{
+    durationText:draft.durationText,
+    roughLocation:draft.roughLocation||draft.locationSummary
+  });
+}
+
+function getDisplayTime(){
+  return BanxingTimeUtils.formatTaskTime(effective.time||draft.scheduleSummary)||effective.time||draft.scheduleSummary||'待补充';
+}
+
+document.getElementById('taskType').textContent=(draft.typeIcon||project.icon)+' '+(draft.typeName||project.name);
+document.getElementById('taskTime').textContent=getDisplayTime();
+document.getElementById('taskValidity').textContent=effective.validityLabel||draft.validityLabel||PublishFlowConfig.getValidityLabel(draft.validityHours||12);
+document.getElementById('taskReward').textContent=effective.finance&&effective.finance.reward||'¥0.00';
+document.getElementById('taskInsuranceFee').textContent=effective.finance&&effective.finance.insuranceFee||'¥0.00';
+document.getElementById('taskTopFee').textContent=effective.finance&&effective.finance.topFee||'¥0.00';
+document.getElementById('taskCoupon').textContent='-'+(effective.finance&&effective.finance.coupon||'¥0.00');
+document.getElementById('taskPaid').textContent=effective.finance&&effective.finance.paid||'¥0.00';
+document.getElementById('taskPayment').textContent=effective.finance&&effective.finance.paymentMethod||'平台余额';
+
+document.getElementById('shareIcon').textContent=draft.typeIcon||project.icon;
+document.getElementById('shareType').textContent=getShareTitle();
+document.getElementById('shareLocation').textContent=getMaskedLocationText(effective.location||draft.roughLocation||'待确认');
+document.getElementById('shareTime').textContent=getDisplayTime();
+document.getElementById('shareInsurance').textContent=effective.insurance||draft.insuranceSummary||'未购保险';
+
+function getShareDetailHref(){
+  return 'order-detail.html?'+new URLSearchParams({
+    owner:'published',
+    status:effective.status||'waiting',
+    type:effective.typeKey||project.orderTypeKey||'health',
+    id:effective.id||'p1',
+    returnRole:'published',
+    returnStatus:'all',
+    title:getShareTitle(),
+    time:getDisplayTime(),
+    location:effective.location||draft.roughLocation||draft.locationSummary||'待确认',
+    price:effective.finance&&effective.finance.reward||'¥0.00'
+  }).toString();
+}
+
+document.getElementById('viewApplicantsBtn').addEventListener('click',function(){
+  const query=new URLSearchParams({
+    owner:'published',
+    status:'waiting',
+    type:effective.typeKey||project.orderTypeKey||'health',
+    id:effective.id||'p1',
+    returnRole:'published',
+    returnStatus:'all',
+    title:effective.title||draft.listTitle||PublishFlowConfig.createTaskTitle(project,draft.taskActions,{
+      durationText:draft.durationText,
+      roughLocation:draft.roughLocation||draft.locationSummary
+    }),
+    time:getDisplayTime(),
+    location:effective.location||draft.roughLocation||draft.locationSummary||'待确认',
+    price:effective.finance&&effective.finance.reward||'¥0.00',
+    coupon:effective.finance&&effective.finance.coupon||'¥0.00',
+    paid:effective.finance&&effective.finance.paid||'¥0.00',
+    refund:effective.finance&&effective.finance.refund||'¥0.00',
+    insuranceFee:effective.finance&&effective.finance.insuranceFee||'¥0.00',
+    paymentMethod:effective.finance&&effective.finance.paymentMethod||'平台余额'
+  });
+  location.href='applicants.html?'+query.toString();
+});
+
+const shareModal=document.getElementById('shareModal');
+function openShareModal(){shareModal.classList.add('active');}
+function closeShareModal(){shareModal.classList.remove('active');}
+function openShareDetail(){location.href=getShareDetailHref();}
+
+document.getElementById('shareBtn').addEventListener('click',openShareModal);
+document.getElementById('shareCloseBtn').addEventListener('click',closeShareModal);
+document.getElementById('previewCloseBtn').addEventListener('click',closeShareModal);
+document.getElementById('shareCard').addEventListener('click',openShareDetail);
+document.getElementById('shareCard').addEventListener('keydown',function(event){
+  if(event.key==='Enter'||event.key===' '){
+    event.preventDefault();
+    openShareDetail();
+  }
+});
+document.getElementById('shareDetailLink').addEventListener('click',function(event){
+  event.stopPropagation();
+  openShareDetail();
+});
+shareModal.addEventListener('click',function(event){
+  if(event.target===shareModal)closeShareModal();
+});
+document.getElementById('generateBtn').addEventListener('click',function(){
+  alert('分享卡片已生成，可转发给微信好友或分享到群聊');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>任务备注 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:20px}
+.field{margin-bottom:20px}.field label{display:block;font-size:14px;color:#666;margin-bottom:8px;display:flex;justify-content:space-between}.field label .count{color:#999;font-size:12px}
+.field textarea{width:100%;height:100px;border:1px solid #e8e8e8;border-radius:8px;padding:10px 12px;font-size:14px;outline:none;resize:none;line-height:1.6}
+.field textarea:focus{border-color:#FF6B35}
+.scan-result{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FFF1F0;border-radius:8px;font-size:12px;color:#FF4D4F;margin-top:8px}
+.upload-area{margin-top:8px}.upload-area .label{font-size:14px;color:#666;margin-bottom:8px;display:block}
+.upload-grid{display:flex;gap:8px;flex-wrap:wrap}
+.upload-grid .img{width:68px;height:68px;border-radius:12px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;position:relative;color:#4A6CF7}
+.upload-grid .img .remove{position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#FF4D4F;color:#fff;border-radius:50%;font-size:12px;display:flex;align-items:center;justify-content:center}
+.upload-grid .add{border:1px dashed #d0d5dd;background:#fafbff;color:#98a2b3;font-size:22px}
+.hint{margin:0 16px;padding:12px 14px;background:#FFF7E6;border-radius:12px;font-size:12px;line-height:1.7;color:#8c6b2f}
+.next-btn{display:block;width:calc(100% - 32px);margin:16px auto 24px;height:48px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.next-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">备注与图片</span><span class="placeholder"></span></div>
+<div class="card">
+  <div class="field">
+    <label>任务备注（选填）<span class="count" id="cc">0/200</span></label>
+    <textarea id="remarkInput" maxlength="200" oninput="document.getElementById('cc').textContent=this.value.length+'/200'"></textarea>
+    <div class="scan-result" id="scanResult" style="display:none">⚠️ 检测到备注中包含联系方式，已自动过滤。请在订单内聊天中沟通。</div>
+  </div>
+  <div class="upload-area">
+    <span class="label">上传图片（选填，最多5张）</span>
+    <div class="upload-grid" id="uploadGrid">
+      <div class="img" onclick="this.remove()"><span class="remove">×</span>📷</div>
+      <div class="add" onclick="addImg()">+</div>
+    </div>
+  </div>
+</div>
+<div class="hint" id="remarkHint"></div>
+<button class="next-btn" onclick="saveAndNext()">下一步</button>
+<script>
+const params=new URLSearchParams(window.location.search);
+const type=params.get('type')||'waimao';
+const highRiskTypes=['waimao','paopao'];
+if(highRiskTypes.includes(type)&&!sessionStorage.getItem('publishSafetyConfirmed:'+type))location.replace('publish-safety.html?type='+type);
+const draft=JSON.parse(localStorage.getItem('publishDraft')||'{}');
+const placeholders={
+  waimao:'补充说明猫咪习惯、门口打卡要求、家中注意事项等...',
+  paopao:'补充说明路线偏好、节奏提醒、天气预案或装备要求等...',
+  peizhen:'补充说明就诊流程、老人体力情况、是否需要轮椅等...',
+  hunqing:'补充说明流程节点、彩排安排、物品清单与现场协调重点...'
+};
+const hints={
+  waimao:'建议在备注中补充猫咪作息、陌生人反应和门口打卡要求，避免服务者到场后重复确认。',
+  paopao:'建议补充天气预案、补给点和安全提醒，帮助服务者提前评估节奏与装备。',
+  peizhen:'如有轮椅、化验单、术前禁食等信息，可写在备注里，便于服务者提前准备。',
+  hunqing:'婚庆任务建议提前写明彩排时间、重要联系人和关键物品，方便申请者评估是否接单。'
+};
+document.getElementById('backLink').href='publish-reward.html?type='+type;
+document.getElementById('remarkInput').placeholder=placeholders[type]||placeholders.waimao;
+document.getElementById('remarkInput').value=draft.remark||'';
+document.getElementById('cc').textContent=(draft.remark||'').length+'/200';
+document.getElementById('remarkHint').textContent=hints[type]||hints.waimao;
+let imgCount=1;
+function addImg(){if(imgCount>=5)return;imgCount++;const grid=document.getElementById('uploadGrid');const addBtn=grid.querySelector('.add');const img=document.createElement('div');img.className='img';img.innerHTML='<span class="remove" onclick="removeImg(this)">×</span>📷';grid.insertBefore(img,addBtn)}
+function removeImg(el){el.parentElement.remove();imgCount--}
+function saveAndNext(){
+  draft.type=type;
+  draft.remark=document.getElementById('remarkInput').value.trim();
+  draft.imageCount=imgCount;
+  localStorage.setItem('publishDraft',JSON.stringify(draft));
+  location.href='publish-insurance.html?type='+type;
+}
+</script>
+</body>
+</html>

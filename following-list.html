@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>关注列表 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.hero{background:#fff;margin:16px;border-radius:18px;padding:18px}
+.hero h2{font-size:18px;color:#1a1a2e}
+.hero p{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:8px}
+.list{display:grid;gap:12px;padding:16px 0 12px}
+.card{background:#fff;margin:0 16px;border-radius:18px;padding:16px}
+.top{display:flex;gap:12px;align-items:flex-start}
+.avatar{width:48px;height:48px;border-radius:16px;background:#eef2ff;color:#4A6CF7;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none}
+.main{flex:1}
+.name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.name-row strong{font-size:15px;color:#1a1a2e}
+.nickname{font-size:12px;color:#98a2b3}
+.credit{display:inline-flex;padding:4px 8px;border-radius:999px;background:#f0fff4;color:#14a44d;font-size:11px;font-weight:700}
+.bio{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.actions{display:flex;gap:8px;margin-top:14px}
+.actions button{width:100%;height:38px;border:none;border-radius:19px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;background:#f3f4f6;color:#667085}
+.empty{background:#fff;margin:16px;border-radius:18px;padding:36px 18px;text-align:center}
+.empty strong{display:block;font-size:18px;color:#1a1a2e}
+.empty p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:8px}
+.empty a{display:inline-flex;margin-top:16px;height:42px;padding:0 18px;border-radius:21px;background:#4A6CF7;color:#fff;text-decoration:none;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="my-home.html" class="back">←</a><span class="title">关注列表</span><span class="placeholder"></span></div>
+
+<div class="list" id="followList"></div>
+<div class="toast" id="pageToast"></div>
+
+<script src="moments-data.js"></script>
+<script>
+let toastTimer;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function showToast(text){
+  clearTimeout(toastTimer);
+  const toast=document.getElementById('pageToast');
+  toast.textContent=text;
+  toast.className='toast show';
+  toastTimer=setTimeout(function(){
+    toast.className='toast';
+  },2200);
+}
+
+function render(){
+  const list=BanxingMoments.listFollowing();
+  const mount=document.getElementById('followList');
+  if(!list.length){
+    mount.innerHTML='<div class="empty"><strong>还没有关注任何用户</strong><p>去动态页逛逛，关注感兴趣的人后，新动态会优先出现在你的信息流里。</p><a href="moments.html">去看动态</a></div>';
+    return;
+  }
+  mount.innerHTML=list.map(function(author){
+    return (
+      '<div class="card" data-author-id="'+escapeHtml(author.id)+'">'+
+        '<div class="top">'+
+          '<div class="avatar">'+escapeHtml(author.avatar)+'</div>'+
+          '<div class="main">'+
+            '<div class="name-row"><strong>'+escapeHtml(author.name)+'</strong><span class="nickname">@'+escapeHtml(author.id)+'</span><span class="credit">⭐ '+escapeHtml(author.credit)+'分</span></div>'+
+            '<div class="bio">'+escapeHtml(author.bio||'')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="actions"><button type="button" data-unfollow="'+escapeHtml(author.id)+'">取消关注</button></div>'+
+      '</div>'
+    );
+  }).join('');
+}
+
+document.getElementById('followList').addEventListener('click',function(event){
+  const button=event.target.closest('[data-unfollow]');
+  if(!button)return;
+  BanxingMoments.toggleFollow(button.dataset.unfollow,false);
+  render();
+  showToast('已取消关注');
+});
+
+render();
+</script>
+</body>
+</html>

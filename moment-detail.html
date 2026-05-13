@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>动态详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;color:#1a1a2e;padding-bottom:114px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.header{position:sticky;top:0;z-index:25;background:#fff;padding:14px 16px 12px;border-bottom:1px solid #eee}
+.header-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.back{width:32px;height:32px;border-radius:16px;background:#f5f7fb;color:#1a1a2e;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:18px}
+.header h1{font-size:18px;color:#1a1a2e}
+.header-space{width:32px;height:32px}
+.card{background:#fff;margin:12px 16px 0;border-radius:18px;padding:16px}
+.card-head{display:flex;align-items:flex-start;gap:12px}
+.report-icon-btn{width:30px;height:30px;border:none;border-radius:15px;background:#f5f7fb;color:#98a2b3;font-size:15px;cursor:pointer;flex:none}
+.report-icon-btn:active{background:#eef2ff;color:#4A6CF7}
+.avatar{width:42px;height:42px;border-radius:16px;background:#eef2ff;color:#4A6CF7;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none}
+.avatar-link{text-decoration:none;color:inherit}
+.card-main{flex:1;min-width:0}
+.name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.name-row strong{font-size:15px;color:#1a1a2e}
+.credit-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;background:#f0fff4;color:#14a44d;font-size:11px;font-weight:700}
+.meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#98a2b3}
+.content{margin-top:14px;font-size:14px;color:#1a1a2e;line-height:1.8;word-break:break-word}
+.image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.image-grid.two{grid-template-columns:repeat(2,1fr)}
+.image-grid.one{grid-template-columns:1fr}
+.image-tile{aspect-ratio:1/1;border-radius:14px;padding:12px;display:flex;align-items:flex-end;font-size:12px;font-weight:700;color:#1a1a2e}
+.video-tile{margin-top:12px;border-radius:14px;background:#111827;color:#fff;padding:16px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.video-tile span{font-size:12px;color:rgba(255,255,255,.72);font-weight:400}
+.order-tag{margin-top:12px;padding:12px 14px;border-radius:14px;background:#f8faff;border:1px solid #edf0f5}
+.order-tag strong{display:block;font-size:13px;color:#1a1a2e}
+.order-tag span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.info-actions{display:flex;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #f2f4f7}
+.info-action{flex:1;height:40px;border:none;border-radius:20px;background:#f5f7fb;color:#667085;font-size:14px;cursor:pointer}
+.info-action.active{background:#eef2ff;color:#4A6CF7;font-weight:700}
+.section{background:#fff;margin:12px 16px 0;border-radius:18px;padding:16px}
+.detail-tabs{display:flex;gap:18px;border-bottom:1px solid #f2f4f7;padding-bottom:10px}
+.detail-tab{position:relative;border:none;background:none;color:#98a2b3;font-size:15px;font-weight:600;padding:0 0 2px;cursor:pointer}
+.detail-tab.active{color:#1a1a2e}
+.detail-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-11px;height:2px;border-radius:1px;background:#4A6CF7}
+.panel-wrap{padding-top:14px}
+.like-list{display:grid;gap:10px;margin-top:14px}
+.like-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#f8faff}
+.like-item .avatar{width:40px;height:40px;font-size:16px}
+.like-item strong{display:block;font-size:14px;color:#1a1a2e}
+.comment-list{display:grid;gap:10px;margin-top:14px}
+.comment-item{display:flex;gap:12px;padding:12px 14px;border-radius:14px;background:#f8faff;cursor:pointer}
+.comment-item .avatar{width:40px;height:40px;font-size:16px;flex:none}
+.comment-body{flex:1;min-width:0}
+.comment-body strong{display:block;font-size:13px;color:#1a1a2e;line-height:1.6;word-break:break-word}
+.comment-body p{font-size:13px;color:#4b5563;line-height:1.7;margin-top:6px}
+.comment-body span{display:block;font-size:11px;color:#98a2b3;margin-top:8px}
+.empty{padding:18px 0;text-align:center;font-size:13px;color:#98a2b3;line-height:1.8}
+.composer-panel{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:375px;background:#fff;border-top:1px solid #eee;padding:10px 16px 12px;z-index:35;box-shadow:0 -8px 24px rgba(15,23,42,.08)}
+.reply-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#98a2b3;margin-bottom:8px}
+.reply-reset{border:none;background:none;color:#4A6CF7;font-size:12px;cursor:pointer}
+.compose-main{display:flex;align-items:flex-end;gap:10px}
+.compose-main textarea{flex:1;min-height:44px;max-height:110px;border:1px solid #e8ecf4;border-radius:16px;padding:11px 14px;font-size:14px;line-height:1.6;outline:none;resize:none}
+.compose-main textarea:focus{border-color:#4A6CF7}
+.send-btn{width:76px;height:44px;border:none;border-radius:16px;background:#4A6CF7;color:#fff;font-size:14px;cursor:pointer}
+.mask{position:fixed;top:0;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:375px;height:100vh;background:rgba(15,23,42,.36);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.mask.show{display:flex}
+.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 22px;max-height:82vh;overflow:auto}
+.sheet-handle{width:48px;height:4px;border-radius:2px;background:#d0d5dd;margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:700;color:#1a1a2e;text-align:center}
+.reason-list{display:grid;gap:10px;margin-top:16px}
+.reason-btn{padding:12px 14px;border:1px solid #e8ecf4;border-radius:14px;background:#fff;color:#1a1a2e;font-size:14px;text-align:left;cursor:pointer}
+.reason-btn.active{border-color:#4A6CF7;background:#eef2ff;color:#4A6CF7;font-weight:700}
+.report-field{margin-top:14px}
+.report-field label{display:block;font-size:13px;color:#667085;margin-bottom:8px}
+.report-field textarea{width:100%;min-height:92px;border:1px solid #e8ecf4;border-radius:14px;padding:12px;font-size:13px;line-height:1.7;outline:none;resize:none}
+.report-field textarea:focus{border-color:#4A6CF7}
+.report-upload{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.report-upload .add,.report-upload .preview{width:68px;height:68px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.4}
+.report-upload .add{border:1px dashed #d0d5dd;background:#fafbff;color:#98a2b3;cursor:pointer;font-size:22px}
+.report-upload .preview{background:#eef2ff;color:#4A6CF7;padding:6px}
+.report-helper{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:8px}
+.sheet-actions{display:flex;gap:10px;margin-top:16px}
+.sheet-actions button{flex:1;height:42px;border:none;border-radius:21px;font-size:14px;cursor:pointer}
+.sheet-actions .ghost{background:#f3f4f6;color:#667085}
+.sheet-actions .primary{background:#4A6CF7;color:#fff}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(19,194,194,.94)}
+.toast.warn{background:rgba(250,140,22,.94)}
+@media (max-width:360px){
+  .card,.section{margin-left:12px;margin-right:12px}
+  .compose-main{gap:8px}
+  .send-btn{width:70px}
+}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+
+<div class="header">
+  <div class="header-row">
+    <a class="back" id="backLink" href="moments.html">←</a>
+    <h1>动态详情</h1>
+    <span class="header-space"></span>
+  </div>
+</div>
+
+<div id="detailMount"></div>
+
+<div class="composer-panel" id="composerPanel">
+  <div class="reply-row">
+    <span id="replyHint">写下你的评论，最多 200 字</span>
+    <button class="reply-reset" type="button" id="replyResetBtn" style="display:none">取消回复</button>
+  </div>
+  <div class="compose-main">
+    <textarea id="commentInput" maxlength="200" placeholder="请输入评论内容"></textarea>
+    <button class="send-btn" type="button" id="commentSubmitBtn">发送</button>
+  </div>
+</div>
+
+<div class="mask" id="reportMask">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">举报内容</div>
+    <div class="reason-list" id="reportReasons"></div>
+    <div class="report-field">
+      <label>详细说明</label>
+      <textarea id="reportDescInput" maxlength="200" placeholder="请说明举报原因，最多 200 字"></textarea>
+    </div>
+    <div class="report-field">
+      <label>举报图片</label>
+      <div class="report-upload" id="reportImageList">
+        <button class="add" type="button" id="reportImageAdd">＋</button>
+      </div>
+      <input id="reportImageInput" type="file" accept="image/*" multiple hidden>
+      <div class="report-helper">最多上传 5 张图片</div>
+    </div>
+    <div class="sheet-actions">
+      <button class="ghost" type="button" id="reportCancelBtn">取消</button>
+      <button class="primary" type="button" id="reportSubmitBtn">提交举报</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="pageToast"></div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="moments-data.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const postId=params.get('id')||'';
+const returnView=params.get('view')==='following'?'following':'recommend';
+const explicitBackHref=params.get('backHref')||'';
+const autoFocusComment=params.get('focus')==='comment';
+const previewRaw=params.get('preview')||'';
+const reportOptions=['违规内容','骚扰','虚假信息'];
+let activeReplyTarget='';
+let activeTab='comments';
+let activeReportReason='违规内容';
+let activeReportImages=[];
+let toastTimer;
+let previewPostCache=null;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function getPreviewPost(){
+  if(previewPostCache!==null)return previewPostCache;
+  if(!previewRaw){
+    previewPostCache=false;
+    return previewPostCache;
+  }
+  try{
+    const preview=JSON.parse(previewRaw);
+    previewPostCache={
+      id:'preview-post',
+      authorId:preview.authorId||'',
+      author:{
+        name:preview.author&&preview.author.name||'伴行用户',
+        avatar:preview.author&&preview.author.avatar||'伴',
+        credit:preview.author&&preview.author.credit||'0'
+      },
+      timeLabel:preview.timeLabel||'刚刚',
+      text:preview.text||'',
+      images:Array.isArray(preview.images)?preview.images:[],
+      video:preview.video||null,
+      order:preview.order||null,
+      visibility:'public',
+      likedByMe:false,
+      likes:0,
+      commentCount:0,
+      likedUsers:[],
+      comments:[]
+    };
+  }catch(error){
+    previewPostCache=false;
+  }
+  return previewPostCache;
+}
+
+function showToast(text,type){
+  clearTimeout(toastTimer);
+  const toast=document.getElementById('pageToast');
+  toast.textContent=text;
+  toast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    toast.className='toast';
+  },2200);
+}
+
+function renderImages(images){
+  if(!images||!images.length)return '';
+  const cls=images.length===1?'one':(images.length===2?'two':'');
+  return '<div class="image-grid '+cls+'">'+images.map(function(image){
+    return '<div class="image-tile" style="background:'+escapeHtml(image.color)+'">'+escapeHtml(image.label)+'</div>';
+  }).join('')+'</div>';
+}
+
+function renderVideo(video){
+  if(!video)return '';
+  return '<div class="video-tile">🎬 '+escapeHtml(video.label||'视频')+'<span>视频</span></div>';
+}
+
+function getUserHomeHref(authorId){
+  const backHref='moment-detail.html?'+buildQuery({
+    id:postId,
+    view:returnView,
+    backHref:explicitBackHref
+  });
+  return 'applicant-detail.html?'+new URLSearchParams({
+    mode:'user',
+    userId:authorId,
+    backHref:backHref
+  }).toString();
+}
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(function(entry){
+    const key=entry[0];
+    const val=entry[1];
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function resolveOrderInfo(order){
+  if(!order||!order.title)return null;
+  const matched=order.id?BanxingMoments.getCompletedOrders().find(function(item){return item.id===order.id;}):null;
+  return {
+    title:order.title||matched&&matched.title||'',
+    serviceName:order.serviceName||matched&&matched.serviceName||order.title||matched&&matched.title||'',
+    taskTime:BanxingTimeUtils.formatTaskTime(order.taskTime||order.time||order.finishedAt||matched&&matched.taskTime||matched&&matched.finishedAt)||''
+  };
+}
+
+function renderOrderTag(order){
+  const info=resolveOrderInfo(order);
+  if(!info||!info.serviceName)return '';
+  return (
+    '<div class="order-tag">'+
+      '<strong>'+escapeHtml(info.serviceName)+'</strong>'+
+      (info.taskTime?'<span>任务时间：'+escapeHtml(info.taskTime)+'</span>':'')+
+    '</div>'
+  );
+}
+
+function openMask(id){
+  document.getElementById(id).classList.add('show');
+}
+
+function closeMask(id){
+  document.getElementById(id).classList.remove('show');
+}
+
+function openReportDrawer(){
+  activeReportReason='违规内容';
+  activeReportImages=[];
+  document.getElementById('reportReasons').innerHTML=reportOptions.map(function(item,index){
+    return '<button class="reason-btn '+(index===0?'active':'')+'" type="button" data-reason="'+escapeHtml(item)+'">'+escapeHtml(item)+'</button>';
+  }).join('');
+  document.getElementById('reportDescInput').value='';
+  renderReportImages();
+  openMask('reportMask');
+}
+
+function renderReportImages(){
+  const mount=document.getElementById('reportImageList');
+  const previews=activeReportImages.map(function(item){
+    return '<div class="preview">'+escapeHtml(item.label)+'</div>';
+  }).join('');
+  mount.innerHTML=previews+'<button class="add" type="button" id="reportImageAdd">＋</button>';
+  const add=document.getElementById('reportImageAdd');
+  add.style.display=activeReportImages.length>=5?'none':'flex';
+}
+
+function addReportImages(files){
+  const fileList=Array.prototype.slice.call(files||[]);
+  if(!fileList.length)return;
+  const remain=5-activeReportImages.length;
+  if(remain<=0){
+    showToast('举报图片最多 5 张','warn');
+    return;
+  }
+  fileList.slice(0,remain).forEach(function(file,index){
+    activeReportImages.push({
+      id:'report-img-'+Date.now()+'-'+(activeReportImages.length+index),
+      label:file.name||('举报图片 '+(activeReportImages.length+1)),
+      color:'#eef2ff'
+    });
+  });
+  renderReportImages();
+  if(fileList.length>remain){
+    showToast('超出 5 张的图片已忽略','warn');
+  }
+}
+
+function renderComposer(){
+  document.getElementById('replyHint').textContent=activeReplyTarget?'回复 '+activeReplyTarget:'写下你的评论，最多 200 字';
+  document.getElementById('replyResetBtn').style.display=activeReplyTarget?'inline':'none';
+}
+
+function getCommentAuthorMeta(comment){
+  const author=comment&&comment.authorId?BanxingMoments.getAuthorById(comment.authorId):null;
+  return {
+    id:comment&&comment.authorId?comment.authorId:'',
+    name:author&&author.name||comment&&comment.authorName||'伴行用户',
+    avatar:author&&author.avatar||String(comment&&comment.authorName||'伴').slice(0,1)||'伴'
+  };
+}
+
+function renderPanel(post){
+  if(activeTab==='likes'){
+    return (
+      '<div class="like-list">'+
+        (post.likedUsers&&post.likedUsers.length?post.likedUsers.map(function(item){
+          return '<div class="like-item"><a class="avatar avatar-link" href="'+escapeHtml(getUserHomeHref(item.id))+'" data-user-link="1">'+escapeHtml(item.avatar)+'</a><div><strong>'+escapeHtml(item.name)+'</strong></div></div>';
+        }).join(''):'<div class="empty">还没有人点赞这条动态</div>')+
+      '</div>'
+    );
+  }
+  return (
+    '<div class="comment-list">'+
+      (post.comments&&post.comments.length?post.comments.map(function(comment){
+        const authorMeta=getCommentAuthorMeta(comment);
+        return (
+          '<div class="comment-item" data-reply="'+escapeHtml(authorMeta.name)+'">'+
+            '<a class="avatar avatar-link" href="'+escapeHtml(getUserHomeHref(authorMeta.id||'me'))+'" data-user-link="1">'+escapeHtml(authorMeta.avatar)+'</a>'+
+            '<div class="comment-body">'+
+              '<strong>'+escapeHtml(authorMeta.name)+(comment.replyTo?' · 回复 '+escapeHtml(comment.replyTo):'')+'</strong>'+
+              '<p>'+escapeHtml(comment.text)+'</p>'+
+              '<span>'+escapeHtml(BanxingMoments.formatTimeLabel(comment.createdAt))+' · 回复</span>'+
+            '</div>'+
+          '</div>'
+        );
+      }).join(''):'<div class="empty">还没有评论，来留下第一条评论吧。</div>')+
+    '</div>'
+  );
+}
+
+function renderDetail(){
+  const realPost=BanxingMoments.getPostById(postId);
+  const post=realPost||getPreviewPost();
+  const mount=document.getElementById('detailMount');
+  document.getElementById('backLink').href=explicitBackHref||('moments.html?view='+returnView);
+  const previewMode=!realPost&&!!getPreviewPost();
+  document.getElementById('composerPanel').style.display=previewMode?'none':'block';
+  if(!post){
+    mount.innerHTML='<div class="section"><div class="empty">动态不存在或已删除</div></div>';
+    return;
+  }
+  const isMine=post.authorId===BanxingMoments.getCurrentUser().id;
+  mount.innerHTML=
+    '<div class="card">'+
+      '<div class="card-head">'+
+        '<a class="avatar avatar-link" href="'+escapeHtml(getUserHomeHref(post.authorId))+'">'+escapeHtml(post.author&&post.author.avatar||'?')+'</a>'+
+        '<div class="card-main">'+
+          '<div class="name-row"><strong>'+escapeHtml(post.author&&post.author.name||'伴行用户')+'</strong><span class="credit-pill">⭐ '+escapeHtml(post.author&&post.author.credit||0)+'分</span></div>'+
+          '<div class="meta-row"><span>'+escapeHtml(post.timeLabel)+'</span></div>'+
+        '</div>'+
+        (!isMine&&!previewMode?'<button class="report-icon-btn" type="button" id="detailReportBtn" aria-label="举报动态">⋯</button>':'')+
+      '</div>'+
+      '<div class="content">'+escapeHtml(post.text)+'</div>'+
+      renderImages(post.images)+
+      renderVideo(post.video)+
+      renderOrderTag(post.order)+
+      (previewMode?'':'<div class="info-actions">'+
+        '<button class="info-action '+(post.likedByMe?'active':'')+'" type="button" id="detailLikeBtn">👍 '+escapeHtml(post.likedByMe?'已点赞':'点赞 '+post.likes)+'</button>'+
+      '</div>')+
+    '</div>'+
+    (previewMode?'<div class="section"><div class="empty">该动态为主页样例内容，当前原型仅支持查看详情，不提供互动操作。</div></div>':'<div class="section" id="panelSection">'+
+      '<div class="detail-tabs">'+
+        '<button class="detail-tab '+(activeTab==='likes'?'active':'')+'" type="button" data-tab="likes">点赞 '+escapeHtml(post.likes)+'</button>'+
+        '<button class="detail-tab '+(activeTab==='comments'?'active':'')+'" type="button" data-tab="comments">评论 '+escapeHtml(post.commentCount)+'</button>'+
+      '</div>'+
+      '<div class="panel-wrap">'+renderPanel(post)+'</div>'+
+    '</div>');
+  renderComposer();
+}
+
+function resetReply(){
+  activeReplyTarget='';
+  renderComposer();
+}
+
+function focusCommentInput(){
+  activeTab='comments';
+  renderDetail();
+  document.getElementById('commentInput').focus();
+  const panelSection=document.getElementById('panelSection');
+  if(panelSection)panelSection.scrollIntoView({block:'start',behavior:'smooth'});
+}
+
+function bindEvents(){
+  document.getElementById('detailMount').addEventListener('click',function(event){
+    const userLink=event.target.closest('[data-user-link]');
+    const tabBtn=event.target.closest('[data-tab]');
+    const replyItem=event.target.closest('[data-reply]');
+    if(userLink){
+      return;
+    }
+    if(tabBtn){
+      activeTab=tabBtn.dataset.tab||'comments';
+      renderDetail();
+      return;
+    }
+    if(replyItem){
+      activeReplyTarget=replyItem.dataset.reply||'';
+      focusCommentInput();
+      return;
+    }
+    if(event.target.id==='detailLikeBtn'){
+      const result=BanxingMoments.toggleLike(postId);
+      renderDetail();
+      if(result)showToast(result.likedByMe?'已点赞，对方会收到通知':'已取消点赞','success');
+      return;
+    }
+    if(event.target.id==='detailReportBtn'){
+      openReportDrawer();
+    }
+  });
+
+  document.getElementById('replyResetBtn').addEventListener('click',function(){
+    resetReply();
+  });
+
+  document.getElementById('commentSubmitBtn').addEventListener('click',function(){
+    const input=document.getElementById('commentInput');
+    const result=BanxingMoments.addComment(postId,input.value.trim(),activeReplyTarget);
+    if(!result.ok){
+      showToast(result.message,'warn');
+      return;
+    }
+    input.value='';
+    resetReply();
+    activeTab='comments';
+    renderDetail();
+    showToast(result.message,result.status==='passed'?'success':'warn');
+  });
+
+  document.getElementById('reportReasons').addEventListener('click',function(event){
+    const button=event.target.closest('[data-reason]');
+    if(!button)return;
+    activeReportReason=button.dataset.reason||'违规内容';
+    document.querySelectorAll('[data-reason]').forEach(function(node){node.classList.remove('active');});
+    button.classList.add('active');
+  });
+  document.getElementById('reportCancelBtn').addEventListener('click',function(){
+    closeMask('reportMask');
+  });
+  document.getElementById('reportImageList').addEventListener('click',function(event){
+    if(!event.target.closest('#reportImageAdd'))return;
+    if(activeReportImages.length>=5){
+      showToast('举报图片最多 5 张','warn');
+      return;
+    }
+    document.getElementById('reportImageInput').click();
+  });
+  document.getElementById('reportImageInput').addEventListener('change',function(event){
+    addReportImages(event.target.files);
+    event.target.value='';
+  });
+  document.getElementById('reportSubmitBtn').addEventListener('click',function(){
+    const description=document.getElementById('reportDescInput').value.trim();
+    if(!description){
+      showToast('请填写举报详细说明','warn');
+      return;
+    }
+    if(!activeReportImages.length){
+      showToast('请至少上传 1 张举报图片','warn');
+      return;
+    }
+    BanxingMoments.reportPost(postId,{
+      reason:activeReportReason,
+      description:description,
+      images:activeReportImages
+    });
+    closeMask('reportMask');
+    showToast('举报已提交，内容将进入审核队列');
+  });
+  document.getElementById('reportMask').addEventListener('click',function(event){
+    if(event.target===event.currentTarget)closeMask('reportMask');
+  });
+}
+
+renderDetail();
+bindEvents();
+resetReply();
+
+if(autoFocusComment){
+  setTimeout(function(){
+    focusCommentInput();
+  },120);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>结算账单 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.section{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.bill-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.bill-meta{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.bill-trigger{height:34px;padding:0 12px;border:none;border-radius:17px;background:#f0fdf9;color:#0f766e;font-size:12px;font-weight:700;cursor:pointer}
+.bill-card{margin-top:12px;padding:16px;border-radius:16px;background:#f8faff;text-align:center}
+.bill-card .month{font-size:14px;color:#98a2b3}
+.bill-card .amount{font-size:32px;font-weight:800;color:#1a1a2e;margin-top:10px}
+.bill-card .status{display:inline-flex;margin-top:10px;padding:5px 12px;border-radius:999px;background:#ecfdf5;color:#0f766e;font-size:12px}
+.settlement-note{font-size:12px;color:#667085;line-height:1.7;margin-top:10px;padding:10px 12px;border-radius:12px;background:#F8FAFC;text-align:left}
+.summary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.summary-grid div{padding:12px;border-radius:14px;background:#f8faff}
+.summary-grid strong{display:block;font-size:18px;color:#1a1a2e}
+.summary-grid span{display:block;font-size:11px;color:#98a2b3;margin-top:4px;line-height:1.6}
+.order-list{display:grid;gap:10px;margin-top:12px}
+.order-card{border:1px solid #edf0f5;border-radius:14px;padding:14px}
+.order-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.order-title{font-size:14px;font-weight:700;color:#1a1a2e;line-height:1.6}
+.order-income{font-size:18px;font-weight:800;color:#0f766e;white-space:nowrap}
+.order-income.zero{color:#FF4D4F}
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#98a2b3;margin-top:8px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tags span{padding:5px 10px;border-radius:999px;background:#f5f7fb;color:#667085;font-size:11px}
+.drawer-mask{position:fixed;inset:0;background:rgba(17,24,39,.42);display:none;align-items:flex-end;justify-content:center;z-index:80}
+.drawer-mask.show{display:flex}
+.drawer{width:100%;max-width:375px;background:#fff;border-radius:20px 20px 0 0;padding:18px 16px 22px}
+.drawer-handle{width:48px;height:4px;border-radius:2px;background:#d0d5dd;margin:0 auto 14px}
+.drawer-title{font-size:16px;font-weight:700;color:#1a1a2e;text-align:center}
+.picker-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.picker-col{background:#f8faff;border-radius:16px;padding:12px;max-height:260px;overflow:auto}
+.picker-col .label{font-size:12px;color:#98a2b3;margin-bottom:8px}
+.picker-col button{display:block;width:100%;padding:10px 12px;border:none;border-radius:12px;background:#fff;color:#667085;font-size:13px;text-align:left;cursor:pointer}
+.picker-col button+button{margin-top:8px}
+.picker-col button.active{background:#0f766e;color:#fff;font-weight:700}
+.drawer-actions{display:flex;gap:10px;margin-top:18px}
+.drawer-actions button{flex:1;height:44px;border:none;border-radius:22px;font-size:14px;cursor:pointer}
+.drawer-actions .ghost{background:#f3f4f6;color:#667085}
+.drawer-actions .primary{background:#0f766e;color:#fff}
+.empty-card{background:#fff;margin:16px;border-radius:16px;padding:24px 18px;text-align:center}
+.empty-card h3{font-size:18px;color:#1a1a2e}
+.empty-card p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:8px}
+.empty-card a{display:inline-flex;margin-top:16px;height:42px;padding:0 18px;border-radius:21px;background:#0f766e;color:#fff;text-decoration:none;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">结算账单</span><span class="placeholder"></span></div>
+
+<div id="contentMount"></div>
+
+<div class="drawer-mask" id="billDrawer">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">选择账单年月</div>
+    <div class="picker-grid">
+      <div class="picker-col">
+        <div class="label">年份</div>
+        <div id="yearOptions"></div>
+      </div>
+      <div class="picker-col">
+        <div class="label">月份</div>
+        <div id="monthOptions"></div>
+      </div>
+    </div>
+    <div class="drawer-actions">
+      <button class="ghost" type="button" id="drawerCancelBtn">取消</button>
+      <button class="primary" type="button" id="drawerConfirmBtn">确认</button>
+    </div>
+  </div>
+</div>
+
+<script src="partner-data.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const mock=params.get('mock')||'';
+const partnerState=mock?BanxingPartner.syncMockState(mock):BanxingPartner.get();
+let selectedBillMonth=partnerState.defaultBillMonth||'';
+let drawerYear='';
+let drawerMonth='';
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function buildPartnerHref(page){
+  return mock?page+'?mock='+encodeURIComponent(mock):page;
+}
+
+document.getElementById('backLink').href=buildPartnerHref('partner-dashboard.html');
+
+function getCurrentBill(){
+  return BanxingPartner.getBillByMonth(partnerState,selectedBillMonth);
+}
+
+function getBillMonths(){
+  return BanxingPartner.getBillMonths(partnerState);
+}
+
+function monthParts(monthKey){
+  const parts=String(monthKey||'').split('-');
+  return {year:parts[0]||'',month:parts[1]||''};
+}
+
+function renderBillOrders(list){
+  return list.map(function(item){
+    const refundDeduction=item.zero?'按退款回冲':'¥0';
+    return `
+      <div class="order-card">
+        <div class="order-top">
+          <div>
+            <div class="order-title">${escapeHtml(item.id+' '+item.title)}</div>
+            <div class="meta">
+              <span>被邀请用户：${escapeHtml(item.user)}</span>
+              <span>订单实收：${escapeHtml(item.amount)}</span>
+              <span>分佣比例：${escapeHtml(item.rate)}</span>
+              <span>退款扣回：${escapeHtml(refundDeduction)}</span>
+              <span>最终佣金：${escapeHtml(item.income)}</span>
+            </div>
+          </div>
+          <div class="order-income ${item.zero?'zero':''}">${escapeHtml(item.income)}</div>
+        </div>
+        <div class="tags">${item.tags.map(function(tag){return '<span>'+escapeHtml(tag)+'</span>';}).join('')}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderBlocked(){
+  const title=partnerState.status==='pending'?'账单暂未开通':'还没有可查看的结算账单';
+  const desc=partnerState.status==='pending'
+    ?'你的合伙人申请仍在审核中，审核通过后即可查看月度结算账单。'
+    :'请先完成合伙人申请并审核通过后，再查看结算账单。';
+  const actionText=partnerState.status==='pending'?'返回查看进度':'去申请合伙人';
+  const actionHref=partnerState.status==='pending'?'partner-dashboard.html':'partner-apply.html';
+  return `
+    <div class="empty-card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(desc)}</p>
+      <a href="${buildPartnerHref(actionHref)}">${escapeHtml(actionText)}</a>
+    </div>
+  `;
+}
+
+function renderApproved(){
+  const currentBill=getCurrentBill();
+  return `
+    <div class="section">
+      <div class="bill-head">
+        <div>
+          <div class="section-title">月度结算账单</div>
+          <div class="bill-meta">${escapeHtml(partnerState.application.type)}合伙人 · 当前分佣比例 ${escapeHtml(partnerState.commission.current)}</div>
+        </div>
+        <button class="bill-trigger" type="button" id="billPickerBtn">${escapeHtml(currentBill.label)}</button>
+      </div>
+      <div class="bill-card">
+        <div class="month">${escapeHtml(currentBill.label)} · 合伙人收益账单</div>
+        <div class="amount">${escapeHtml(currentBill.amount)}</div>
+        <div class="status">${escapeHtml(currentBill.status)}</div>
+        <div class="settlement-note">C端仅展示账单与确认无异议状态；佣金入钱包以后台“确定结算”为准，确认后实时进入可提现余额。</div>
+      </div>
+      <div class="summary-grid">
+        ${currentBill.summary.map(function(item){
+          return '<div><strong>'+escapeHtml(item.num)+'</strong><span>'+escapeHtml(item.label)+'</span></div>';
+        }).join('')}
+      </div>
+      <div class="order-list">${renderBillOrders(currentBill.orders)}</div>
+    </div>
+  `;
+}
+
+function renderDrawerOptions(){
+  const months=getBillMonths();
+  const current=monthParts(drawerYear&&drawerMonth?(drawerYear+'-'+drawerMonth):selectedBillMonth);
+  const years=[...new Set(months.map(function(item){return monthParts(item.key).year;}))];
+  if(!drawerYear)drawerYear=current.year;
+  if(!drawerMonth)drawerMonth=current.month;
+  document.getElementById('yearOptions').innerHTML=years.map(function(year){
+    return '<button type="button" data-year="'+escapeHtml(year)+'" class="'+(year===drawerYear?'active':'')+'">'+escapeHtml(year+'年')+'</button>';
+  }).join('');
+  const monthList=months.filter(function(item){
+    return monthParts(item.key).year===drawerYear;
+  }).map(function(item){
+    const parts=monthParts(item.key);
+    return {month:parts.month,label:item.label};
+  });
+  if(!monthList.some(function(item){return item.month===drawerMonth;})){
+    drawerMonth=monthList[0]?monthList[0].month:'';
+  }
+  document.getElementById('monthOptions').innerHTML=monthList.map(function(item){
+    return '<button type="button" data-month="'+escapeHtml(item.month)+'" class="'+(item.month===drawerMonth?'active':'')+'">'+escapeHtml(Number(item.month)+'月')+'</button>';
+  }).join('');
+  document.querySelectorAll('[data-year]').forEach(function(button){
+    button.addEventListener('click',function(){
+      drawerYear=button.dataset.year||drawerYear;
+      renderDrawerOptions();
+    });
+  });
+  document.querySelectorAll('#monthOptions [data-month]').forEach(function(button){
+    button.addEventListener('click',function(){
+      drawerMonth=button.dataset.month||drawerMonth;
+      renderDrawerOptions();
+    });
+  });
+}
+
+function openBillDrawer(){
+  const current=monthParts(selectedBillMonth);
+  drawerYear=current.year;
+  drawerMonth=current.month;
+  renderDrawerOptions();
+  document.getElementById('billDrawer').classList.add('show');
+}
+
+function closeBillDrawer(){
+  document.getElementById('billDrawer').classList.remove('show');
+}
+
+function bindPageEvents(){
+  const billPickerBtn=document.getElementById('billPickerBtn');
+  if(billPickerBtn){
+    billPickerBtn.addEventListener('click',openBillDrawer);
+  }
+}
+
+document.getElementById('contentMount').innerHTML=partnerState.status==='approved'?renderApproved():renderBlocked();
+bindPageEvents();
+document.getElementById('drawerCancelBtn').addEventListener('click',closeBillDrawer);
+document.getElementById('billDrawer').addEventListener('click',function(event){
+  if(event.target===event.currentTarget)closeBillDrawer();
+});
+document.getElementById('drawerConfirmBtn').addEventListener('click',function(){
+  if(drawerYear&&drawerMonth){
+    selectedBillMonth=drawerYear+'-'+drawerMonth;
+    document.getElementById('contentMount').innerHTML=renderApproved();
+    bindPageEvents();
+  }
+  closeBillDrawer();
+});
+</script>
+</body>
+</html>

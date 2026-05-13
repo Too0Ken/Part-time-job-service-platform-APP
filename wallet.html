@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>钱包 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:20px}
+.status-bar{height:44px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+.nav{height:44px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);display:flex;align-items:center;padding:0 16px}
+.nav .back{font-size:20px;color:#fff;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#fff;flex:1;text-align:center}
+.balance-card{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);margin:16px;border-radius:16px;padding:24px;color:#fff}
+.balance-card .label{font-size:13px;opacity:.8;margin-bottom:4px}
+.balance-card .amount{font-size:36px;font-weight:700;margin-bottom:16px}
+.balance-row{display:flex;gap:0}
+.balance-row .item{flex:1;text-align:center;padding:12px 0;border-right:1px solid rgba(255,255,255,.2)}
+.balance-row .item:last-child{border:none}
+.balance-row .item .num{font-size:18px;font-weight:600}
+.balance-row .item .desc{font-size:11px;opacity:.7;margin-top:2px}
+.actions{display:flex;gap:12px;margin:16px 16px 0}
+.actions .btn{flex:1;height:44px;border-radius:22px;font-size:14px;font-weight:500;cursor:pointer;text-align:center;line-height:44px;text-decoration:none}
+.actions .btn-primary{background:#4A6CF7;color:#fff}
+.actions .btn-secondary{background:#fff;color:#4A6CF7;border:1px solid #4A6CF7}
+.wallet-notice{margin:12px 16px 0;padding:12px 14px;border-radius:14px;background:#FFF7E6;border:1px solid #FFE0A3;color:#8A5A00;font-size:12px;line-height:1.7}
+.tabs{display:flex;background:#fff;margin-top:10px;padding:0 16px}
+.tabs .t{flex:1;text-align:center;padding:14px 0;font-size:14px;color:#666;cursor:pointer;border-bottom:2px solid transparent}
+.tabs .t.active{color:#4A6CF7;border-color:#4A6CF7;font-weight:600}
+.list{background:#fff;margin-top:0}
+.list .item{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #f5f5f5}
+.list .item .icon{width:36px;height:36px;min-width:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;margin-right:12px}
+.list .item .icon.income{background:#F0FFF4;color:#52C41A}
+.list .item .icon.expense{background:#FFF1F0;color:#FF4D4F}
+.list .item .icon.withdraw{background:#EEF2FF;color:#4A6CF7}
+.list .item .info{flex:1}
+.list .item .info .title{font-size:14px;color:#1a1a2e}
+.list .item .info .time{font-size:11px;color:#999;margin-top:2px}
+.list .item .amount{font-size:15px;font-weight:600}
+.list .item .amount.pos{color:#52C41A}
+.list .item .amount.neg{color:#FF4D4F}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="profile.html" class="back">←</a>
+  <span class="title">我的钱包</span>
+  <span></span>
+</div>
+<div class="balance-card">
+  <div class="label">可提现余额</div>
+  <div class="amount">¥368.50</div>
+  <div class="balance-row">
+    <div class="item"><div class="num">¥86.00</div><div class="desc">待结算</div></div>
+    <div class="item"><div class="num">¥200.00</div><div class="desc">提现中</div></div>
+    <div class="item"><div class="num">¥1,280.00</div><div class="desc">累计已提现</div></div>
+  </div>
+</div>
+<div class="actions">
+  <a href="withdraw.html" class="btn btn-primary">提现</a>
+  <a href="transactions.html" class="btn btn-secondary">交易明细</a>
+</div>
+<div class="wallet-notice">账号封禁或主体冻结时，提现中申请会进入平台复核；拒绝后金额退回冻结余额，解封后需重新发起提现。</div>
+<div class="tabs"><span class="t active">全部</span><span class="t">收入</span><span class="t">支出</span><span class="t">提现</span></div>
+<div class="list">
+  <div class="item"><div class="icon income">💰</div><div class="info"><div class="title">喂猫服务结算</div><div class="time">3月26日 15:35</div></div><div class="amount pos">+¥114.00</div></div>
+  <div class="item"><div class="icon income">💰</div><div class="info"><div class="title">陪跑服务结算</div><div class="time">3月20日 18:20</div></div><div class="amount pos">+¥76.00</div></div>
+  <div class="item"><div class="icon withdraw">↗</div><div class="info"><div class="title">提现到微信零钱</div><div class="time">3月19日 10:00</div></div><div class="amount neg">-¥200.00</div></div>
+  <div class="item"><div class="icon income">💰</div><div class="info"><div class="title">陪诊服务结算</div><div class="time">3月18日 12:40</div></div><div class="amount pos">+¥138.00</div></div>
+</div>
+</body>
+</html>

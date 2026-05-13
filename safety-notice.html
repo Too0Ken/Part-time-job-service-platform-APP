@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>安全须知 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#FFFBE6;max-width:375px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.status-bar{height:44px;background:#FAAD14;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.header{background:#FAAD14;padding:24px 20px;text-align:center;color:#fff}
+.header h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.header p{font-size:13px;opacity:.9}
+.content{flex:1;padding:20px;overflow-y:auto}
+.notice-item{display:flex;gap:12px;margin-bottom:16px}
+.notice-item .icon{width:36px;height:36px;min-width:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.notice-item .text h4{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:2px}
+.notice-item .text p{font-size:12px;color:#666;line-height:1.6}
+.footer{padding:20px;background:#FFFBE6}
+.confirm-btn{display:block;width:100%;height:48px;background:#FAAD14;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:600;cursor:pointer}
+.confirm-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="header">
+  <h1>⚠️ 安全须知</h1>
+  <p id="noticeSubtitle">服务前请确认本次任务的安全提醒</p>
+</div>
+<div class="content" id="noticeList"></div>
+<div class="footer">
+  <button class="confirm-btn" id="confirmBtn">我已知晓，确认接单</button>
+</div>
+<script>
+const noticeMap={
+  cat:{
+    subtitle:'上门喂猫安全提醒',
+    items:[
+      {icon:'🔒',title:'保护住址与门锁信息',text:'请勿在聊天或备注中透露门禁密码、WiFi 密码和详细门牌，避免额外泄露发布者隐私。'},
+      {icon:'📸',title:'到达与完成需打卡',text:'到达时请按要求上传门口打卡照片，服务结束后补充猫咪状态照片，方便双方留痕。'},
+      {icon:'🛡️',title:'先核对保险状态',text:'如任务已购保险，可按任务页展示的保障说明执行；如未购保险，请先与发布者确认风险边界。'},
+      {icon:'🆘',title:'紧急情况及时求助',text:'如遇上门异常、住址不符或突发风险，请优先离场并使用平台 SOS 功能求助。'}
+    ]
+  },
+  outdoor:{
+    subtitle:'户外任务安全提醒',
+    items:[
+      {icon:'🌦️',title:'先确认天气与路线',text:'出发前请再次确认天气、路线和集合点，必要时建议发布者调整时间或降低运动强度。'},
+      {icon:'🛡️',title:'关注保险与难度',text:'户外任务通常伴随更高风险，请先核对保险状态、运动难度和自身适配度后再继续。'},
+      {icon:'📍',title:'全程会记录 GPS',text:'任务进行中会保留轨迹或阶段定位信息，用于安全保障与异常回溯，请保持定位可用。'},
+      {icon:'⏱️',title:'按节点完成打卡',text:'到达集合点、途中关键节点和结束时请按要求打卡，避免后续争议。'}
+    ]
+  },
+  health:{
+    subtitle:'陪诊任务安全提醒',
+    items:[
+      {icon:'🧾',title:'保护就诊隐私',text:'病历、检查结果、联系方式等仅用于本次服务，请勿截图外传或私下留存。'},
+      {icon:'🏥',title:'先核对医院与流程',text:'接单前请确认医院、科室、陪同内容和到院时间，避免到场后信息不一致。'},
+      {icon:'📸',title:'关键节点留痕',text:'建议在到院、候诊、取药等关键节点完成服务打卡，便于记录服务进度。'},
+      {icon:'🆘',title:'突发情况优先求助',text:'如出现就诊纠纷、身体突发不适或信息异常，请先联系现场医护并同步平台。'}
+    ]
+  },
+  wedding:{
+    subtitle:'婚庆协助安全提醒',
+    items:[
+      {icon:'👗',title:'提前确认着装与角色',text:'请先确认伴郎伴娘或现场协助角色、着装要求和当天时间表，避免临场误差。'},
+      {icon:'📞',title:'保留现场联系人',text:'建议提前确认新人、主持或婚礼管家的联系方式，方便现场快速协同。'},
+      {icon:'⏱️',title:'关注长时段任务强度',text:'婚庆任务时间跨度较长，请提前评估体力与通勤安排，必要时自备补给。'},
+      {icon:'🆘',title:'遇到突发先保安全',text:'如出现流程混乱、临时加项或现场纠纷，请优先保障自身安全并同步平台处理。'}
+    ]
+  }
+};
+
+const params=new URLSearchParams(location.search);
+const type=params.get('type')||'cat';
+const from=params.get('from');
+const taskId=params.get('taskId');
+const taskTitle=params.get('taskTitle');
+const time=params.get('time');
+const locationText=params.get('location');
+const price=params.get('price');
+const insurance=params.get('insurance');
+const publisherName=params.get('publisherName');
+const publisherCredit=params.get('publisherCredit');
+const publisherStats=params.get('publisherStats');
+const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+const notice=noticeMap[type]||noticeMap.cat;
+const noticeList=document.getElementById('noticeList');
+
+document.getElementById('noticeSubtitle').textContent=notice.subtitle;
+noticeList.innerHTML=notice.items.map(item=>`
+  <div class="notice-item">
+    <div class="icon">${item.icon}</div>
+    <div class="text"><h4>${item.title}</h4><p>${item.text}</p></div>
+  </div>
+`).join('');
+
+document.getElementById('confirmBtn').onclick=()=>{
+  if(['banned','frozen'].includes(authState.accountStatus)){
+    const label=authState.accountStatus==='frozen'?'冻结':'封禁';
+    if(confirm('账号已'+label+'，暂不可接单。是否前往提交解封申诉？')){
+      location.href='account-ban-appeal.html?from=apply&back='+encodeURIComponent(location.pathname.split('/').pop()+location.search);
+    }
+    return;
+  }
+  const next=new URL('apply-success.html',location.href);
+  if(type){next.searchParams.set('type',type);}
+  if(from){next.searchParams.set('from',from);}
+  if(taskId){next.searchParams.set('taskId',taskId);}
+  if(taskTitle){next.searchParams.set('taskTitle',taskTitle);}
+  if(time){next.searchParams.set('time',time);}
+  if(locationText){next.searchParams.set('location',locationText);}
+  if(price){next.searchParams.set('price',price);}
+  if(insurance){next.searchParams.set('insurance',insurance);}
+  if(publisherName){next.searchParams.set('publisherName',publisherName);}
+  if(publisherCredit){next.searchParams.set('publisherCredit',publisherCredit);}
+  if(publisherStats){next.searchParams.set('publisherStats',publisherStats);}
+  location.href=next.pathname+next.search;
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>我的 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:72px;color:#1a1a2e}
+.status-bar{height:44px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:12px}
+.profile-header{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);padding:18px 16px 56px;position:relative;overflow:hidden}
+.profile-shell{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:18px 16px;backdrop-filter:blur(14px);box-shadow:0 18px 40px rgba(18,36,94,.16);cursor:pointer}
+.header-top{display:flex;gap:14px;align-items:center;position:relative}
+.avatar-btn{width:76px;height:76px;border-radius:24px;border:2px solid rgba(255,255,255,.32);background:rgba(255,255,255,.18);overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;font-weight:700;cursor:pointer;position:relative;flex-shrink:0}
+.avatar-btn img{width:100%;height:100%;object-fit:cover}
+.avatar-tip{position:absolute;right:-4px;bottom:-4px;min-width:28px;height:28px;border-radius:14px;background:#fff;color:#4A6CF7;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 8px;box-shadow:0 8px 18px rgba(27,39,94,.18)}
+.header-main{flex:1;color:#fff;min-width:0;padding-right:92px}
+.name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.name{font-size:22px;font-weight:700;line-height:1.2}
+.icon-btn{width:30px;height:30px;border:none;background:rgba(255,255,255,.16);color:#fff;border-radius:15px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sub-line{font-size:12px;color:rgba(255,255,255,.88);line-height:1.7;margin-top:10px}
+.auth-badges{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;margin-top:14px}
+.auth-badges span{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,.14);color:rgba(255,255,255,.82);font-size:11px;min-width:0}
+.auth-badges span.active{background:#fff;color:#4A6CF7;font-weight:700}
+.auth-badges .badge-icon{font-style:normal;font-size:12px;line-height:1}
+.auth-badges em{font-style:normal}
+.credit-panel{position:absolute;top:0;right:0;width:86px;height:86px;border-radius:24px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.credit-panel .label{font-size:11px;opacity:.88;margin-bottom:4px}
+.credit-panel .num{font-size:32px;font-weight:800;line-height:1;color:#fff}
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:-34px 16px 10px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 18px 36px rgba(17,36,88,.1);position:relative;z-index:3}
+.summary-item{text-align:center;padding:15px 4px}
+.summary-item:not(:nth-child(4n)){border-right:1px solid #f1f3f8}
+.summary-item .num{font-size:19px;font-weight:800;color:#1a1a2e}
+.summary-item .label{font-size:11px;color:#8c8c8c;margin-top:5px}
+.notice-card,.auth-card,.benefit-card{background:#fff;margin:10px 16px;border-radius:16px;padding:16px}
+.notice-card{background:linear-gradient(180deg,#FFF8E8 0%,#fff 100%);border:1px solid #FFE7AD}
+.notice-title,.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.notice-desc,.benefit-desc{font-size:12px;color:#6b7280;line-height:1.7;margin-top:8px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip-row span{padding:6px 10px;border-radius:999px;background:#fff;color:#C77700;font-size:11px;border:1px solid #FFE1A8}
+.auth-card .head,.benefit-card .head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.auth-card .link{font-size:12px;color:#4A6CF7;text-decoration:none}
+.auth-list{display:grid;gap:10px;margin-top:14px}
+.auth-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:14px;background:#f8faff}
+.auth-icon{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#eef2ff;color:#4A6CF7;flex-shrink:0}
+.auth-item.done .auth-icon{background:#ebfff1;color:#14a44d}
+.auth-item.optional .auth-icon{background:#fff7e6;color:#d48806}
+.auth-main{flex:1}
+.auth-main strong{display:flex;align-items:center;gap:8px;font-size:14px;color:#1a1a2e}
+.auth-main p{font-size:12px;color:#6b7280;line-height:1.7;margin-top:5px}
+.tag{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700}
+.tag.required{background:#FFF1F0;color:#FF4D4F}
+.tag.optional{background:#FFF7E6;color:#D48806}
+.state{font-size:12px;font-weight:700}
+.state.done{color:#14a44d}
+.state.pending{color:#ff7a45}
+.state.optional{color:#d48806}
+.benefit-list{display:grid;gap:10px;margin-top:12px}
+.benefit-item{padding:12px;border-radius:14px;background:#f8faff}
+.benefit-item strong{font-size:14px;color:#1a1a2e}
+.benefit-item p{font-size:12px;color:#6b7280;line-height:1.7;margin-top:6px}
+.menu-group{background:#fff;margin:10px 16px;border-radius:14px;overflow:hidden}
+.menu-item{display:flex;align-items:center;padding:15px 16px;border-bottom:1px solid #f7f7f7;text-decoration:none;color:#1a1a2e}
+.menu-item:last-child{border-bottom:none}
+.menu-item .icon{font-size:20px;margin-right:12px;min-width:24px;text-align:center}
+.menu-item .text{flex:1;font-size:14px;min-width:0}
+.menu-item .meta{font-size:12px;color:#999;margin-right:8px;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.partner-entry.is-none .meta{color:#4A6CF7}
+.partner-entry.is-pending .meta{color:#D48806}
+.partner-entry.is-approved .meta{color:#0f766e;max-width:158px}
+.partner-entry.is-rejected .meta{color:#FF4D4F}
+.partner-meta.with-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.menu-item .arrow{font-size:14px;color:#ccc}
+.bottom-tab{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;display:flex;border-top:1px solid #eee;z-index:30;overflow:visible}
+.bottom-tab a{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 0 10px;text-decoration:none;font-size:10px;color:#999}
+.bottom-tab a.active{color:#4A6CF7}
+.bottom-tab .tab-icon{font-size:22px;margin-bottom:2px}
+.bottom-tab .publish-tab{flex:none;width:72px;height:72px;border-radius:50%;background:#4A6CF7;color:#fff;justify-content:center;padding:0;transform:translateY(-18px);box-shadow:0 12px 28px rgba(74,108,247,.28);font-size:10px;font-weight:700;line-height:1.2}
+.bottom-tab .publish-tab .tab-icon{font-size:24px;margin-bottom:2px}
+.mask{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:375px;background:none;display:none;align-items:flex-end;justify-content:center;z-index:50;pointer-events:none}
+.mask.show{display:flex}
+.sheet,.dialog{width:calc(100% - 16px);background:#fff;border-radius:18px 18px 0 0;padding:16px;box-shadow:0 -12px 28px rgba(17,36,88,.18);pointer-events:auto}
+.sheet-title,.dialog-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:14px}
+.sheet button,.dialog-actions button{width:100%;height:46px;border-radius:14px;border:none;font-size:15px;cursor:pointer}
+.sheet .main{background:#4A6CF7;color:#fff;margin-bottom:10px}
+.sheet .minor{background:#EEF2FF;color:#4A6CF7;margin-bottom:10px}
+.sheet .cancel{background:#f5f6fa;color:#666}
+.dialog input{width:100%;height:46px;border:1px solid #e8e8e8;border-radius:12px;padding:0 14px;font-size:15px;outline:none}
+.dialog input:focus{border-color:#4A6CF7}
+.input-meta{display:flex;justify-content:space-between;margin-top:8px;font-size:12px}
+.input-meta .count{color:#999}
+.input-meta .error{color:#FF4D4F}
+.dialog-actions{display:flex;gap:10px;margin-top:16px}
+.dialog-actions .ghost{background:#f5f6fa;color:#666}
+.dialog-actions .primary{background:#4A6CF7;color:#fff}
+.danger-actions{margin:10px 16px 0;display:grid;gap:10px}
+.danger-link{display:flex;align-items:center;justify-content:center;height:44px;border-radius:22px;text-decoration:none;font-size:14px;background:#fff}
+.danger-link.logout{border:1px solid #FF8A8A;color:#FF4D4F}
+.danger-link.deactivate{border:1px solid #eceff5;color:#98a2b3}
+.toast{position:fixed;top:94px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:70;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(19,194,194,.94)}
+</style>
+</head>
+<body>
+<div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+<div class="profile-header">
+  <div class="profile-shell" id="myHomeEntry">
+    <div class="header-top">
+      <button class="avatar-btn" id="avatarBtn" type="button">
+        <span id="avatarText">王</span>
+        <img id="avatarImage" alt="头像" style="display:none">
+      </button>
+      <div class="header-main">
+        <div class="name-row">
+          <div class="name" id="nickname">王小明</div>
+          <button class="icon-btn" id="editNicknameBtn" type="button" aria-label="进入我的主页" title="进入我的主页">›</button>
+        </div>
+        
+        <div class="auth-badges" id="authBadges"></div>
+      </div>
+      <div class="credit-panel">
+        <div class="label">信用积分</div>
+        <div class="num" id="creditNum">92</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="summary-row" id="summaryRow"></div>
+
+<div class="menu-group">
+  <a href="wallet.html" class="menu-item"><span class="icon">💰</span><span class="text">我的钱包</span><span class="arrow">›</span></a>
+  <a href="order-list.html" class="menu-item"><span class="icon">🧾</span><span class="text">我的订单</span><span class="meta"></span><span class="arrow">›</span></a>
+  <a href="coupons.html" class="menu-item"><span class="icon">🎟️</span><span class="text">优惠券</span><span class="meta" id="couponMeta"></span><span class="arrow">›</span></a>
+  <a href="credit-score.html" class="menu-item"><span class="icon">📊</span><span class="text">信用积分</span><span class="meta"></span><span class="arrow">›</span></a>
+  <a href="points-center.html" class="menu-item"><span class="icon">🎟️</span><span class="text">奖励中心</span><span class="meta"></span><span class="arrow">›</span></a>
+  <a href="favorites.html" class="menu-item"><span class="icon">⭐</span><span class="text">收藏任务</span><span class="arrow">›</span></a>
+</div>
+
+<div class="menu-group">
+  <a href="partner-dashboard.html" class="menu-item partner-entry" id="partnerEntry"><span class="icon">🤝</span><span class="text" id="partnerText">合伙人中心</span><span class="meta" id="partnerMeta"></span><span class="arrow">›</span></a>
+  <a href="#" class="menu-item" id="wechatEntry"><span class="icon">📢</span><span class="text">关注公众号</span><span class="meta">接收活动与服务通知</span><span class="arrow">›</span></a>
+  <a href="feedback.html" class="menu-item"><span class="icon">📝</span><span class="text">意见反馈</span><span class="meta"></span><span class="arrow">›</span></a>
+  <a href="help.html" class="menu-item"><span class="icon">❓</span><span class="text">帮助与客服</span><span class="arrow">›</span></a>
+</div>
+
+<div class="danger-actions">
+  <a href="login.html" class="danger-link logout">退出登录</a>
+</div>
+
+<div class="bottom-tab">
+  <a href="index.html" id="homeTab"><span class="tab-icon">🧭</span>首页</a>
+  <a href="moments.html"><span class="tab-icon">🫧</span>动态</a>
+  <a href="publish-items.html" class="publish-tab"><span class="tab-icon">⊕</span>发布任务</a>
+  <a href="messages.html"><span class="tab-icon">💬</span>消息</a>
+  <a href="profile.html" class="active"><span class="tab-icon">👤</span>我的</a>
+</div>
+
+<div class="mask" id="avatarMask">
+  <div class="sheet">
+    <div class="sheet-title">修改头像</div>
+    <button class="main" id="galleryBtn" type="button">从相册选择</button>
+    <button class="minor" id="cameraBtn" type="button">拍照上传</button>
+    <button class="cancel" id="avatarCancelBtn" type="button">取消</button>
+  </div>
+</div>
+
+<div class="mask" id="nicknameMask">
+  <div class="dialog">
+    <div class="dialog-title">修改昵称</div>
+    <input id="nicknameInput" type="text" maxlength="15" placeholder="请输入昵称，不超过15字">
+    <div class="input-meta">
+      <span class="error" id="nicknameError"></span>
+      <span class="count" id="nicknameCount">0/15</span>
+    </div>
+    <div class="dialog-actions">
+      <button class="ghost" id="nicknameCancelBtn" type="button">取消</button>
+      <button class="primary" id="nicknameSaveBtn" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<input id="galleryInput" type="file" accept="image/*" hidden>
+<input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
+<div class="toast" id="profileToast"></div>
+
+<script src="coupon-data.js"></script>
+<script src="moments-data.js"></script>
+<script src="partner-data.js"></script>
+<script src="publish-flow-config.js"></script>
+<script src="publish-launcher.js"></script>
+<script>
+const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+const sensitiveWords=['官方','客服','管理员','平台','系统'];
+const savedProfile=JSON.parse(localStorage.getItem('sharedProfileState')||'null');
+const profileState=savedProfile||{nickname:'王小明',avatarText:'王',credit:92,avatarData:''};
+if(!savedProfile){
+  localStorage.setItem('sharedProfileState',JSON.stringify(profileState));
+}
+
+const summaryStats=[['32','接单数'],['12','发布订单'],['¥3,260','累计收益'],['¥1,580','累计消费']];
+const authBadges=document.getElementById('authBadges');
+const avatarText=document.getElementById('avatarText');
+const avatarImage=document.getElementById('avatarImage');
+const nicknameEl=document.getElementById('nickname');
+const creditNum=document.getElementById('creditNum');
+const couponMeta=document.getElementById('couponMeta');
+const partnerEntry=document.getElementById('partnerEntry');
+const partnerText=document.getElementById('partnerText');
+const partnerMeta=document.getElementById('partnerMeta');
+const profileToast=document.getElementById('profileToast');
+const avatarMask=document.getElementById('avatarMask');
+const nicknameMask=document.getElementById('nicknameMask');
+const nicknameInput=document.getElementById('nicknameInput');
+const nicknameError=document.getElementById('nicknameError');
+const nicknameCount=document.getElementById('nicknameCount');
+let toastTimer;
+
+function saveProfile(){
+  localStorage.setItem('sharedProfileState',JSON.stringify(profileState));
+}
+
+function showStatus(text,type){
+  clearTimeout(toastTimer);
+  profileToast.textContent=text;
+  profileToast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    profileToast.className='toast';
+  },2200);
+}
+
+function validateNickname(value){
+  const trimmed=value.trim();
+  if(!trimmed)return'昵称不能为空';
+  if(trimmed.length>15)return'昵称不能超过15字';
+  if(!/^[\u4e00-\u9fa5A-Za-z0-9]+$/.test(trimmed))return'昵称不能包含特殊字符';
+  if(sensitiveWords.some(function(word){return trimmed.includes(word);})){return'昵称包含敏感词，请重新输入';}
+  return'';
+}
+
+function updateNicknameValidation(){
+  const value=nicknameInput.value;
+  const error=validateNickname(value);
+  nicknameCount.textContent=value.length+'/15';
+  nicknameError.textContent=error;
+  document.getElementById('nicknameSaveBtn').disabled=!!error;
+  document.getElementById('nicknameSaveBtn').style.opacity=error?'.5':'1';
+}
+
+function closeAvatarMask(){avatarMask.classList.remove('show');}
+function closeNicknameMask(){nicknameMask.classList.remove('show');}
+
+function renderSummary(){
+  document.getElementById('summaryRow').innerHTML=summaryStats.map(function(item){
+    return '<div class="summary-item"><div class="num">'+item[0]+'</div><div class="label">'+item[1]+'</div></div>';
+  }).join('');
+}
+
+function renderAuth(){
+  const authItems=[
+    {
+      icon:'✅',
+      name:'实名认证',
+      shortName:'实名',
+      required:true,
+      done:!!authState.realnameVerified,
+      doneText:'已认证',
+      pendingText:'未认证',
+      descDone:'已满足发布订单和接单前置条件。',
+      descPending:'发布和接单前必须先完成实名认证。'
+    },
+    {
+      icon:'🎓',
+      name:'学历认证',
+      shortName:'学历',
+      required:false,
+      done:!!authState.eduVerified,
+      doneText:'已认证',
+      pendingText:'可选',
+      descDone:'学历信息已核验，可增强任务信任感。',
+      descPending:'非必须，可提升部分任务的信任度与匹配效率。'
+    }
+  ];
+  authBadges.innerHTML=authItems.map(function(item){
+    return '<span class="'+(item.done?'active':'')+'"><i class="badge-icon">'+item.icon+'</i><em>'+item.shortName+'</em></span>';
+  }).join('');
+}
+
+function renderProfile(){
+  const fallbackText=(profileState.nickname||'伴行用户').slice(0,1);
+  const sharedProfile=JSON.parse(localStorage.getItem('sharedProfileState')||'{}')||{};
+  nicknameEl.textContent=profileState.nickname;
+  creditNum.textContent=profileState.credit;
+  if(profileState.avatarData){
+    avatarImage.src=profileState.avatarData;
+    avatarImage.style.display='block';
+    avatarText.style.display='none';
+  }else{
+    avatarImage.style.display='none';
+    avatarText.style.display='block';
+    avatarText.textContent=profileState.avatarText||fallbackText;
+  }
+  couponMeta.textContent='';
+  const partnerState=BanxingPartner.get();
+  const partnerEntryConfig=BanxingPartner.getProfileEntry(partnerState);
+  partnerText.textContent=partnerEntryConfig.text;
+  partnerEntry.href=partnerEntryConfig.href;
+  partnerEntry.className='menu-item partner-entry is-'+partnerEntryConfig.tone;
+  partnerMeta.textContent=partnerEntryConfig.metaText;
+  partnerMeta.className='meta partner-meta partner-meta--'+partnerEntryConfig.tone+(partnerEntryConfig.showDot?' with-dot':'');
+  couponMeta.style.display='none';
+  partnerMeta.style.display=partnerEntryConfig.metaText?'inline-flex':'none';
+  renderSummary();
+  renderAuth();
+}
+
+function handleAvatarFile(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(event){
+    closeAvatarMask();
+    showStatus('头像上传中，正在进行人工审核。');
+    setTimeout(function(){
+      profileState.avatarData=event.target.result;
+      profileState.avatarText=(profileState.nickname||'伴行用户').slice(0,1);
+      saveProfile();
+      renderProfile();
+      showStatus('头像审核通过，已更新到我的页。','success');
+    },900);
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('myHomeEntry').onclick=function(){
+  location.href='my-home.html';
+};
+document.getElementById('avatarBtn').onclick=function(event){
+  event.stopPropagation();
+  location.href='my-home.html';
+};
+document.getElementById('editNicknameBtn').onclick=function(event){
+  event.stopPropagation();
+  location.href='my-home.html';
+};
+document.getElementById('galleryBtn').onclick=function(){document.getElementById('galleryInput').click();};
+document.getElementById('cameraBtn').onclick=function(){document.getElementById('cameraInput').click();};
+document.getElementById('avatarCancelBtn').onclick=closeAvatarMask;
+document.getElementById('nicknameCancelBtn').onclick=closeNicknameMask;
+document.getElementById('galleryInput').onchange=function(e){handleAvatarFile(e.target.files[0]);};
+document.getElementById('cameraInput').onchange=function(e){handleAvatarFile(e.target.files[0]);};
+nicknameInput.addEventListener('input',updateNicknameValidation);
+document.getElementById('nicknameSaveBtn').onclick=function(){
+  const value=nicknameInput.value.trim();
+  const error=validateNickname(value);
+  if(error){
+    nicknameError.textContent=error;
+    return;
+  }
+  profileState.nickname=value;
+  profileState.avatarText=value.slice(0,1);
+  saveProfile();
+  closeNicknameMask();
+  renderProfile();
+  showStatus('昵称已更新。','success');
+};
+document.getElementById('wechatEntry').addEventListener('click',function(event){
+  event.preventDefault();
+  showStatus('公众号入口已添加，后续可接入二维码弹层。','success');
+});
+
+renderProfile();
+</script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>消息 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:72px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.header{background:#fff;padding:14px 16px 12px;border-bottom:1px solid #eee;text-align:center}
+.header h1{font-size:20px;color:#1a1a2e}
+.header p{font-size:12px;color:#8c8c8c;margin-top:4px}
+.section{padding:14px 16px 8px}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.section-title span:first-child{font-size:15px;font-weight:700;color:#1a1a2e}
+.section-title span:last-child{font-size:12px;color:#999}
+.notice-list{display:grid;gap:1px}
+.notice-item{position:relative;display:flex;align-items:center;padding:14px 16px;background:#fff;text-decoration:none;color:#1a1a2e}
+.notice-item .icon{width:46px;height:46px;min-width:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px}
+.notice-item .info{flex:1;min-width:0}
+.notice-item .name{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px;font-weight:600}
+.notice-item .time{font-size:11px;color:#999;font-weight:400}
+.notice-item .preview{font-size:13px;color:#8c8c8c;margin-top:4px;line-height:1.6}
+.badge{position:absolute;top:10px;right:10px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#FF4D4F;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center}
+.chat-list{display:grid;gap:1px}
+.chat-item{display:flex;align-items:center;padding:14px 16px;background:#fff;text-decoration:none;color:#1a1a2e}
+.chat-item .avatar{width:46px;height:46px;min-width:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-right:12px}
+.chat-item .info{flex:1;min-width:0}
+.chat-item .name{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:15px;font-weight:600}
+.chat-item .time{font-size:11px;color:#999;font-weight:400}
+.chat-item .preview{font-size:13px;color:#8c8c8c;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item .status{font-size:11px;color:#999;margin-top:6px}
+.chat-item .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-left:8px}
+.chat-item .dot{width:10px;height:10px;border-radius:50%;background:#FF4D4F}
+.chat-item .closed{font-size:11px;color:#999;background:#f3f4f6;padding:4px 8px;border-radius:999px}
+.bottom-tab{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;display:flex;border-top:1px solid #eee;z-index:30;overflow:visible}
+.bottom-tab a{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 0 10px;text-decoration:none;font-size:10px;color:#999}
+.bottom-tab a.active{color:#4A6CF7}
+.bottom-tab .tab-icon{font-size:22px;margin-bottom:2px}
+.bottom-tab .publish-tab{flex:none;width:72px;height:72px;border-radius:50%;background:#4A6CF7;color:#fff;justify-content:center;padding:0;transform:translateY(-18px);box-shadow:0 12px 28px rgba(74,108,247,.28);font-size:10px;font-weight:700;line-height:1.2}
+.bottom-tab .publish-tab .tab-icon{font-size:24px;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="header">
+  <h1>消息中心</h1>
+
+</div>
+
+<div class="section">
+  <div class="section-title">
+  
+    <span></span>
+  </div>
+  <div class="notice-list" id="noticeGrid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">
+    <span>聊天消息</span>
+    <span>按最近会话排序</span>
+  </div>
+</div>
+<div class="chat-list" id="chatList"></div>
+
+<div class="bottom-tab">
+  <a href="index.html"><span class="tab-icon">🧭</span>首页</a>
+  <a href="moments.html"><span class="tab-icon">🫧</span>动态</a>
+  <a href="publish-items.html" class="publish-tab"><span class="tab-icon">⊕</span>发布任务</a>
+  <a href="messages.html" class="active"><span class="tab-icon">💬</span>消息</a>
+  <a href="profile.html"><span class="tab-icon">👤</span>我的</a>
+</div>
+
+<script src="moments-data.js"></script>
+<script src="publish-flow-config.js"></script>
+<script src="publish-launcher.js"></script>
+<script>
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+const momentNotifications=window.BanxingMoments?BanxingMoments.getMomentNotifications():[];
+const latestMomentNotice=momentNotifications[0]||null;
+const noticeCategories=[
+  {
+    key:'order',
+    icon:'🔔',
+    title:'订单状态变更',
+    unread:3,
+    preview:'服务开始、提交凭证、纠纷处理和退款结果都会在这里提醒，可直接查看关联订单。',
+    time:'刚刚',
+    color:'#EEF2FF',
+    textColor:'#4A6CF7'
+  },
+  {
+    key:'credit',
+    icon:'📊',
+    title:'信用积分扣分通知',
+    unread:1,
+    preview:'仅在发生扣分时通知，支持带上关联订单快速发起申诉。',
+    time:'今天',
+    color:'#F0FFF4',
+    textColor:'#52C41A'
+  },
+  {
+    key:'income',
+    icon:'💰',
+    title:'收益到账通知',
+    unread:2,
+    preview:'服务费到账、退款退回、提现结果会在这里同步。',
+    time:'今天',
+    color:'#FFF7E6',
+    textColor:'#D48806'
+  },
+  {
+    key:'points',
+    icon:'🎟️',
+    title:'优惠券通知',
+    unread:5,
+    preview:'转发订单可获得优惠券，支持直达券中心查看，并在发布订单时抵扣使用。',
+    time:'昨天',
+    color:'#FFF1F0',
+    textColor:'#FF7A45'
+  },
+  {
+    key:'moments',
+    icon:'🫧',
+    title:'动态互动通知',
+    unread:momentNotifications.length||4,
+    preview:latestMomentNotice?latestMomentNotice.desc:'点赞、评论、关注和举报处理结果会在这里同步，可直达动态页查看。',
+    time:latestMomentNotice?latestMomentNotice.time:'刚刚',
+    color:'#EEF9FF',
+    textColor:'#1677FF'
+  }
+];
+
+const chats=[
+  {
+    name:'张小花',
+    task:'上门喂猫',
+    icon:'🐱',
+    time:'14:06',
+    preview:'好的辛苦了，后续麻烦继续在订单里同步记录。',
+    unread:2,
+    owner:'accepted',
+    status:'serving',
+    type:'cat',
+    id:'a1',
+    returnRole:'all',
+    returnStatus:'all'
+  },
+  {
+    name:'刘同学',
+    task:'周末 8km 户外任务',
+    icon:'🏃',
+    time:'昨天',
+    preview:'纠纷处理结果已经出来了，你可以查看详情。',
+    unread:0,
+    owner:'published',
+    status:'refund',
+    type:'outdoor',
+    id:'p4',
+    provider:'liu',
+    disputeHistory:'1',
+    closed:true,
+    returnRole:'all',
+    returnStatus:'all'
+  },
+  {
+    name:'王阿姨',
+    task:'协和门诊陪诊半天',
+    icon:'🏥',
+    time:'周一',
+    preview:'评价已完成，感谢你的配合。',
+    unread:0,
+    owner:'accepted',
+    status:'done',
+    type:'health',
+    id:'a3',
+    closed:true,
+    returnRole:'all',
+    returnStatus:'all'
+  }
+];
+
+document.getElementById('noticeGrid').innerHTML=noticeCategories.map(item=>`
+  <a class="notice-item" href="notice-category.html?${buildQuery({category:item.key})}">
+    <div class="icon" style="background:${item.color};color:${item.textColor}">${item.icon}</div>
+    <div class="info">
+      <div class="name">${item.title}<span class="time">${item.time}</span></div>
+      <div class="preview">${item.preview}</div>
+    </div>
+    ${item.unread?'<span class="badge">'+item.unread+'</span>':''}
+  </a>
+`).join('');
+
+document.getElementById('chatList').innerHTML=chats.map(item=>`
+  <a class="chat-item" href="chat.html?${buildQuery({
+    owner:item.owner,
+    status:item.status,
+    type:item.type,
+    id:item.id,
+    provider:item.provider,
+    disputeHistory:item.disputeHistory,
+    returnRole:item.returnRole,
+    returnStatus:item.returnStatus,
+    chatName:item.name,
+    title:item.task
+  })}">
+    <div class="avatar" style="background:#EEF2FF;color:#4A6CF7">${item.icon}</div>
+    <div class="info">
+      <div class="name">${item.name} - ${item.task}<span class="time">${item.time}</span></div>
+      <div class="preview">${item.preview}</div>
+      <div class="status">${item.closed?'':''}</div>
+    </div>
+    <div class="right">
+      ${item.unread?'<span class="badge">'+item.unread+'</span>':(item.closed?'<span class="closed">已关闭</span>':'')}
+    </div>
+  </a>
+`).join('');
+</script>
+</body>
+</html>

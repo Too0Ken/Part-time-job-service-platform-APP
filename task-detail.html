@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>任务详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;display:flex;align-items:center;justify-content:center;color:#666;padding:24px;text-align:center}
+.tip{background:#fff;padding:20px 18px;border-radius:16px;box-shadow:0 10px 24px rgba(0,0,0,.06);line-height:1.8;font-size:14px}
+</style>
+</head>
+<body>
+<div class="tip">正在跳转到新的订单详情页...</div>
+<script>
+const params=new URLSearchParams(location.search);
+const provider=params.get('provider')||'';
+const applicants=Math.max(Number(params.get('applicants')||0),0);
+const explicitStatus=params.get('status')||'';
+const type=params.get('type')||'cat';
+const id=params.get('id')||'p2';
+const returnRole=params.get('returnRole')||'published';
+const returnStatus=params.get('returnStatus')||'all';
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+const nextStatus=explicitStatus||(
+  provider?'ready':(applicants>0?'applying':'waiting')
+);
+
+location.replace('order-detail.html?'+buildQuery({
+  owner:'published',
+  status:nextStatus,
+  type,
+  id,
+  provider,
+  applicants,
+  returnRole,
+  returnStatus
+}));
+</script>
+</body>
+</html>

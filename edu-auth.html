@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>学历认证 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:24px}
+.card-title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.card-desc{font-size:13px;color:#999;margin-bottom:22px;line-height:1.7}
+.tag{display:inline-block;padding:4px 10px;background:#FFF7E6;color:#FA8C16;border-radius:4px;font-size:12px;margin-left:8px;vertical-align:middle}
+.api-box{border:1px solid #E6F4FF;background:#F6FBFF;border-radius:12px;padding:16px}
+.api-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.api-top h3{font-size:15px;color:#1a1a2e}
+.api-status{font-size:12px;padding:3px 10px;border-radius:999px;background:#fff1f0;color:#ff4d4f}
+.api-status.done{background:#f6ffed;color:#52c41a}
+.info-panel{display:none;margin-top:14px;border-top:1px dashed #dbeafe;padding-top:14px}
+.info-panel.active{display:block}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.info-item{background:#fff;border-radius:10px;padding:12px}
+.info-item .label{font-size:12px;color:#999}
+.info-item .value{font-size:14px;color:#1a1a2e;font-weight:600;margin-top:4px}
+.face-area{width:140px;height:140px;border:2px dashed #d9d9d9;border-radius:18px;margin:20px auto 0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;cursor:pointer;transition:.2s}
+.face-area.ready{border-color:#4A6CF7;color:#4A6CF7;background:#F6F9FF}
+.face-area.done{border-color:#52C41A;color:#52C41A;background:#F6FFED}
+.face-area .icon{font-size:38px;margin-bottom:8px}
+.face-area span{font-size:13px}
+.step-note{margin:16px 16px 0;padding:12px 14px;background:#fff;border-radius:12px;font-size:12px;color:#666;line-height:1.7}
+.actions{display:flex;gap:10px;padding:0 16px 24px}
+.actions button{flex:1;height:48px;border:none;border-radius:24px;font-size:15px;cursor:pointer}
+.api-btn{background:#EEF2FF;color:#4A6CF7}
+.submit-btn{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff}
+.submit-btn:disabled{background:#d9d9d9;color:#fff;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="auth-center.html" class="back">←</a>
+  <span class="title">学历认证</span>
+  <span class="placeholder"></span>
+</div>
+<div class="card">
+  <div class="api-box">
+    <div class="api-top">
+      <h3>学历官方 API 核验</h3>
+      <span class="api-status" id="eduApiStatus">未调用</span>
+    </div>
+    <div class="info-panel" id="eduPanel">
+      <div class="info-grid">
+        <div class="info-item"><div class="label">学校名称</div><div class="value">北京大学</div></div>
+        <div class="info-item"><div class="label">专业</div><div class="value">社会学</div></div>
+        <div class="info-item"><div class="label">学历层级</div><div class="value">本科在读</div></div>
+        <div class="info-item"><div class="label">学籍状态</div><div class="value">学信接口已验证</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="face-area" id="eduFaceArea" onclick="runEduFaceCheck()">
+    <div class="icon" id="eduFaceIcon">🎓</div>
+    <span id="eduFaceText">请先调用学历 API</span>
+  </div>
+</div>
+<div class="actions">
+  <button class="api-btn" onclick="fetchEduInfo()">调用学历 API</button>
+  <button class="submit-btn" id="eduSubmitBtn" disabled onclick="submitEdu()">认证通过，下一步</button>
+</div>
+<script>
+const eduParams=new URLSearchParams(location.search);
+const eduSource=eduParams.get('source')||'auth';
+const eduAuthState=JSON.parse(localStorage.getItem('authState')||'{}');
+let eduLoaded=false;
+let eduFaceChecked=false;
+if(eduSource==='apply'){
+  document.getElementById('eduDesc').textContent='接此类高风险任务需要学历认证。系统将通过学历 API 自动拉取信息，你只需做人脸识别即可继续接单。';
+}
+function fetchEduInfo(){
+  eduLoaded=true;
+  eduAuthState.eduProfile={school:'北京大学',major:'社会学',level:'本科在读',verifiedBy:'学历API'};
+  localStorage.setItem('authState',JSON.stringify(eduAuthState));
+  document.getElementById('eduApiStatus').textContent='已获取';
+  document.getElementById('eduApiStatus').className='api-status done';
+  document.getElementById('eduPanel').classList.add('active');
+  document.getElementById('eduFaceArea').classList.add('ready');
+  document.getElementById('eduFaceText').textContent='点击进行人脸识别';
+}
+function runEduFaceCheck(){
+  if(!eduLoaded)return;
+  eduFaceChecked=true;
+  document.getElementById('eduFaceArea').className='face-area done';
+  document.getElementById('eduFaceIcon').textContent='✅';
+  document.getElementById('eduFaceText').textContent='人脸识别通过';
+  document.getElementById('eduSubmitBtn').disabled=false;
+}
+function submitEdu(){
+  eduAuthState.eduVerified=true;
+  localStorage.setItem('authState',JSON.stringify(eduAuthState));
+  if(eduSource==='apply'){
+    const type=eduParams.get('type')||'cat';
+    if(!eduAuthState.emergencyContactBound){
+      location.href='emergency-contact.html?source=apply&type='+type;
+      return;
+    }
+    location.href='safety-notice.html?type='+type;
+    return;
+  }
+  location.href='auth-center.html';
+}
+</script>
+</body>
+</html>

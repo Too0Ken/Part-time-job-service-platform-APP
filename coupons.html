@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>优惠券 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px}
+.summary-card{background:#fff;border-radius:16px;padding:14px 10px;text-align:center}
+.summary-card .num{font-size:24px;font-weight:800;color:#1a1a2e}
+.summary-card .label{font-size:11px;color:#98a2b3;margin-top:4px}
+.tabs{display:flex;background:#fff;margin:0 16px;border-radius:16px;padding:4px}
+.tab{flex:1;text-align:center;height:36px;line-height:36px;border-radius:12px;font-size:13px;color:#667085;cursor:pointer}
+.tab.active{background:#EEF2FF;color:#4A6CF7;font-weight:700}
+.list{padding:12px 16px 16px}
+.coupon-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;border:1px solid #edf0f5}
+.coupon-card.unused{position:relative;background:linear-gradient(135deg,#FFF8F1 0%,#fff 100%);border-color:#FFDAB8;box-shadow:0 8px 22px rgba(255,107,53,.08)}
+.coupon-card.unused::before{content:'可用';position:absolute;right:16px;top:48px;height:20px;padding:0 8px;border-radius:10px;background:#FF6B35;color:#fff;font-size:10px;font-weight:700;line-height:20px}
+.coupon-card.used{background:#f3f4f6;border-color:#e5e7eb}
+.coupon-card.used .coupon-amount,.coupon-card.used .coupon-title{color:#98a2b3}
+.coupon-card.used .coupon-period{color:#b6bdc8}
+.coupon-card.expired{opacity:.72}
+.coupon-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.coupon-amount{font-size:28px;font-weight:800;color:#FF6B35;line-height:1.2}
+.coupon-title{font-size:15px;font-weight:700;color:#1a1a2e;line-height:1.5;margin-top:14px}
+.coupon-period{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:8px}
+.coupon-rules{margin-top:10px;border-top:1px solid rgba(237,240,245,.9);padding-top:8px}
+.coupon-rules summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#667085;font-size:12px;font-weight:700;line-height:1.7;cursor:pointer}
+.coupon-rules summary::-webkit-details-marker{display:none}
+.coupon-rules summary::after{content:'展开';font-size:11px;color:#98a2b3;font-weight:600}
+.coupon-rules[open] summary::after{content:'收起'}
+.coupon-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.coupon-meta span{padding:7px 8px;border-radius:10px;background:#F8FAFC;color:#667085;font-size:11px;line-height:1.5}
+.coupon-reason{font-size:12px;color:#FF4D4F;line-height:1.6;margin-top:8px}
+.coupon-status{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.coupon-status.unused{background:#FFF1E8;color:#FF6B35}
+.coupon-status.used{background:#F5F7FB;color:#667085}
+.coupon-status.expired{background:#F3F4F6;color:#98A2B3}
+.empty{background:#fff;border-radius:16px;padding:24px 18px;text-align:center;font-size:13px;color:#98a2b3;line-height:1.7}
+.cta{display:flex;gap:10px;margin:0 16px 20px}
+.cta:empty{display:none}
+.cta a{flex:1;height:42px;border-radius:21px;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:13px}
+.cta .primary{background:#4A6CF7;color:#fff}
+.cta .secondary{background:#fff;color:#4A6CF7;border:1px solid #DDE6FF}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">优惠券</span><span class="placeholder"></span></div>
+
+<div class="summary" id="summary"></div>
+<div class="tabs" id="tabs"></div>
+<div class="list" id="couponList"></div>
+<div class="cta">
+
+</div>
+
+<script src="coupon-data.js"></script>
+<script>
+const filters=[
+  {key:'unused',label:'待使用'},
+  {key:'used',label:'已使用'},
+  {key:'expired',label:'已失效'}
+];
+const counts=BanxingCoupons.counts();
+const state={filter:'unused'};
+
+document.getElementById('summary').innerHTML=[
+  
+].map(function(item){
+  return '<div class="summary-card"><div class="num">'+item[1]+'</div><div class="label">'+item[0]+'</div></div>';
+}).join('');
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=filters.map(function(item){
+    return '<span class="tab '+(state.filter===item.key?'active':'')+'" data-filter="'+item.key+'">'+item.label+'</span>';
+  }).join('');
+}
+
+function renderList(){
+  const items=BanxingCoupons.read().filter(function(item){return item.status===state.filter;});
+  document.getElementById('couponList').innerHTML=items.map(function(item){
+    const unavailable=item.unavailableReason||(
+      item.status==='used'&&item.usedOrderId?'已用于订单 '+item.usedOrderId:
+      item.status==='expired'?'已超过有效期':''
+    );
+    return (
+      '<div class="coupon-card '+item.status+'">'+
+        '<div class="coupon-top">'+
+          '<div class="coupon-amount">'+BanxingCoupons.displayText(item)+'</div>'+
+          '<span class="coupon-status '+item.status+'">'+BanxingCoupons.statusLabel(item.status)+'</span>'+
+        '</div>'+
+        '<div class="coupon-title">'+item.name+'</div>'+
+        '<div class="coupon-period">有效期 '+BanxingCoupons.formatDateRange(item.validFrom,item.validTo)+'</div>'+
+        '<details class="coupon-rules">'+
+          '<summary>使用规则</summary>'+
+          '<div class="coupon-meta">'+
+            '<span>门槛：'+BanxingCoupons.thresholdLabel(item)+'</span>'+
+            '<span>范围：'+(item.useScope||'全部服务项目')+'</span>'+
+            '<span>抵扣：'+(item.deductionScope||'仅抵扣任务金额')+'</span>'+
+            '<span>叠加：'+(item.stackable?'可叠加':'不可叠加')+'</span>'+
+          '</div>'+
+        '</details>'+
+        (unavailable?'<div class="coupon-reason">'+unavailable+'</div>':'')+
+      '</div>'
+    );
+  }).join('')||'<div class="empty">当前分类下暂无优惠券，去奖励中心或发布流程里再看看。</div>';
+}
+
+document.getElementById('tabs').addEventListener('click',function(event){
+  const target=event.target.closest('[data-filter]');
+  if(!target)return;
+  state.filter=target.dataset.filter;
+  renderTabs();
+  renderList();
+});
+
+renderTabs();
+renderList();
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+31:.card-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+96:  <div class="card-title">基础信息</div>
+97:  <div class="card-desc">请尽量填写完整，方便服务者判断是否接单。任务地点支持跳转地图选点，详细说明支持文字和图片。</div>
+102:  <div class="card-title">其他信息</div>
+159:  {key:'roughLocation',label:'任务地点',type:'location',required:true,placeholder:project.locationPlaceholder,defaultValue:''},
+160:  {key:'detailDescription',label:'详细说明',type:'rich-detail',required:false,placeholder:'补充现场说明、碰面点、注意事项等，最多 500 字。',defaultValue:''},
+215:  const input=document.getElementById('detailDescriptionInput');
+241:    return '<div class="field"><label>'+field.label+requiredHtml+'</label><button class="picker-trigger '+(display?'':'empty')+'" type="button" data-location-picker="1"><span class="value">'+escapeHtml(display||field.placeholder||'请选择任务地点')+'</span><span class="arrow">›</span></button><div class="field-hint">点击进入地图页选点，也可搜索地址结果后回填到这里。</div></div>';
+244:    return '<div class="field"><label>'+field.label+requiredHtml+'</label><textarea id="detailDescriptionInput" data-field-key="'+field.key+'" maxlength="500" placeholder="'+escapeHtml(field.placeholder||'')+'">'+escapeHtml(value)+'</textarea><div class="count-row"><span>支持输入文字 + 图片</span><span id="detailCount">0/500</span></div><div class="upload-row"><button class="upload-btn" id="detailImageBtn" type="button">上传图片</button><span class="upload-hint">最多 5 张图</span></div><input id="detailImageInput" type="file" accept="image/*" multiple hidden><div class="media-list" id="detailImageList"></div></div>';
+259:    const node=document.getElementById('detailDescriptionInput');
+304:  document.getElementById('pageDesc').textContent='当前项目为「'+category.name+' · '+project.name+'」，请完成任务内容、要求、时间安排、任务地点和任务酬劳填写。';
+369:    detailDescription:formData.detailDescription||'',
+421:  if(event.target.id==='detailImageBtn'){
+422:    document.getElementById('detailImageInput').click();
+434:  if(event.target.id==='detailDescriptionInput'){
+440:  if(event.target.id==='detailImageInput'){

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>认证中心 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.banner{margin:16px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);border-radius:18px;padding:18px 16px;color:#fff}
+.banner h3{font-size:18px}
+.banner p{font-size:12px;line-height:1.7;opacity:.92;margin-top:8px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chips span{padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.16);font-size:11px}
+.auth-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px}
+.auth-card{min-height:132px;background:#fff;border-radius:16px;padding:16px 10px;text-decoration:none;color:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 22px rgba(24,39,75,.04)}
+.status-icon{width:44px;height:44px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#eef2ff;color:#4A6CF7;flex-shrink:0}
+.status-icon.done{background:#ebfff1;color:#14a44d}
+.status-icon.optional{background:#fff7e6;color:#d48806}
+.auth-title{font-size:15px;font-weight:700;text-align:center}
+.auth-meta{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;min-height:22px}
+.tag{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700}
+.tag.required{background:#FFF1F0;color:#FF4D4F}
+.tag.optional{background:#FFF7E6;color:#D48806}
+.done{color:#14a44d;font-size:12px}
+.pending{color:#ff7a45;font-size:12px}
+.optional-text{color:#d48806;font-size:12px}
+.benefit-card{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.benefit-card .title{font-size:15px;font-weight:700;color:#1a1a2e}
+.benefit-list{display:grid;gap:10px;margin-top:12px}
+.benefit-list div{padding:12px;border-radius:14px;background:#f8faff}
+.benefit-list strong{font-size:14px;color:#1a1a2e}
+.benefit-list p{font-size:12px;color:#667085;line-height:1.7;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">认证中心</span><span class="placeholder"></span></div>
+
+
+<div class="auth-grid">
+  <a href="realname-auth.html" class="auth-card">
+    <div class="status-icon" id="realnameIcon">✅</div>
+    <div class="auth-title">实名认证</div>
+    <div class="auth-meta">
+      <span class="tag required">必需</span>
+      <span class="pending" id="realnameLabel">未完成</span>
+    </div>
+  </a>
+  <a href="edu-auth.html" class="auth-card">
+    <div class="status-icon optional" id="eduIcon">🎓</div>
+    <div class="auth-title">学历认证</div>
+    <div class="auth-meta">
+      <span class="tag optional">可选</span>
+      <span class="optional-text" id="eduLabel">按需完成</span>
+    </div>
+  </a>
+  <a href="skill-cert.html" class="auth-card">
+    <div class="status-icon optional" id="certIcon">📄</div>
+    <div class="auth-title">技能认证</div>
+    <div class="auth-meta">
+      <span class="tag optional">可选</span>
+      <span class="optional-text" id="certLabel">API核验</span>
+    </div>
+  </a>
+  <a href="emergency-contact.html" class="auth-card">
+    <div class="status-icon" id="emergencyIcon">📱</div>
+    <div class="auth-title">紧急联系人</div>
+    <div class="auth-meta">
+      <span class="pending" id="emergencyLabel">未绑定</span>
+    </div>
+  </a>
+</div>
+
+
+
+<script>
+const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+function setDone(iconId,labelId,labelText,extraClass){
+  const icon=document.getElementById(iconId);
+  icon.className='status-icon done'+(extraClass?' '+extraClass:'');
+  const label=document.getElementById(labelId);
+  label.className='done';
+  label.textContent=labelText;
+}
+if(authState.realnameVerified){
+  setDone('realnameIcon','realnameLabel','已认证','');
+}
+if(authState.eduVerified){
+  setDone('eduIcon','eduLabel','已认证','optional');
+}
+if(authState.skillCertVerified){
+  setDone('certIcon','certLabel','已核验','optional');
+}
+if(authState.emergencyContactBound){
+  setDone('emergencyIcon','emergencyLabel','已绑定','');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>发布动态 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:32px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.section{background:#fff;margin:12px 16px;border-radius:18px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.section-desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.user-row{display:flex;gap:12px;align-items:flex-start}
+.avatar{width:44px;height:44px;border-radius:16px;background:#eef2ff;color:#4A6CF7;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none}
+.user-row strong{display:block;font-size:16px;color:#1a1a2e}
+.user-row span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.textarea-wrap{margin-top:14px}
+.textarea-wrap textarea{width:100%;min-height:168px;border:1px solid #e7ebf3;border-radius:16px;padding:14px;font-size:14px;line-height:1.8;outline:none;resize:none}
+.textarea-wrap textarea:focus{border-color:#4A6CF7}
+.count-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:12px;color:#98a2b3}
+.upload-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.upload-btn{width:68px;height:68px;border:1px dashed #d0d5dd;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#98a2b3;cursor:pointer;background:#fafbff;text-align:center}
+.upload-btn:active{border-color:#4A6CF7;color:#4A6CF7}
+.upload-btn .icon{font-size:22px;margin-bottom:2px}
+.upload-btn span{font-size:11px;line-height:1.4}
+.upload-btn small{font-size:11px;color:#98a2b3;margin-top:2px}
+.upload-btn.disabled{opacity:.45;cursor:not-allowed}
+.image-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.image-card,.image-add{width:68px;height:68px;border-radius:12px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+.video-card{width:68px;height:68px;margin-top:12px;border-radius:12px;background:#111827;color:#fff;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;position:relative}
+.video-card strong{font-size:11px;line-height:1.4}
+.video-card span{font-size:11px;color:rgba(255,255,255,.72)}
+.video-card button,.image-card button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border:none;border-radius:50%;background:#fff;color:#4A6CF7;font-size:0;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(15,23,42,.12)}
+.video-card button::after,.image-card button::after{content:'×';font-size:12px}
+.image-card strong{font-size:11px;color:#1a1a2e;line-height:1.4;word-break:break-word}
+.image-card span{display:none}
+.image-card.failed{background:#fff1f0;border:1px solid #ffc9c9}
+.image-card.failed strong,.image-card.failed span{color:#ff4d4f}
+.image-add{border:1px dashed #d6deeb;background:#fafbff;color:#98a2b3;font-size:12px}
+.options{display:grid;gap:10px;margin-top:12px}
+.option-row{display:flex;gap:10px}
+.option-chip{flex:1;height:42px;border:1px solid #e7ebf3;border-radius:16px;background:#fff;color:#667085;font-size:13px;font-weight:600;cursor:pointer}
+.option-chip.active{border-color:#4A6CF7;background:#eef2ff;color:#4A6CF7}
+.order-module{margin-top:12px;padding:14px;border:1px dashed #d6deeb;border-radius:16px;background:#fafbff}
+.order-module strong{display:block;font-size:14px;color:#1a1a2e}
+.order-module span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:5px}
+.order-actions{display:flex;gap:8px;margin-top:12px}
+.order-actions button{height:34px;padding:0 12px;border:none;border-radius:17px;background:#eef2ff;color:#4A6CF7;font-size:12px;font-weight:700;cursor:pointer}
+.demo-grid{display:grid;gap:12px;margin-top:12px}
+.field label{display:block;font-size:12px;color:#667085;margin-bottom:6px}
+.field select{width:100%;height:42px;border:1px solid #e7ebf3;border-radius:14px;padding:0 12px;font-size:13px;color:#1a1a2e;outline:none;background:#fff}
+.rule-list{display:grid;gap:10px;margin-top:12px}
+.rule-item{padding:12px;border-radius:14px;background:#f8faff}
+.rule-item strong{display:block;font-size:14px;color:#1a1a2e}
+.rule-item span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:5px}
+.submit-wrap{padding:4px 16px 16px}
+.submit-btn{width:100%;height:48px;border:none;border-radius:24px;background:#4A6CF7;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.submit-note{font-size:12px;color:#98a2b3;line-height:1.7;text-align:center;margin-top:10px}
+.blocked{background:#fff;margin:16px;border-radius:18px;padding:24px 18px;text-align:center}
+.blocked .icon{width:64px;height:64px;border-radius:22px;background:#fff7e6;color:#fa8c16;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto}
+.blocked h2{font-size:20px;color:#1a1a2e;margin-top:16px}
+.blocked p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:10px}
+.blocked-actions{display:flex;gap:10px;margin-top:18px}
+.blocked-actions a{flex:1;height:42px;border-radius:21px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;font-weight:700}
+.blocked-actions .primary{background:#4A6CF7;color:#fff}
+.blocked-actions .ghost{background:#eef2ff;color:#4A6CF7}
+.mask{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:375px;background:rgba(15,23,42,.36);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.mask.show{display:flex}
+.sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px 22px;max-height:82vh;overflow:auto}
+.sheet-handle{width:48px;height:4px;border-radius:2px;background:#d0d5dd;margin:0 auto 14px}
+.sheet-title{font-size:16px;font-weight:700;color:#1a1a2e;text-align:center}
+.order-list{display:grid;gap:10px;margin-top:16px}
+.order-item{padding:14px;border:1px solid #e7ebf3;border-radius:16px;background:#fff;cursor:pointer}
+.order-item.active{border-color:#4A6CF7;background:#eef2ff}
+.order-item strong{display:block;font-size:14px;color:#1a1a2e}
+.order-item span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:5px}
+.sheet-actions{display:flex;gap:10px;margin-top:16px}
+.sheet-actions button{flex:1;height:42px;border:none;border-radius:21px;font-size:14px;cursor:pointer}
+.sheet-actions .ghost{background:#f3f4f6;color:#667085}
+.sheet-actions .primary{background:#4A6CF7;color:#fff}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(19,194,194,.94)}
+.toast.warn{background:rgba(250,140,22,.94)}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="moments.html" class="back">←</a><span class="title">发布动态</span><span class="placeholder"></span></div>
+
+<div id="contentMount"></div>
+
+<div class="mask" id="orderMask">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">关联已完成订单</div>
+    <div class="order-list" id="orderList"></div>
+    <div class="sheet-actions">
+      <button class="ghost" type="button" id="orderCancelBtn">取消</button>
+      <button class="primary" type="button" id="orderConfirmBtn">确认关联</button>
+    </div>
+  </div>
+</div>
+
+<input id="imageInput" type="file" accept="image/*" multiple hidden>
+<input id="videoInput" type="file" accept="video/*" hidden>
+<div class="toast" id="pageToast"></div>
+
+<script src="time-utils.js"></script>
+<script src="moments-data.js"></script>
+<script>
+const gate=BanxingMoments.getPublishGate();
+const currentUser=BanxingMoments.getCurrentUser();
+const imageColors=['#dbeafe','#fee2e2','#dcfce7','#fef3c7','#ede9fe','#fce7f3','#cffafe','#e0f2fe','#f3e8ff'];
+let draftImages=[];
+let draftVideo=null;
+let selectedVisibility='public';
+let selectedOrder=null;
+let tempSelectedOrderId='';
+let toastTimer;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function showToast(text,type){
+  clearTimeout(toastTimer);
+  const toast=document.getElementById('pageToast');
+  toast.textContent=text;
+  toast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    toast.className='toast';
+  },2200);
+}
+
+function renderBlocked(){
+  const actions=gate.blockers.map(function(item,index){
+    return '<a class="'+(index===0?'primary':'ghost')+'" href="'+escapeHtml(item.href)+'">'+escapeHtml(item.action)+'</a>';
+  }).join('');
+  document.getElementById('contentMount').innerHTML=
+    '<div class="blocked">'+
+      '<div class="icon">🫧</div>'+
+      '<h2>暂不可发布动态</h2>'+
+      '<p>'+escapeHtml(gate.blockers.map(function(item){return item.title;}).join('，'))+'。完成条件后，即可发布图文动态并关联已完成订单。</p>'+
+      '<div class="blocked-actions">'+actions+'</div>'+
+    '</div>';
+}
+
+function renderImages(){
+  const mount=document.getElementById('imageGrid');
+  if(!mount)return;
+  const uploadBtn=document.getElementById('uploadBtn');
+  if(uploadBtn){
+    const reachedLimit=draftImages.length>=9;
+    uploadBtn.classList.toggle('disabled',reachedLimit);
+    uploadBtn.innerHTML=
+      '<div class="icon">🖼️</div>'+
+      '<span>'+(reachedLimit?'已达图片上限':'上传图片')+'</span>'+
+      '<small>'+draftImages.length+'/9</small>';
+  }
+  const cards=draftImages.map(function(item){
+    return (
+      '<div class="image-card '+(item.failed?'failed':'')+'" '+(item.failed?'':'style="background:'+escapeHtml(item.color)+'"')+'>'+
+        '<strong>'+escapeHtml(item.label)+'</strong>'+
+        '<span>'+escapeHtml(item.failed?'上传失败，可重试':'已上传，可直接发布')+'</span>'+
+        (item.failed?'<button type="button" data-retry="'+escapeHtml(item.id)+'">重试</button>':'<button type="button" data-remove="'+escapeHtml(item.id)+'">移除</button>')+
+      '</div>'
+    );
+  }).join('');
+  mount.innerHTML=cards;
+  renderVideo();
+}
+
+function renderVideo(){
+  const mount=document.getElementById('videoMount');
+  if(!mount)return;
+  const uploadBtn=document.getElementById('uploadVideoBtn');
+  if(uploadBtn){
+    uploadBtn.classList.toggle('disabled',!!draftVideo);
+    uploadBtn.innerHTML=
+      '<div class="icon">🎬</div>'+
+      '<span>'+(draftVideo?'已添加视频':'上传视频')+'</span>'+
+      '<small>1 个，≤10M</small>';
+  }
+  mount.innerHTML=draftVideo?(
+    '<div class="video-card">'+
+      '<div><strong>🎬 '+escapeHtml(draftVideo.label)+'</strong><span>'+escapeHtml(formatFileSize(draftVideo.size))+'</span></div>'+
+      '<button type="button" data-remove-video="1">移除</button>'+
+    '</div>'
+  ):'';
+}
+
+function renderOrderModule(){
+  const mount=document.getElementById('orderModule');
+  if(!mount)return;
+  if(selectedOrder){
+    mount.innerHTML=
+      '<strong>'+escapeHtml(selectedOrder.serviceName||selectedOrder.title)+'</strong>'+
+      '<span>任务时间：'+escapeHtml(BanxingTimeUtils.formatTaskTime(selectedOrder.taskTime||selectedOrder.finishedAt||selectedOrder.time)||selectedOrder.taskTime||selectedOrder.finishedAt||selectedOrder.time||'待确认')+'</span>'+
+      '<div class="order-actions"><button type="button" id="changeOrderBtn">切换其他订单</button><button type="button" id="clearOrderBtn">取消关联</button></div>';
+    return;
+  }
+  mount.innerHTML=
+    '<strong>关联服务记录</strong>'+
+    '<span>可选择一个已完成订单作为“服务记录”展示，提高动态可信度。</span>'+
+    '<div class="order-actions"><button type="button" id="selectOrderBtn">选择订单</button></div>';
+}
+
+function renderForm(){
+  document.getElementById('contentMount').innerHTML=
+    '<div class="section">'+
+      '<div class="user-row">'+
+      '</div>'+
+      '<div class="textarea-wrap">'+
+        '<textarea id="contentInput" maxlength="500" placeholder="分享兼职心得、技能展示或生活内容。正文最多 500 字。"></textarea>'+
+      '</div>'+
+      '<div class="count-row"><span></span><span id="contentCount">0/500</span></div>'+
+      '<div class="upload-actions">'+
+        '<div class="upload-btn" id="uploadBtn" role="button" tabindex="0"></div>'+
+        '<div class="upload-btn" id="uploadVideoBtn" role="button" tabindex="0"></div>'+
+      '</div>'+
+      '<div class="image-grid" id="imageGrid"></div>'+
+      '<div id="videoMount"></div>'+
+    '</div>'+
+
+    '<div class="section">'+
+      '<div class="section-title">可见范围</div>'+
+      '<div class="options"><div class="option-row" id="visibilityRow">'+
+        '<button class="option-chip active" type="button" data-visibility="public">公开</button>'+
+        '<button class="option-chip" type="button" data-visibility="followers">仅关注者</button>'+
+        '<button class="option-chip" type="button" data-visibility="self">仅自己</button>'+
+      '</div></div>'+
+    '</div>'+
+
+    '<div class="section">'+
+      '<div class="order-module" id="orderModule"></div>'+
+    '</div>'+
+
+    '<div class="section">'+
+      '<div class="section-title">原型模拟</div>'+
+      '<div class="section-desc">用于演示 AI 审核和异常处理，不影响正式业务规则。</div>'+
+      '<div class="demo-grid">'+
+        '<div class="field"><label>审核结果模拟</label><select id="auditMode"><option value="normal">正常通过</option><option value="manual_review">疑似违规转人工</option><option value="violation">人工确认违规</option><option value="ai_offline">AI超时/离线阻塞</option></select></div>'+
+        '<div class="field"><label>上传异常模拟</label><select id="uploadMode"><option value="normal">无异常</option><option value="first_fail">首张图片上传失败</option></select></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="submit-wrap">'+
+      '<button class="submit-btn" type="button" id="submitBtn">提交发布</button>'+
+    '</div>';
+
+  renderImages();
+  renderOrderModule();
+  bindFormEvents();
+}
+
+function bindFormEvents(){
+  document.getElementById('contentInput').addEventListener('input',function(){
+    document.getElementById('contentCount').textContent=document.getElementById('contentInput').value.length+'/500';
+  });
+  document.getElementById('uploadBtn').addEventListener('click',function(){
+    if(draftImages.length>=9){
+      showToast('最多上传 9 张图片','warn');
+      return;
+    }
+    document.getElementById('imageInput').click();
+  });
+  document.getElementById('uploadVideoBtn').addEventListener('click',function(){
+    if(draftVideo){
+      showToast('最多上传 1 个视频','warn');
+      return;
+    }
+    document.getElementById('videoInput').click();
+  });
+  document.getElementById('visibilityRow').addEventListener('click',function(event){
+    const button=event.target.closest('[data-visibility]');
+    if(!button)return;
+    selectedVisibility=button.dataset.visibility||'public';
+    document.querySelectorAll('[data-visibility]').forEach(function(node){node.classList.remove('active');});
+    button.classList.add('active');
+  });
+  document.getElementById('orderModule').addEventListener('click',function(event){
+    if(event.target.id==='selectOrderBtn'||event.target.id==='changeOrderBtn'){
+      tempSelectedOrderId=selectedOrder?selectedOrder.id:'';
+      renderOrderDrawer();
+      document.getElementById('orderMask').classList.add('show');
+    }
+    if(event.target.id==='clearOrderBtn'){
+      selectedOrder=null;
+      renderOrderModule();
+    }
+  });
+  document.getElementById('imageGrid').addEventListener('click',function(event){
+    const retryBtn=event.target.closest('[data-retry]');
+    const removeBtn=event.target.closest('[data-remove]');
+    if(retryBtn){
+      draftImages=draftImages.map(function(item){
+        return item.id===retryBtn.dataset.retry?{...item,failed:false}:item;
+      });
+      renderImages();
+      return;
+    }
+    if(removeBtn){
+      draftImages=draftImages.filter(function(item){return item.id!==removeBtn.dataset.remove;});
+      renderImages();
+    }
+  });
+  document.getElementById('videoMount').addEventListener('click',function(event){
+    if(!event.target.closest('[data-remove-video]'))return;
+    draftVideo=null;
+    renderVideo();
+  });
+  document.getElementById('submitBtn').addEventListener('click',submitPost);
+}
+
+function renderOrderDrawer(){
+  const orders=BanxingMoments.getCompletedOrders();
+  document.getElementById('orderList').innerHTML=orders.map(function(order){
+    return (
+      '<div class="order-item '+(order.id===tempSelectedOrderId?'active':'')+'" data-order-id="'+escapeHtml(order.id)+'">'+
+        '<strong>'+escapeHtml(order.serviceName||order.title)+'</strong>'+
+        '<span>任务时间：'+escapeHtml(BanxingTimeUtils.formatTaskTime(order.taskTime||order.finishedAt||order.time)||order.taskTime||order.finishedAt||order.time||'待确认')+'</span>'+
+      '</div>'
+    );
+  }).join('');
+}
+
+function formatFileSize(size){
+  const value=Number(size)||0;
+  if(value>=1024*1024)return (value/1024/1024).toFixed(1).replace(/\.0$/,'')+'M';
+  if(value>=1024)return Math.ceil(value/1024)+'K';
+  return value+'B';
+}
+
+function buildImageLabel(name){
+  const clean=String(name||'').trim();
+  if(!clean)return'图片';
+  const noExt=clean.replace(/\.[^.]+$/,'');
+  return noExt.slice(0,8)||'图片';
+}
+
+function handleSelectedFiles(files){
+  const fileList=Array.from(files||[]);
+  if(!fileList.length)return;
+  const remain=9-draftImages.length;
+  if(remain<=0){
+    showToast('最多上传 9 张图片','warn');
+    return;
+  }
+  const uploadMode=document.getElementById('uploadMode')?document.getElementById('uploadMode').value:'normal';
+  const picked=fileList.slice(0,remain).map(function(file,index){
+    const color=imageColors[(draftImages.length+index)%imageColors.length];
+    return {
+      id:'img-'+Date.now()+'-'+index,
+      label:buildImageLabel(file.name),
+      color:color,
+      failed:uploadMode==='first_fail'&&draftImages.length===0&&index===0
+    };
+  });
+  draftImages=draftImages.concat(picked);
+  renderImages();
+  if(fileList.length>remain){
+    showToast('超出 9 张的图片已忽略','warn');
+  }
+  if(picked.some(function(item){return item.failed;})){
+    showToast('首张图片上传失败，可重试或仅发文字','warn');
+  }
+}
+
+function handleSelectedVideo(file){
+  if(!file)return;
+  if(draftVideo){
+    showToast('最多上传 1 个视频','warn');
+    return;
+  }
+  if(file.size>=10*1024*1024){
+    showToast('视频大小需小于 10M','warn');
+    return;
+  }
+  draftVideo={
+    id:'video-'+Date.now(),
+    label:buildImageLabel(file.name)||'视频',
+    size:file.size
+  };
+  renderVideo();
+}
+
+function submitPost(){
+  const content=document.getElementById('contentInput').value.trim();
+  const successfulImages=draftImages.filter(function(item){return !item.failed;});
+  if(!content&&!successfulImages.length&&!draftVideo){
+    showToast('至少填写正文、成功上传 1 张图片或上传 1 个视频','warn');
+    return;
+  }
+  const result=BanxingMoments.createPost({
+    text:content,
+    images:successfulImages,
+    video:draftVideo,
+    visibility:selectedVisibility,
+    order:selectedOrder,
+    auditMode:document.getElementById('auditMode').value
+  });
+  if(!result.ok){
+    showToast(result.message,'warn');
+    return;
+  }
+  location.href='moments.html?published='+encodeURIComponent(result.status);
+}
+
+if(!gate.allowed){
+  renderBlocked();
+}else{
+  renderForm();
+}
+
+document.getElementById('imageInput').addEventListener('change',function(event){
+  handleSelectedFiles(event.target.files);
+  event.target.value='';
+});
+document.getElementById('videoInput').addEventListener('change',function(event){
+  handleSelectedVideo(event.target.files&&event.target.files[0]);
+  event.target.value='';
+});
+document.getElementById('orderList').addEventListener('click',function(event){
+  const item=event.target.closest('[data-order-id]');
+  if(!item)return;
+  tempSelectedOrderId=item.dataset.orderId||'';
+  renderOrderDrawer();
+});
+document.getElementById('orderCancelBtn').addEventListener('click',function(){
+  document.getElementById('orderMask').classList.remove('show');
+});
+document.getElementById('orderConfirmBtn').addEventListener('click',function(){
+  const order=BanxingMoments.getCompletedOrders().find(function(item){return item.id===tempSelectedOrderId;})||null;
+  selectedOrder=order;
+  renderOrderModule();
+  document.getElementById('orderMask').classList.remove('show');
+});
+document.getElementById('orderMask').addEventListener('click',function(event){
+  if(event.target===event.currentTarget){
+    document.getElementById('orderMask').classList.remove('show');
+  }
+});
+</script>
+</body>
+</html>

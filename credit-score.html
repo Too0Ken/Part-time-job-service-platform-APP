@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>信用积分 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:16px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.score-card{background:#fff;margin:16px;border-radius:16px;padding:24px;text-align:center}
+.circle{width:120px;height:120px;border-radius:50%;background:conic-gradient(#52C41A 0% 92%,#f0f0f0 92%);margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.inner{width:100px;height:100px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.num{font-size:32px;font-weight:800;color:#52C41A}
+.inner .label{font-size:11px;color:#999}
+.level{display:inline-block;padding:4px 12px;border-radius:12px;font-size:13px;background:#F0FFF4;color:#52C41A;font-weight:600;margin-bottom:4px}
+.desc{font-size:12px;color:#999;margin-top:4px}
+.rule-card,.history,.entry-card{background:#fff;margin:0 16px 10px;border-radius:16px;padding:16px}
+.title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.rule-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8f8f8;font-size:13px}
+.rule-row:last-child{border:none}
+.rule-row .val{color:#4A6CF7;font-weight:700}
+.history .item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f8f8f8}
+.history .item:last-child{border:none}
+.history .type{flex:1;font-size:13px;color:#333}
+.history .change{font-size:14px;font-weight:700;min-width:60px;text-align:right;color:#FF4D4F}
+.history .time{font-size:11px;color:#999;min-width:62px;text-align:right}
+.entry-card{display:flex;align-items:center;text-decoration:none;color:#1a1a2e}
+.entry-card .icon{font-size:20px;margin-right:12px}
+.entry-card .info{flex:1}
+.entry-card .info .desc{margin-top:4px;line-height:1.6}
+.entry-card .arrow{font-size:14px;color:#ccc}
+.restore{display:flex;gap:10px;margin:16px}
+.restore .btn{flex:1;height:40px;border-radius:20px;font-size:13px;cursor:pointer;text-align:center;line-height:40px;text-decoration:none}
+.btn-primary{background:#4A6CF7;color:#fff}
+.btn-secondary{background:#fff;color:#4A6CF7;border:1px solid #4A6CF7}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="profile.html" class="back">←</a>
+  <span class="title">信用积分</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="score-card">
+  <div class="circle"><div class="inner"><span class="num">92</span><span class="label">当前信用积分</span></div></div>
+  <span class="level">⭐ 优质用户</span>
+</div>
+
+<div class="history">
+  <div class="title">扣分明细</div>
+  <div class="item"><span class="type">迟到扣分（迟到15分钟）</span><span class="change">-3</span><span class="time">3月12日</span></div>
+  <div class="item"><span class="type">服务中失联 20 分钟</span><span class="change">-2</span><span class="time">2月28日</span></div>
+  <div class="item"><span class="type">纠纷成立，未按约完成服务</span><span class="change">-5</span><span class="time">2月16日</span></div>
+  <div class="item"><span class="type">临时取消已确认订单</span><span class="change">-2</span><span class="time">1月30日</span></div>
+</div>
+
+<a href="credit-appeal-history.html" class="entry-card">
+  <span class="icon">🗂️</span>
+  <div class="info">
+    <div class="title" style="margin-bottom:0">查看申诉记录</div>
+    <div class="desc">扣分后可在这里查看历史申诉材料、关联订单、处理进度和平台结论。</div>
+  </div>
+  <span class="arrow">›</span>
+</a>
+
+<div class="restore">
+  <a href="credit-rules.html" class="btn btn-secondary">📖 查看规则</a>
+  <a href="credit-appeal.html" class="btn btn-primary">📝 发起申诉</a>
+</div>
+</body>
+</html>

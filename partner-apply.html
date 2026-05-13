@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>合伙人申请 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:40px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.hero{background:linear-gradient(135deg,#0f766e,#14b8a6);margin:16px;border-radius:18px;padding:24px 18px;color:#fff}
+.hero h2{font-size:20px;margin-bottom:8px}
+.hero p{font-size:13px;opacity:.92;line-height:1.7}
+.benefits{display:flex;gap:10px;margin-top:16px}
+.benefits .b{flex:1;background:rgba(255,255,255,.16);border-radius:12px;padding:10px 6px;font-size:11px;text-align:center}
+.benefits .b .num{font-size:18px;font-weight:700;display:block;margin-bottom:2px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:18px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:6px}
+.section-desc{font-size:12px;color:#98a2b3;line-height:1.7}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.type-card{padding:12px 8px;border-radius:14px;border:1px solid #e5e7eb;background:#fff;text-align:center;cursor:pointer}
+.type-card.active{border-color:#14b8a6;background:#f0fdfa;color:#0f766e}
+.type-card .icon{font-size:20px;margin-bottom:6px}
+.type-card strong{display:block;font-size:13px}
+.type-card span{display:block;font-size:11px;color:#98a2b3;line-height:1.6;margin-top:4px}
+.type-card.active span{color:#0f766e}
+.field{margin-top:16px}
+.field label{display:block;font-size:14px;color:#666;margin-bottom:6px}
+.field label .req{color:#FF4D4F}
+.field input,.field textarea{width:100%;border:1px solid #e8e8e8;border-radius:12px;padding:12px 14px;font-size:14px;outline:none;background:#fff}
+.field textarea{min-height:88px;resize:none}
+.hint{font-size:11px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.page-actions{display:grid;gap:12px;padding:0 16px 8px}
+.submit-btn,.ghost-btn{display:flex;width:100%;height:48px;border:none;border-radius:24px;font-size:16px;font-weight:600;cursor:pointer;align-items:center;justify-content:center;text-decoration:none}
+.submit-btn{margin:20px 0 0;background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff}
+.ghost-btn{margin:0;background:#fff;color:#667085;border:1px solid #d8dee6}
+.state-card{background:#fff;margin:16px;border-radius:16px;padding:18px}
+.state-badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:#eefcf7;color:#0f766e;font-size:11px;font-weight:700}
+.state-badge.pending{background:#FFF7E6;color:#D48806}
+.state-badge.rejected{background:#FFF1F0;color:#FF4D4F}
+.state-card h3{font-size:18px;color:#1a1a2e;margin-top:10px}
+.state-card p{font-size:13px;color:#667085;line-height:1.8;margin-top:8px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;margin-top:14px}
+.info-grid .item{font-size:12px;color:#98a2b3}
+.info-grid .item.full{grid-column:1/-1}
+.info-grid .val{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.7;margin-top:4px}
+.retry-card{background:#fff;margin:16px;border-radius:16px;padding:18px;border:1px solid #FFE1E1}
+.retry-card h3{font-size:17px;color:#1a1a2e}
+.retry-card p{font-size:13px;color:#667085;line-height:1.8;margin-top:8px}
+.retry-card .tips{display:grid;gap:10px;margin-top:14px}
+.retry-card .tip{padding:12px;border-radius:14px;background:#FFF7F7}
+.retry-card .tip strong{display:block;font-size:13px;color:#1a1a2e}
+.retry-card .tip span{display:block;font-size:12px;color:#667085;line-height:1.7;margin-top:6px}
+.image-uploader{margin-top:10px}
+.upload-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.upload-trigger{width:110px;height:74px;border:1px dashed #d0d5dd;border-radius:14px;background:#fff;color:#667085;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
+.upload-trigger .icon{font-size:22px;line-height:1}
+.upload-trigger span{font-size:12px;font-weight:700;margin-top:4px}
+.upload-trigger small{font-size:11px;color:#98a2b3;margin-top:2px}
+.upload-trigger.disabled{opacity:.45;cursor:not-allowed}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.media-card{border:1px solid #edf0f5;border-radius:14px;overflow:hidden;background:#fff;position:relative}
+.media-thumb{aspect-ratio:1/1;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.media-name{padding:8px 10px;font-size:11px;color:#667085;line-height:1.5;word-break:break-word}
+.media-remove{position:absolute;top:6px;right:6px;width:22px;height:22px;border:none;border-radius:11px;background:rgba(255,77,79,.94);color:#fff;font-size:0;cursor:pointer}
+.media-remove::after{content:'×';font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="partner-dashboard.html" class="back" id="backLink">←</a><span class="title">合伙人申请</span><span class="placeholder"></span></div>
+
+
+
+<div id="contentMount"></div>
+
+<script src="partner-data.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const mock=params.get('mock')||'';
+const partnerState=mock?BanxingPartner.syncMockState(mock):BanxingPartner.get();
+document.getElementById('backLink').href=buildPartnerHref('partner-dashboard.html');
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function buildPartnerHref(page){
+  return mock?page+'?mock='+encodeURIComponent(mock):page;
+}
+
+function renderMediaGrid(images){
+  if(!Array.isArray(images)||!images.length)return '';
+  return `
+    <div class="media-grid">
+      ${images.map(function(item,index){
+        const source=typeof item==='string'?{name:item,dataUrl:''}:item||{};
+        const name=source.name||('图片'+(index+1));
+        const thumb=source.dataUrl
+          ?'<img alt="'+escapeHtml(name)+'" src="'+escapeHtml(source.dataUrl)+'">'
+          :'<span>'+escapeHtml(name)+'</span>';
+        return `
+          <div class="media-card">
+            <button class="media-remove" type="button" data-remove-material-image="${escapeHtml(source.id||('img-'+index))}">删除</button>
+            <div class="media-thumb">${thumb}</div>
+            <div class="media-name">${escapeHtml(name)}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderStateCard(status){
+  const isApproved=status.status==='approved';
+  const badgeClass=isApproved?'state-badge':'state-badge pending';
+  const title=isApproved?'当前申请已通过':'申请已提交，正在审核';
+  const desc=isApproved
+    ?'合伙人资格已开通，无需重复申请。后续请直接在合伙人中心查看收益和分佣比例。'
+    :'你的资料已经保存，可回到合伙人中心查看审核进度。';
+  const primaryHref=buildPartnerHref('partner-dashboard.html');
+  const primaryText=isApproved?'返回合伙人中心':'查看审核进度';
+  return `
+    <div class="state-card">
+      <span class="${badgeClass}">${escapeHtml(isApproved?'已通过':'审核中')}</span>
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(desc)}</p>
+      <div class="info-grid">
+        <div class="item"><div>合伙人类型</div><div class="val">${escapeHtml(status.application.type)}</div></div>
+        <div class="item"><div>主体名称</div><div class="val">${escapeHtml(status.application.name||'未填写')}</div></div>
+        <div class="item full"><div>推广渠道</div><div class="val">${escapeHtml(status.application.channel||'未填写')}</div></div>
+        <div class="item"><div>预计月拉新</div><div class="val">${escapeHtml(status.application.monthlyLeads||'未填写')}</div></div>
+        <div class="item"><div>结算联系人</div><div class="val">${escapeHtml(status.application.contact||'未填写')}</div></div>
+        <div class="item full"><div>资质材料</div><div class="val">${escapeHtml(status.application.materials||'未补充')}</div></div>
+        <div class="item full"><div>材料图片</div><div class="val">${status.application.materialsImages&&status.application.materialsImages.length?renderMediaGrid(status.application.materialsImages):'未上传图片'}</div></div>
+      </div>
+    </div>
+    <div class="page-actions">
+      <a class="submit-btn" href="${primaryHref}">${primaryText}</a>
+      <a class="ghost-btn" href="${buildPartnerHref('partner-dashboard.html')}">返回合伙人中心</a>
+    </div>
+  `;
+}
+
+function renderRetryCard(status){
+  return `
+    <div class="retry-card">
+      <span class="state-badge rejected">未通过</span>
+      <h3>请修改后重新申请</h3>
+      <p>${escapeHtml(status.review.desc||'本次申请未通过，请根据驳回原因修改后重新申请。')}</p>
+      <div class="tips">
+        <div class="tip">
+          <strong>驳回原因</strong>
+          <span>${escapeHtml(status.review.reason||'请补充资料后重新提交')}</span>
+        </div>
+        <div class="tip">
+          <strong>修改建议</strong>
+          <span>${escapeHtml(status.review.nextAction||'补充资料后重新提交')}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderForm(status){
+  const application=status&&status.application?status.application:{type:'个人',name:'',channel:'',monthlyLeads:'',contact:'',materials:''};
+  const selectedType=application.type||'个人';
+  const prefix=status&&status.status==='rejected'?renderRetryCard(status):'';
+  return `
+    ${prefix}
+    <div class="card">
+      <div class="section-title">申请信息</div>
+
+      <div class="type-grid" id="typeGrid">
+        <div class="type-card ${selectedType==='个人'?'active':''}" data-type="个人">
+          <div class="icon">🧑</div>
+          <strong>个人</strong>
+          <span>适合个人推广者</span>
+        </div>
+        <div class="type-card ${selectedType==='公司'?'active':''}" data-type="公司">
+          <div class="icon">🏢</div>
+          <strong>公司</strong>
+          <span>适合渠道与机构</span>
+        </div>
+        <div class="type-card ${selectedType==='组织'?'active':''}" data-type="组织">
+          <div class="icon">🏫</div>
+          <strong>组织</strong>
+          <span>适合社团/协会</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>主体名称 <span class="req">*</span></label>
+        <input id="nameInput" placeholder="例如：张三 / 某某公司 / 某某校园组织" value="${escapeHtml(application.name||'')}">
+      </div>
+
+      <div class="field">
+        <label>推广渠道描述 <span class="req">*</span></label>
+        <textarea id="channelInput" placeholder="描述你的推广渠道，如：校园社群、公众号、私域社群、线下活动、公司渠道合作等">${escapeHtml(application.channel||'')}</textarea>
+      </div>
+
+      <div class="field">
+        <label>预计月拉新人数</label>
+        <input id="monthlyInput" placeholder="如：50人" value="${escapeHtml(application.monthlyLeads||'')}">
+      </div>
+
+      <div class="field">
+        <label>结算联系人 / 手机号 <span class="req">*</span></label>
+        <input id="contactInput" placeholder="便于后续分佣结算与回访" value="${escapeHtml(application.contact||'')}">
+      </div>
+
+      <div class="field">
+        <label>资质材料 / 补充说明</label>
+        <textarea id="materialsInput" placeholder="如有营业执照、组织证明、社群截图或渠道说明，可填写在这里">${escapeHtml(application.materials||'')}</textarea>
+        <div class="hint">个人可不填，公司和组织建议补充，方便更快审核。</div>
+      </div>
+
+      <div class="field">
+        <label>资质图片</label>
+        <div class="image-uploader">
+          <div class="upload-actions">
+            <button class="upload-trigger" id="materialsImageBtn" type="button">
+              <span class="icon">🖼️</span>
+              <span>上传图片</span>
+              <small id="materialsImageCount">0/6</small>
+            </button>
+            <input id="materialsImageInput" type="file" accept="image/*" multiple hidden>
+          </div>
+          <div class="media-grid" id="materialsImageList"></div>
+          <div class="hint">可上传营业执照、社群截图、渠道证明、活动海报等图片，最多 6 张。</div>
+        </div>
+      </div>
+    </div>
+    <div class="page-actions">
+      <button class="submit-btn" id="submitBtn" type="button">${status&&status.status==='rejected'?'重新提交申请':'提交合伙人申请'}</button>
+    </div>
+  `;
+}
+
+const canEdit=partnerState.status==='none'||partnerState.status==='rejected';
+document.getElementById('contentMount').innerHTML=canEdit?renderForm(partnerState):renderStateCard(partnerState);
+
+if(canEdit){
+  let selectedType=partnerState.application&&partnerState.application.type||'个人';
+  let materialsImages=(partnerState.application&&partnerState.application.materialsImages||[]).map(function(item,index){
+    if(typeof item==='string'){
+      return {id:'img-'+index,name:item,dataUrl:''};
+    }
+    return {
+      id:item.id||('img-'+index),
+      name:item.name||('图片'+(index+1)),
+      dataUrl:item.dataUrl||''
+    };
+  });
+
+  function renderMaterialsImages(){
+    const btn=document.getElementById('materialsImageBtn');
+    const count=document.getElementById('materialsImageCount');
+    const mount=document.getElementById('materialsImageList');
+    if(btn){
+      const reachedLimit=materialsImages.length>=6;
+      btn.classList.toggle('disabled',reachedLimit);
+      count.textContent=materialsImages.length+'/6';
+      btn.disabled=reachedLimit;
+    }
+    if(!mount)return;
+    mount.innerHTML=materialsImages.length?materialsImages.map(function(item){
+      return `
+        <div class="media-card">
+          <button class="media-remove" type="button" data-remove-material-image="${escapeHtml(item.id)}">删除</button>
+          <div class="media-thumb">${item.dataUrl?'<img alt="'+escapeHtml(item.name)+'" src="'+escapeHtml(item.dataUrl)+'">':'<span>'+escapeHtml(item.name)+'</span>'}</div>
+          <div class="media-name">${escapeHtml(item.name)}</div>
+        </div>
+      `;
+    }).join(''):'<div class="hint">尚未上传图片</div>';
+  }
+
+  function normalizeFiles(fileList){
+    return Array.from(fileList||[]).slice(0,6-materialsImages.length);
+  }
+
+  function addMaterialImages(fileList){
+    const files=normalizeFiles(fileList);
+    if(!files.length){
+      showToast(materialsImages.length>=6?'图片已达到上限':'请选择图片');
+      return;
+    }
+    let pending=files.length;
+    files.forEach(function(file){
+      const reader=new FileReader();
+      reader.onload=function(event){
+        materialsImages.push({
+          id:'img-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),
+          name:(file.name||'图片').replace(/\.[^.]+$/,'').slice(0,18)||'图片',
+          dataUrl:event.target.result
+        });
+        pending-=1;
+        if(pending<=0)renderMaterialsImages();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.querySelectorAll('.type-card').forEach(function(card){
+    card.addEventListener('click',function(){
+      selectedType=card.dataset.type||'个人';
+      document.querySelectorAll('.type-card').forEach(function(item){item.classList.remove('active');});
+      card.classList.add('active');
+    });
+  });
+
+  document.getElementById('materialsImageBtn').addEventListener('click',function(){
+    if(materialsImages.length>=6)return;
+    document.getElementById('materialsImageInput').click();
+  });
+  document.getElementById('materialsImageInput').addEventListener('change',function(event){
+    addMaterialImages(event.target.files);
+    event.target.value='';
+  });
+  document.getElementById('materialsImageList').addEventListener('click',function(event){
+    const remove=event.target.closest('[data-remove-material-image]');
+    if(!remove)return;
+    materialsImages=materialsImages.filter(function(item){return item.id!==remove.dataset.removeMaterialImage;});
+    renderMaterialsImages();
+  });
+  renderMaterialsImages();
+
+  document.getElementById('submitBtn').addEventListener('click',function(){
+    const name=document.getElementById('nameInput').value.trim();
+    const channel=document.getElementById('channelInput').value.trim();
+    const monthlyLeads=document.getElementById('monthlyInput').value.trim();
+    const contact=document.getElementById('contactInput').value.trim();
+    const materials=document.getElementById('materialsInput').value.trim();
+    if(!name||!channel||!contact){
+      alert('请先补全主体名称、推广渠道描述和结算联系人。');
+      return;
+    }
+    BanxingPartner.saveApplication({
+      type:selectedType,
+      name:name,
+      channel:channel,
+      monthlyLeads:monthlyLeads,
+      contact:contact,
+      materials:materials||'未补充资质材料',
+      materialsImages:materialsImages,
+      submittedAt:'2026-04-16 18:20'
+    });
+    location.href='partner-dashboard.html';
+  });
+}
+</script>
+</body>
+</html>

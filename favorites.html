@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>收藏任务 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.list{padding:12px 0 20px}
+.task-link{display:block;margin:0 16px 10px;text-decoration:none;color:inherit}
+.task-card{background:#fff;border-radius:14px;padding:14px;position:relative;border:1px solid #edf0f5}
+.task-card .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;padding-right:56px}
+.task-card .task-name{font-size:15px;font-weight:600;color:#1a1a2e;line-height:1.4;flex:1;min-width:0}
+.task-card .price{font-size:18px;font-weight:700;color:#FF6B35;white-space:nowrap;flex:none}
+.task-card .price small{font-size:12px;font-weight:400}
+.task-card .meta{display:flex;align-items:center;gap:12px;font-size:12px;color:#999;flex-wrap:wrap}
+.task-card .meta span{display:flex;align-items:center;gap:4px}
+.task-status{position:absolute;top:14px;right:14px;display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.task-status.closed{background:#F3F4F6;color:#9CA3AF}
+.task-status.open{background:#EEF2FF;color:#4A6CF7}
+.actions{display:flex;justify-content:flex-end;margin-top:12px}
+.actions button{height:32px;padding:0 14px;border:none;border-radius:16px;background:#FFF1F0;color:#FF4D4F;font-size:12px;font-weight:700;cursor:pointer}
+.empty{margin:40px 16px 0;background:#fff;border-radius:18px;padding:36px 18px;text-align:center}
+.empty strong{display:block;font-size:18px;color:#1a1a2e}
+.empty p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:8px}
+.empty a{display:inline-flex;margin-top:16px;height:42px;padding:0 18px;border-radius:21px;background:#4A6CF7;color:#fff;text-decoration:none;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">收藏任务</span><span class="placeholder"></span></div>
+
+<div class="list" id="favoriteList"></div>
+
+<script src="moments-data.js"></script>
+<script src="prototype-data.js"></script>
+<script src="task-preferences.js"></script>
+<script src="time-utils.js"></script>
+<div class="toast" id="pageToast"></div>
+<script>
+const DATA=window.BANXING_DATA;
+const STORAGE_KEYS={
+  current:'banxing.currentLocationId',
+  browse:'banxing.browseLocationId'
+};
+const TYPE_META={
+  cat:{label:'上门喂猫'},
+  outdoor:{label:'户外任务'},
+  health:{label:'健康陪诊'},
+  wedding:{label:'婚庆协助'}
+};
+let toastTimer;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function showToast(text){
+  clearTimeout(toastTimer);
+  const toast=document.getElementById('pageToast');
+  toast.textContent=text;
+  toast.className='toast show';
+  toastTimer=setTimeout(function(){
+    toast.className='toast';
+  },2200);
+}
+
+function formatDistance(distanceKm){
+  if(distanceKm<10)return distanceKm.toFixed(1)+'km';
+  return Math.round(distanceKm)+'km';
+}
+
+function normalizeTaskDuration(durationText){
+  const source=String(durationText||'').trim();
+  if(!source)return '';
+  const cleaned=source.replace(/^约/,'');
+  const hourMatch=cleaned.match(/(\d+(?:\.\d+)?)h/i);
+  if(hourMatch)return hourMatch[1]+' 小时';
+  const minuteMatch=cleaned.match(/(\d+)\s*分钟/);
+  if(minuteMatch)return minuteMatch[1]+' 分钟';
+  if(/全天/.test(cleaned))return '全天';
+  if(/半天/.test(cleaned))return '半天';
+  return cleaned.replace(/\s+/g,' ');
+}
+
+function extractTaskDistrict(locationText){
+  const source=String(locationText||'').trim();
+  const matches=source.match(/[^省市区县旗\s·,，/]+(?:区|县|旗|市)/g);
+  if(matches&&matches.length)return matches[matches.length-1];
+  const parts=source.split(/[·,，/]/).map(function(item){
+    return item.trim();
+  }).filter(Boolean);
+  return parts[parts.length-1]||source;
+}
+
+function getTaskDisplayTitle(task){
+  const meta=TYPE_META[task.type]||{label:'任务'};
+  return [
+    meta.label,
+    normalizeTaskDuration(task.duration),
+    extractTaskDistrict(task.locationName)
+  ].filter(Boolean).join('｜')||task.title;
+}
+
+function getSelectedLocation(){
+  const browseId=localStorage.getItem(STORAGE_KEYS.browse);
+  const currentId=localStorage.getItem(STORAGE_KEYS.current)||DATA.defaultCurrentLocationId;
+  return DATA.getLocationById(browseId)||DATA.getLocationById(currentId)||DATA.getLocationById(DATA.defaultCurrentLocationId);
+}
+
+function getTaskMaskedLocation(task){
+  const distanceKm=DATA.distanceKm(getSelectedLocation(),task);
+  return extractTaskDistrict(task.locationName)+' · 距你约'+formatDistance(distanceKm);
+}
+
+function buildTaskHref(task){
+  const displayTime=BanxingTimeUtils.formatTaskTime(task.timeText)||task.timeText;
+  const params=new URLSearchParams({
+    from:'favorites',
+    type:task.type,
+    taskId:task.id,
+    title:getTaskDisplayTitle(task),
+    time:displayTime,
+    location:task.locationName,
+    price:'¥'+task.price,
+    insurance:'🛡️ '+task.insuranceText
+  });
+  return 'fuwuzhe_task-detail.html?'+params.toString();
+}
+
+function getFavoriteTasks(){
+  const blockedNames=window.BanxingMoments?BanxingMoments.getBlockedNames():[];
+  return BanxingTaskPrefs.getFavorites().map(function(entry){
+    const task=DATA.tasks.find(function(item){return item.id===entry.taskId;});
+    if(!task||blockedNames.includes(task.publisher))return null;
+    return Object.assign({},task,{favoritedAt:entry.createdAt});
+  }).filter(Boolean);
+}
+
+function render(){
+  const favoriteTasks=getFavoriteTasks();
+  const mount=document.getElementById('favoriteList');
+  if(!favoriteTasks.length){
+    mount.innerHTML='<div class="empty"><strong>还没有收藏任务</strong><p>在首页任务卡片左滑后点击“收藏”，这里会自动同步展示。</p><a href="index.html">去首页看看</a></div>';
+    return;
+  }
+  mount.innerHTML=favoriteTasks.map(function(item){
+    const timeText=BanxingTimeUtils.formatTaskTime(item.timeText)||item.timeText;
+    const statusText=String(item.statusText||'').trim();
+    const statusClass=statusText&&statusText!=='已结束归档'?'open':'closed';
+    const statusHtml=statusText?'<span class="task-status '+statusClass+'">'+escapeHtml(statusText)+'</span>':'';
+    return (
+      '<a class="task-link" href="'+escapeHtml(buildTaskHref(item))+'">'+
+        '<div class="task-card">'+
+          statusHtml+
+          '<div class="title-row"><span class="task-name">'+escapeHtml(getTaskDisplayTitle(item))+'</span><span class="price">¥'+escapeHtml(item.price)+'<small>/次</small></span></div>'+
+          '<div class="meta"><span>📍 '+escapeHtml(getTaskMaskedLocation(item))+'</span><span>🕐 '+escapeHtml(timeText)+'</span></div>'+
+          '<div class="actions"><button type="button" data-unfavorite="'+escapeHtml(item.id)+'">取消收藏</button></div>'+
+        '</div>'+
+      '</a>'
+    );
+  }).join('');
+}
+
+document.getElementById('favoriteList').addEventListener('click',function(event){
+  const button=event.target.closest('[data-unfavorite]');
+  if(!button)return;
+  event.preventDefault();
+  event.stopPropagation();
+  BanxingTaskPrefs.toggleFavorite(button.dataset.unfavorite,false);
+  render();
+  showToast('已取消收藏');
+});
+
+render();
+</script>
+</body>
+</html>

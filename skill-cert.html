@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>技能证书 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:20px}
+.title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.desc{font-size:13px;color:#999;line-height:1.7;margin-bottom:18px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:14px;color:#666;margin-bottom:8px}
+.field input,.field select{width:100%;height:44px;border:1px solid #e8e8e8;border-radius:8px;padding:0 12px;font-size:15px;outline:none}
+.api-box{background:#F6FBFF;border:1px solid #E6F4FF;border-radius:12px;padding:14px;margin-top:6px}
+.api-box h4{font-size:14px;color:#1a1a2e;margin-bottom:6px}
+.api-box p{font-size:12px;color:#666;line-height:1.7}
+.result{display:none;margin-top:12px;padding:12px;background:#F6FFED;border-radius:10px;font-size:12px;color:#389e0d;line-height:1.7}
+.result.active{display:block}
+.saved-list{margin-top:14px;display:grid;gap:10px}
+.saved-item{padding:12px;border:1px solid #edf0f5;border-radius:10px;background:#fff}
+.saved-item strong{display:block;font-size:13px;color:#1a1a2e}
+.saved-item span{display:block;font-size:12px;color:#999;line-height:1.6;margin-top:4px}
+.add-entry{display:flex;align-items:center;justify-content:center;height:48px;margin-top:16px;border:1px dashed #4A6CF7;border-radius:12px;color:#4A6CF7;background:#F7F9FF;text-decoration:none;font-size:14px;font-weight:600}
+.actions{display:flex;gap:10px;padding:0 16px 24px}
+.actions button{flex:1;height:48px;border:none;border-radius:24px;font-size:15px;cursor:pointer}
+.verify-btn{background:#EEF2FF;color:#4A6CF7}
+.save-btn{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff}
+.save-btn:disabled{background:#d9d9d9;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="auth-center.html" class="back" id="backLink">←</a><span class="title" id="pageTitle">技能证书</span><span class="placeholder"></span></div>
+<div class="card" id="listCard" style="display:none;">
+  <div class="saved-list" id="savedCertList"></div>
+  <a class="add-entry" href="skill-cert.html?mode=add">+ 添加证书</a>
+</div>
+<div class="card" id="formCard">
+  <div class="field"><label>证书类型</label><select id="certType"><option>急救员证</option><option>教师资格证</option><option>宠物护理证</option><option>婚礼主持培训证书</option><option>心理咨询基础证书</option></select></div>
+  <div class="field"><label>发证机构</label><input id="issuer" value="中国红十字会总会训练中心"></div>
+  <div class="field"><label>证书编号</label><input id="certNo" value="CERT-2026-009812"></div>
+    <div class="result" id="verifyResult">API 核验通过：急救员证 · 有效期至 2028-12-31 · 核验等级 A</div>
+  </div>
+</div>
+<div class="actions" id="formActions">
+  <button class="verify-btn" onclick="verifyCert()">调用证书 API</button>
+  <button class="save-btn" id="saveCertBtn" disabled onclick="saveCert()">保存证书</button>
+</div>
+<script>
+let certVerified=false;
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+function getAuthState(){
+  return JSON.parse(localStorage.getItem('authState')||'{}');
+}
+function getSkillCerts(authState){
+  const list=Array.isArray(authState.skillCertInfos)?authState.skillCertInfos.slice():[];
+  if(!list.length&&authState.skillCertInfo){
+    list.push(authState.skillCertInfo);
+  }
+  return list;
+}
+function isAddMode(){
+  return new URLSearchParams(location.search).get('mode')==='add';
+}
+function renderSavedCerts(){
+  const list=getSkillCerts(getAuthState());
+  const mount=document.getElementById('savedCertList');
+  if(!list.length){
+    mount.innerHTML='';
+    return;
+  }
+  mount.innerHTML=list.map(function(item,index){
+    return '<div class="saved-item"><strong>'+escapeHtml(index+1+'. '+(item.type||'技能证书'))+'</strong><span>'+escapeHtml((item.issuer||'未知机构')+' · '+(item.number||'无编号')+' · '+(item.level||'等级 A'))+'</span></div>';
+  }).join('');
+}
+function renderPage(){
+  const list=getSkillCerts(getAuthState());
+  const showList=list.length>0&&!isAddMode();
+  document.getElementById('listCard').style.display=showList?'block':'none';
+  document.getElementById('formCard').style.display=showList?'none':'block';
+  document.getElementById('formActions').style.display=showList?'none':'flex';
+  document.getElementById('pageTitle').textContent=showList?'技能证书':'技能证书核验';
+  document.getElementById('backLink').href=isAddMode()&&list.length?'skill-cert.html':'auth-center.html';
+  if(showList){
+    renderSavedCerts();
+  }
+}
+function verifyCert(){
+  certVerified=true;
+  document.getElementById('verifyResult').classList.add('active');
+  document.getElementById('verifyResult').textContent='API 核验通过：'+document.getElementById('certType').value+' · 有效期至 2028-12-31 · 核验等级 A';
+  document.getElementById('saveCertBtn').disabled=false;
+}
+function saveCert(){
+  if(!certVerified){
+    alert('请先调用证书 API 完成核验');
+    return;
+  }
+  const authState=getAuthState();
+  const certs=getSkillCerts(authState);
+  const certType=document.getElementById('certType').value;
+  const certNo=document.getElementById('certNo').value;
+  const exists=certs.some(function(item){
+    return item.type===certType&&item.number===certNo;
+  });
+  if(!exists){
+    certs.push({
+      type:certType,
+      issuer:document.getElementById('issuer').value,
+      number:certNo,
+      verifiedBy:'技能证书API',
+      verifiedAt:'2026-05-12 09:41',
+      expireAt:'2028-12-31',
+      level:'等级 A',
+      apiTraceId:'skill_api_'+Date.now()
+    });
+  }
+  authState.skillCertVerified=true;
+  authState.skillCertInfos=certs;
+  authState.skillCertInfo=certs[certs.length-1];
+  localStorage.setItem('authState',JSON.stringify(authState));
+  certVerified=false;
+  document.getElementById('saveCertBtn').disabled=true;
+  document.getElementById('verifyResult').classList.remove('active');
+  alert(exists?'该证书已保存，可继续添加其他证书':'证书已保存，可继续添加其他证书');
+  location.href='skill-cert.html';
+}
+renderPage();
+</script>
+</body>
+</html>

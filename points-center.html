@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>奖励中心 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:20px;text-align:center}
+.money{font-size:40px;font-weight:800;color:#FF6B35}
+.label{font-size:13px;color:#999;margin-top:4px}
+.sub{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:10px}
+.action{display:flex;gap:10px;margin-top:16px}
+.action a{flex:1;height:40px;border-radius:20px;font-size:13px;cursor:pointer;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center}
+.btn-primary{background:#FF6B35;color:#fff}
+.btn-secondary{background:#f5f6fa;color:#666}
+.rules,.history{background:#fff;margin:0 16px 16px;border-radius:16px;padding:16px}
+.title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.rule-item,.history-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #f8f8f8;font-size:13px}
+.rule-item:last-child,.history-item:last-child{border:none}
+.rule-item .val,.history-item .change{color:#FF6B35;font-weight:700;margin-left:auto;min-width:74px;text-align:right}
+.history-item .desc{flex:1;color:#333}
+.history-item .time{color:#999;font-size:11px;min-width:60px;text-align:right}
+.reward-main{flex:1}
+.reward-title{font-size:13px;color:#333;line-height:1.5}
+.reward-meta{font-size:11px;color:#98a2b3;line-height:1.6;margin-top:3px}
+.reward-status{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:24px;padding:0 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
+.reward-status.done{background:#E8FFF1;color:#14A44D}
+.reward-status.processing{background:#EEF2FF;color:#4A6CF7}
+.reward-status.review{background:#FFF7E6;color:#FA8C16}
+.reward-status.expired{background:#F3F4F6;color:#98A2B3}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">奖励中心</span><span class="placeholder"></span></div>
+
+<div class="card">
+  <div class="money">¥18</div>
+  <div class="label">当前可累计优惠券金额</div>
+  <div class="action">
+     <a class="btn-primary" href="order-list.html">去转发订单</a>
+     <a class="btn-secondary" href="coupons.html">查看优惠券</a>
+  </div>
+</div>
+
+<div class="history">
+  <div class="title">奖励记录</div>
+  <div class="history-item"><div class="reward-main"><div class="reward-title">转发“上门喂猫”订单</div><div class="reward-meta">优惠券 · 全部服务项目 · 有效期至 5月10日</div></div><span class="change">+¥2</span><span class="reward-status done">已发放</span></div>
+  <div class="history-item"><div class="reward-main"><div class="reward-title">转发“陪跑”订单</div><div class="reward-meta">优惠券 · 发放链路处理中，到账后可在优惠券页查看</div></div><span class="change">+¥1</span><span class="reward-status processing">处理中</span></div>
+  <div class="history-item"><div class="reward-main"><div class="reward-title">新用户首单奖励</div><div class="reward-meta">命中风控复核，冻结期间不可在支付页使用</div></div><span class="change">+¥2</span><span class="reward-status review">待审核</span></div>
+  <div class="history-item"><div class="reward-main"><div class="reward-title">订单使用优惠券</div><div class="reward-meta">已核销 · 订单 P7 · 仅抵扣任务金额</div></div><span class="change">-¥20</span><span class="reward-status done">已使用</span></div>
+  <div class="history-item"><div class="reward-main"><div class="reward-title">转发“陪诊半天”订单</div><div class="reward-meta">优惠券已超过有效期，记录保留</div></div><span class="change">+¥2</span><span class="reward-status expired">已失效</span></div>
+</div>
+
+<div class="rules">
+  <div class="title">优惠券规则</div>
+  <div class="rule-item"><span>首次成功转发订单</span><span class="val">得 满20减2 券</span></div>
+  <div class="rule-item"><span>转发有效订单</span><span class="val">得 满20减1 券</span></div>
+  <div class="rule-item"><span>完成首单</span><span class="val">得 满20减2 券</span></div>
+</div>
+
+</body>
+</html>

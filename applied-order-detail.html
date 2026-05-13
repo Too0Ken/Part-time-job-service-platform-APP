@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>申请详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:84px}
+.status-bar{height:44px;background:#4A6CF7;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:12px}
+.nav{height:44px;background:#4A6CF7;display:flex;align-items:center;padding:0 16px;gap:12px}
+.nav .back{font-size:20px;color:#fff;text-decoration:none}
+.nav .title{font-size:16px;font-weight:600;color:#fff;flex:1;text-align:center}
+.nav .placeholder{width:24px}
+.status-summary{display:flex;justify-content:center;padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid #f2f4f7}
+.status-badge{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:112px;padding:14px 20px;border-radius:18px;font-size:15px;font-weight:700;line-height:1.2;background:#EEF3FF;color:#4A6CF7}
+.status-badge #statusIcon{font-size:24px;line-height:1}
+.section{background:#fff;margin-top:10px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.detail-copy{font-size:14px;color:#1a1a2e;line-height:1.75}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.detail-grid .item{font-size:13px;color:#666}
+.detail-grid .item .val{font-size:14px;color:#1a1a2e;font-weight:500;line-height:1.5;margin-top:2px}
+.detail-media{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.publisher-card{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;background:#F3F6FF}
+.publisher-card .avatar{width:48px;height:48px;padding:0;border:none;border-radius:50%;background:#DCE5FF;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer}
+.publisher-card .name{font-size:15px;font-weight:700;color:#1a1a2e}
+.publisher-card .meta{font-size:12px;color:#8c8c8c;margin-top:4px;line-height:1.6}
+.publisher-card .view-btn{padding:8px 14px;border:none;border-radius:18px;background:#4A6CF7;color:#fff;font-size:12px;cursor:pointer}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+.info-grid .item{font-size:12px;color:#8c8c8c}
+.info-grid .val{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.6;margin-top:3px}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:2px;bottom:4px;width:2px;background:#ececec}
+.node{position:relative;padding-bottom:18px}
+.node::before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:#d0d7de;border:2px solid #fff;box-shadow:0 0 0 2px #f2f2f2}
+.node.done::before{background:#4A6CF7;box-shadow:0 0 0 2px #E6EDFF}
+.node.current::before{background:#FA8C16;box-shadow:0 0 0 2px #FFF0D6}
+.node .time{font-size:11px;color:#999;margin-bottom:3px}
+.node .desc{font-size:13px;color:#333;line-height:1.6}
+.node .sub{font-size:12px;color:#8c8c8c;line-height:1.6;margin-top:3px}
+.timeline-toggle{display:none;align-items:center;justify-content:center;width:100%;margin-top:4px;border:none;background:none;color:#98a2b3;font-size:12px;line-height:1.8;cursor:pointer}
+.timeline-toggle:active{opacity:.72}
+.media-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:none;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px;font-weight:600;cursor:pointer}
+.media-pill:active{transform:scale(.98)}
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;padding:10px 16px;display:flex;gap:10px;border-top:1px solid #eee;z-index:20}
+.bottom-bar button{flex:1;height:44px;border-radius:22px;font-size:14px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666}
+.bottom-bar button.primary{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);border:none;color:#fff}
+.preview-mask{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;padding:24px;z-index:80}
+.preview-mask.show{display:flex}
+.preview-dialog{width:min(100%,320px);background:#fff;border-radius:24px;padding:18px;box-shadow:0 20px 50px rgba(15,23,42,.22)}
+.preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.preview-head h4{font-size:16px;color:#1a1a2e}
+.preview-close{width:32px;height:32px;border:none;border-radius:50%;background:#F2F4F7;color:#667085;font-size:18px;cursor:pointer}
+.preview-card{margin-top:14px;border-radius:20px;background:linear-gradient(135deg,#EEF3FF,#FFFFFF);padding:28px 18px;text-align:center}
+.preview-card .icon{font-size:42px;line-height:1}
+.preview-card .name{font-size:15px;font-weight:700;color:#1a1a2e;margin-top:12px}
+.preview-card .meta{font-size:12px;color:#667085;line-height:1.7;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+<div class="nav">
+  <a href="order-list.html" class="back" id="backLink">←</a>
+  <span class="title">申请详情</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="section">
+  <div class="status-summary">
+    <div class="status-badge" id="statusBadge"><span id="statusIcon">🕓</span><span id="statusTitle">申请中</span></div>
+  </div>
+  <div class="timeline" id="timeline"></div>
+  <button class="timeline-toggle" id="timelineToggleBtn" type="button">展开完整进度 ↓</button>
+</div>
+
+<div class="section">
+  <div class="section-title">申请信息</div>
+  <div class="info-grid" id="infoGrid"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">任务要求</div>
+  <div class="detail-copy" id="taskRequirementContent"></div>
+</div>
+
+<div class="section" id="otherSupplementSection" style="display:none">
+  <div class="section-title">其他补充</div>
+  <div class="detail-grid" id="otherSupplementList"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">详细说明</div>
+  <div class="detail-copy" id="taskDetailDescription"></div>
+  <div class="detail-media" id="taskDetailMedia" style="display:none"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">发布者信息</div>
+  <div class="publisher-card">
+    <button class="avatar" id="publisherAvatar" type="button">张</button>
+    <div style="flex:1">
+      <div class="name" id="publisherName">张小花</div>
+      <div class="meta" id="publisherMeta">信用 92 · 已发布16单 · 好评率96%</div>
+    </div>
+    <button class="view-btn" id="publisherDetailBtn" type="button">查看详情</button>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="primary" onclick="location.href='fuwuzhe_home.html'" id="browseBtn">继续浏览任务</button>
+</div>
+
+<div class="preview-mask" id="previewMask">
+  <div class="preview-dialog">
+    <div class="preview-head">
+      <h4>图片预览</h4>
+      <button class="preview-close" id="previewClose" type="button">×</button>
+    </div>
+    <div class="preview-card">
+      <div class="icon">🖼️</div>
+      <div class="name" id="previewName">任务图片</div>
+      <div class="meta" id="previewMeta">申请详情里可放大查看任务说明相关图片。</div>
+    </div>
+  </div>
+</div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const recordId=params.get('recordId')||'';
+const taskId=params.get('taskId')||'';
+const returnRole=params.get('returnRole')||'applied';
+const returnStatus=params.get('returnStatus')||'all';
+let timelineExpanded=false;
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function getMaskedLocationText(text){
+  const source=String(text||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{
+    exactVisible:false,
+    maskStyle:'asterisk',
+    includeDistance:false
+  }).text||source;
+}
+
+function getPublisherUserPageHref(){
+  const publisherUserMap={
+    '张小花':'zhang',
+    '林同学':'chen',
+    '周阿姨':'wang'
+  };
+  return 'applicant-detail.html?'+buildQuery({
+    mode:'user',
+    userId:publisherUserMap[record.publisherName]||'zhang',
+    backHref:'applied-order-detail.html?'+buildQuery({
+      recordId:record.recordId||'',
+      taskId:record.taskId||'',
+      returnRole,
+      returnStatus
+    })
+  });
+}
+
+function defaultAppliedHistory(){
+  return [
+    {
+      recordId:'seed-applying-cat-1',
+      taskId:'cat-history-1',
+      type:'cat',
+      title:'上门喂猫｜1 小时｜朝阳区',
+      time:'2026年4月19日 19:00',
+      location:'望京花园',
+      price:'¥88',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'林同学',
+      publisherCredit:'信用 91',
+      publisherStats:'已发布8单 · 好评率97%',
+      status:'applying',
+      appliedAtText:'4月2日 10:12',
+      updatedAtText:'4月2日 10:12',
+      resultNote:'已提交申请，等待发布者确认。'
+    },
+    {
+      recordId:'seed-failed-health-1',
+      taskId:'health-history-1',
+      type:'health',
+      title:'健康陪诊｜半天｜东城区',
+      time:'2026年4月13日 09:00',
+      location:'北京协和医院',
+      price:'¥220',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'周阿姨',
+      publisherCredit:'信用 90',
+      publisherStats:'已发布14单 · 好评率95%',
+      status:'failed',
+      appliedAtText:'3月24日 08:15',
+      updatedAtText:'3月24日 08:42',
+      resultNote:'发布者已选择其他服务者，本次未接单成功。'
+    }
+  ];
+}
+
+function ensureSeedAppliedHistory(history){
+  const list=Array.isArray(history)?history.slice():[];
+  const seeds=defaultAppliedHistory();
+  const hasApplying=list.some(item=>item&&item.status==='applying');
+  const hasFailed=list.some(item=>item&&item.status==='failed');
+  if(!hasApplying){
+    list.push(seeds[0]);
+  }
+  if(!hasFailed){
+    list.push(seeds[1]);
+  }
+  return list;
+}
+
+function readAppliedHistory(){
+  let history=[];
+  try{
+    history=JSON.parse(localStorage.getItem('appliedTaskHistory')||'[]');
+  }catch(error){
+    history=[];
+  }
+  history=ensureSeedAppliedHistory(history);
+  localStorage.setItem('appliedTaskHistory',JSON.stringify(history));
+  return history;
+}
+
+const record=readAppliedHistory().find(item=>item.recordId===recordId)||readAppliedHistory().find(item=>item.taskId===taskId)||defaultAppliedHistory()[0];
+
+const typeMeta={
+  cat:'🐱 上门喂猫',
+  outdoor:'🏃 户外任务',
+  health:'🏥 健康陪诊',
+  wedding:'💒 婚庆协助'
+};
+const taskDetailMetaByType={
+  cat:{
+    taskRequirements:'需要细心、有上门服务经验，能严格按喂养说明执行，结束后同步照片和服务情况。',
+    otherSupplement:[{label:'上门方式',value:'密码锁入户'},{label:'猫咪数量',value:'2只'},{label:'特殊说明',value:'冻干零食在冰箱，结束后帮忙拍一张猫砂盆状态照片。'}],
+    detailDescription:'猫粮在柜子第二层，猫砂盆在阳台。到场后先补粮换水，再清理猫砂，最后陪小橘玩一会儿。门锁为密码锁，接单后我会单独同步进门方式和注意事项。',
+    detailImages:['照片1','照片2']
+  },
+  outdoor:{
+    taskRequirements:'需要熟悉常见跑步路线，体能稳定，能根据现场状态协助控配速并提醒热身和拉伸。',
+    otherSupplement:[{label:'目标距离',value:'5km'},{label:'目标配速',value:'6\'00"-7\'00"/km'}],
+    detailDescription:'今天主要想在奥森完成约 5km 走跑结合训练，如果现场体感不错也可能临时调整节奏。建议自备运动鞋和饮水，集合后先简单热身，再按路线陪同完成任务。',
+    detailImages:['路线图','集合点']
+  },
+  health:{
+    taskRequirements:'需要耐心细致，能协助挂号、候诊、陪同检查和取药，并注意保护就诊隐私。',
+    otherSupplement:[{label:'就诊科室',value:'骨科复诊'},{label:'陪同内容',value:'挂号、候诊、检查、取药'}],
+    detailDescription:'这次是骨科复诊，老人步行较慢，现场可能需要搀扶。希望接单人能全程陪同看号、协助往返检查点位，并在结束后帮忙确认药品和医嘱信息。',
+    detailImages:['门诊楼','取药窗口']
+  },
+  wedding:{
+    taskRequirements:'需要性格开朗、执行力强，能配合婚礼流程安排，有现场协助或活动执行经验更合适。',
+    otherSupplement:[{label:'角色需求',value:'伴娘 / 婚礼协助'},{label:'着装要求',value:'浅色礼服，自备高跟鞋'}],
+    detailDescription:'当天需要协助迎宾、流程配合、礼金桌照看和部分拍照留念，着装要求为浅色礼服。到场时间会早于正式仪式，接单后会同步更完整的流程表和现场联系人。',
+    detailImages:['礼服参考','酒店宴会厅']
+  }
+};
+
+const statusMeta={
+  applying:{
+    title:'申请中',
+    icon:'🕓',
+    desc:'已提交接单申请，当前等待发布者确认。',
+    timeline:[
+      {state:'done',time:'2026-04-02 10:12:00',desc:'申请已提交',sub:'系统已将你的申请推送给发布者'},
+      {state:'current',time:'待发布者确认',desc:'发布者待确认',sub:'确认通过后，任务会自动进入“我接的”'},
+      {state:'todo',time:'待归档',desc:'申请结果待归档',sub:'若未被选中，记录会继续保留在“申请记录”中'}
+    ]
+  },
+  failed:{
+    title:'未接单成功',
+    icon:'📭',
+    desc:'发布者已选择其他服务者，本次申请未通过。',
+    timeline:[
+      {state:'done',time:'2026-03-24 08:15:00',desc:'申请已提交',sub:'系统已将申请推送给发布者'},
+      {state:'done',time:'2026-03-24 08:42:00',desc:'发布者已确认',sub:record.resultNote||'本次未接单成功'},
+      {state:'done',time:'2026-03-24 08:42:30',desc:'申请结果已归档',sub:'你仍可在“申请记录”中查看这条记录'}
+    ]
+  }
+};
+
+const currentStatus=statusMeta[record.status]||statusMeta.applying;
+
+document.getElementById('backLink').href='order-list.html?'+buildQuery({role:returnRole,status:returnStatus});
+document.getElementById('statusIcon').textContent=currentStatus.icon;
+document.getElementById('statusTitle').textContent=currentStatus.title;
+const statusBadge=document.getElementById('statusBadge');
+if(record.status==='failed'){
+  statusBadge.style.background='#FFF7E8';
+  statusBadge.style.color='#D48806';
+}
+document.getElementById('publisherAvatar').textContent=(record.publisherName||'发').slice(0,1);
+document.getElementById('publisherName').textContent=record.publisherName||'发布者';
+document.getElementById('publisherMeta').textContent=(record.publisherCredit||'信用 90')+' · '+(record.publisherStats||'已发布任务');
+document.getElementById('publisherAvatar').onclick=()=>location.href=getPublisherUserPageHref();
+document.getElementById('publisherDetailBtn').onclick=()=>location.href=getPublisherUserPageHref();
+const infoItems=[
+  ['申请编号',(record.recordId||'apply').toUpperCase()],
+  ['任务名称',record.title||typeMeta[record.type]||typeMeta.cat],
+  ['任务时间',BanxingTimeUtils.formatTaskTime(record.time)||record.time||'待确认'],
+  ['任务地点',getMaskedLocationText(record.location||'待确认')],
+  ['任务金额',record.price||'¥0'],
+  ['保险状态',record.insurance||'🛡️ 已购保险'],
+  ['申请时间',BanxingTimeUtils.formatMaybe(record.appliedAtText)||record.appliedAtText||'刚刚']
+];
+const currentTaskDetail=taskDetailMetaByType[record.type]||taskDetailMetaByType.cat;
+document.getElementById('taskRequirementContent').textContent=currentTaskDetail.taskRequirements||'待补充';
+document.getElementById('taskDetailDescription').textContent=currentTaskDetail.detailDescription||'待补充';
+if(Array.isArray(currentTaskDetail.otherSupplement)&&currentTaskDetail.otherSupplement.length){
+  document.getElementById('otherSupplementSection').style.display='block';
+  document.getElementById('otherSupplementList').innerHTML=currentTaskDetail.otherSupplement.map(function(item){
+    return '<div class="item">'+item.label+'<div class="val">'+item.value+'</div></div>';
+  }).join('');
+}
+if(Array.isArray(currentTaskDetail.detailImages)&&currentTaskDetail.detailImages.length){
+  const mediaNode=document.getElementById('taskDetailMedia');
+  mediaNode.style.display='flex';
+  mediaNode.innerHTML=currentTaskDetail.detailImages.map(function(name){
+    return '<button type="button" class="media-pill" data-preview-name="'+name+'" data-preview-type="image">🖼️ '+name+'</button>';
+  }).join('');
+}
+
+document.getElementById('infoGrid').innerHTML=infoItems.map(item=>'<div class="item">'+item[0]+'<div class="val">'+item[1]+'</div></div>').join('');
+function renderTimeline(){
+  const timelineItems=currentStatus.timeline||[];
+  const collapsedItem=timelineItems.find(function(item){return item.state==='current';})||timelineItems[timelineItems.length-1];
+  const visibleItems=timelineExpanded?timelineItems:(collapsedItem?[collapsedItem]:[]);
+  document.getElementById('timeline').innerHTML=visibleItems.map(item=>`
+    <div class="node ${item.state==='done'?'done':''} ${item.state==='current'?'current':''}">
+      <div class="time">${BanxingTimeUtils.formatMaybe(item.time)}</div>
+      <div class="desc">${item.desc}</div>
+      <div class="sub">${item.sub}</div>
+    </div>
+  `).join('');
+  const toggleBtn=document.getElementById('timelineToggleBtn');
+  if(timelineItems.length>1){
+    toggleBtn.style.display='inline-flex';
+    toggleBtn.textContent=timelineExpanded?'收起完整进度 ↑':'展开完整进度 ↓';
+  }else{
+    toggleBtn.style.display='none';
+  }
+}
+renderTimeline();
+document.getElementById('timelineToggleBtn').addEventListener('click',function(){
+  timelineExpanded=!timelineExpanded;
+  renderTimeline();
+});
+
+function openPreview(name,type){
+  const isVideo=type==='video';
+  document.querySelector('#previewMask .icon').textContent=isVideo?'🎬':'🖼️';
+  document.querySelector('#previewMask h4').textContent=isVideo?'视频预览':'图片预览';
+  document.getElementById('previewName').textContent=name||(isVideo?'视频':'图片');
+  document.getElementById('previewMeta').textContent=isVideo
+    ?'当前为原型预览，正式版会在这里播放并放大查看该视频内容。'
+    :'当前为原型预览，正式版会在这里放大展示该图片内容。';
+  document.getElementById('previewMask').classList.add('show');
+}
+
+function closePreview(){
+  document.getElementById('previewMask').classList.remove('show');
+}
+
+document.addEventListener('click',function(event){
+  const trigger=event.target.closest('[data-preview-name]');
+  if(trigger){
+    openPreview(trigger.getAttribute('data-preview-name'),trigger.getAttribute('data-preview-type'));
+    return;
+  }
+  if(event.target.id==='previewMask'||event.target.id==='previewClose'){
+    closePreview();
+  }
+});
+</script>
+</body>
+</html>

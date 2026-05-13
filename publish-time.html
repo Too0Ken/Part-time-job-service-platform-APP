@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>服务时间 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}.nav .placeholder{width:32px}
+.progress{display:flex;padding:12px 24px;gap:0;background:#fff}.progress .step{flex:1;text-align:center;font-size:11px;color:#999;position:relative}.progress .step::before{content:'';display:block;width:100%;height:3px;background:#eee;border-radius:2px;margin-bottom:6px}
+.progress .step.done::before{background:#52C41A}.progress .step.active::before{background:#FF6B35}
+.progress .step .num{display:inline-block;width:20px;height:20px;border-radius:50%;background:#eee;color:#999;font-size:11px;line-height:20px;margin-bottom:2px}
+.progress .step.done .num{background:#52C41A;color:#fff}.progress .step.active .num{background:#FF6B35;color:#fff}
+.card{background:#fff;margin:16px;border-radius:12px;padding:20px}
+.card .title{font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:6px}.card .desc{font-size:12px;color:#999;line-height:1.6}
+.field{margin-top:18px}.field label{display:block;font-size:14px;color:#666;margin-bottom:8px}.field label .req{color:#FF4D4F}
+.field select,.field input{width:100%;height:46px;border:1px solid #e8e8e8;border-radius:10px;padding:0 12px;font-size:14px;outline:none;background:#fff;appearance:auto}
+.field select:focus,.field input:focus{border-color:#FF6B35}
+.quick-time{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.quick-time span{padding:6px 14px;background:#f5f6fa;border-radius:16px;font-size:13px;color:#666;cursor:pointer}
+.quick-time span.active{background:#FFF7E6;color:#FF6B35}
+.note{margin-top:14px;padding:12px 14px;background:#FFF7E6;border-radius:10px;font-size:12px;line-height:1.7;color:#8c6b2f}
+.next-btn{display:block;width:calc(100% - 32px);margin:16px auto 24px;height:48px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.next-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">服务时间</span><span class="placeholder"></span></div>
+<div class="progress">
+  <div class="step done"><span class="num">✓</span>类型</div><div class="step done"><span class="num">✓</span>确认</div>
+  <div class="step done"><span class="num">✓</span>子项</div><div class="step active"><span class="num">4</span>时间</div>
+  <div class="step"><span class="num">5</span>地址</div><div class="step"><span class="num">6</span>酬劳</div>
+</div>
+<div class="card">
+  <div class="title" id="pageTitle"></div>
+  <div class="desc" id="pageDesc"></div>
+  <div class="field"><label id="dateLabel"></label><input id="serviceDate" type="date"></div>
+  <div class="field"><label id="timeLabel"></label><input id="serviceTime" type="time"></div>
+  <div class="quick-time" id="quickTimes"></div>
+  <div class="field"><label id="durationLabel"></label><select id="durationSelect"></select></div>
+  <div class="note" id="sceneNote"></div>
+</div>
+<button class="next-btn" onclick="saveAndNext()">下一步</button>
+<script>
+const params=new URLSearchParams(window.location.search);
+const type=params.get('type')||'waimao';
+const highRiskTypes=['waimao','paopao'];
+if(highRiskTypes.includes(type)&&!sessionStorage.getItem('publishSafetyConfirmed:'+type))location.replace('publish-safety.html?type='+type);
+const draft=JSON.parse(localStorage.getItem('publishDraft')||'{}');
+const today=new Date();
+const defaultDate=today.toISOString().split('T')[0];
+const config={
+  waimao:{name:'上门喂猫',desc:'填写上门日期、预计到达时间和服务时长。',dateLabel:'上门日期 <span class="req">*</span>',timeLabel:'上门时间 <span class="req">*</span>',durationLabel:'预计服务时长 <span class="req">*</span>',times:['09:00','12:00','14:00','18:00','20:00'],durations:['0.5 小时','1 小时','1.5 小时','2 小时','3 小时'],note:'上门喂猫完成后，服务者需上传猫咪状态照片，建议预留 30 分钟缓冲。'},
+  paopao:{name:'户外任务',desc:'填写出发日期、集合时间和预计运动时长。',dateLabel:'出发日期 <span class="req">*</span>',timeLabel:'集合时间 <span class="req">*</span>',durationLabel:'运动时长 <span class="req">*</span>',times:['06:00','07:00','18:00','19:00','20:00'],durations:['45 分钟','1 小时','1.5 小时','2 小时','3 小时'],note:'户外任务会结合运动难度计算保险费率，建议避开极端天气和过晚时段。'},
+  peizhen:{name:'陪诊',desc:'填写就诊日期、预计开始时间和陪诊时长。',dateLabel:'就诊日期 <span class="req">*</span>',timeLabel:'预计就诊时间 <span class="req">*</span>',durationLabel:'预计陪诊时长 <span class="req">*</span>',times:['08:00','09:30','13:30','15:00','17:00'],durations:['2 小时','3 小时','4 小时','半天（4小时）','全天（8小时）'],note:'陪诊流程包含挂号、候诊、就诊与取药节点，建议按医院高峰时段适度放宽时长。'},
+  hunqing:{name:'婚庆协助',desc:'填写婚礼日期、到场时间和服务时长，系统将自动按预约任务处理。',dateLabel:'婚礼日期 <span class="req">*</span>',timeLabel:'到场时间 <span class="req">*</span>',durationLabel:'服务时长 <span class="req">*</span>',times:['07:00','08:00','10:00','13:00','15:00'],durations:['半天（4小时）','全天（8小时）','延时待定'],note:'婚庆任务支持最多提前 30 天发布，发布后默认进入“招募中”状态，待发布者确认档期。'}
+};
+const info=config[type]||config.waimao;
+const defaultTimeIndex=type==='hunqing'?1:2;
+const defaultDurationIndex=type==='hunqing'?1:2;
+document.getElementById('backLink').href='publish-items.html?type='+type;
+document.getElementById('pageTitle').textContent=info.name+' - 时间安排';
+document.getElementById('pageDesc').textContent=info.desc;
+document.getElementById('dateLabel').innerHTML=info.dateLabel;
+document.getElementById('timeLabel').innerHTML=info.timeLabel;
+document.getElementById('durationLabel').innerHTML=info.durationLabel;
+document.getElementById('sceneNote').textContent=info.note;
+document.getElementById('quickTimes').innerHTML=info.times.map((time,index)=>`<span class="${index===defaultTimeIndex?'active':''}" onclick="pickTime(this,'${time}')">${time}</span>`).join('');
+document.getElementById('durationSelect').innerHTML=info.durations.map((text,index)=>`<option ${index===defaultDurationIndex?'selected':''}>${text}</option>`).join('');
+document.getElementById('serviceDate').min=defaultDate;
+document.getElementById('serviceDate').value=draft.serviceDate||draft.weddingDate||new Date(today.getTime()+((type==='hunqing'?7:1)*24*60*60*1000)).toISOString().split('T')[0];
+document.getElementById('serviceTime').value=draft.serviceTime||info.times[Math.min(defaultTimeIndex,info.times.length-1)];
+
+function pickTime(el,time){
+  document.querySelectorAll('#quickTimes span').forEach(node=>node.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('serviceTime').value=time;
+}
+
+function saveAndNext(){
+  draft.type=type;
+  draft.serviceDate=document.getElementById('serviceDate').value;
+  draft.serviceTime=document.getElementById('serviceTime').value;
+  draft.durationText=document.getElementById('durationSelect').value;
+  if(type==='hunqing')draft.weddingDate=draft.serviceDate;
+  localStorage.setItem('publishDraft',JSON.stringify(draft));
+  location.href='publish-location.html?type='+type;
+}
+</script>
+</body>
+</html>

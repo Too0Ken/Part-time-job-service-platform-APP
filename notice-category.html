@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>通知详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:24px}
+.list{padding:16px}
+.item{background:#fff;border-radius:16px;padding:14px 14px 12px;margin-bottom:10px}
+.item .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.item .title{font-size:14px;font-weight:700;color:#1a1a2e}
+.item .time{font-size:11px;color:#999}
+.item .desc{font-size:13px;color:#5f6675;line-height:1.7;margin-top:8px}
+.item .tag{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;margin-top:10px}
+.order-box{margin-top:12px;padding:12px;border-radius:12px;background:#f8faff}
+.order-box .label{font-size:11px;color:#98a2b3}
+.order-box .name{font-size:13px;font-weight:700;color:#1a1a2e;margin-top:6px}
+.order-box .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.order-box .meta span{display:inline-flex;padding:4px 9px;border-radius:999px;background:#fff;color:#667085;font-size:11px}
+.item-actions{display:flex;gap:10px;margin-top:12px}
+.item-actions a{flex:1;height:38px;border-radius:19px;text-decoration:none;font-size:13px;display:flex;align-items:center;justify-content:center}
+.item-actions .ghost{background:#fff;border:1px solid #d9deeb;color:#667085}
+.item-actions .primary{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="messages.html" class="back">←</a>
+  <span class="title">通知详情</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="list" id="list"></div>
+
+<script src="time-utils.js"></script>
+<script src="moments-data.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const category=params.get('category')||'order';
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(function(entry){
+    const key=entry[0];
+    const val=entry[1];
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function buildOrderLink(order){
+  return 'order-detail.html?'+buildQuery(order.detailParams||{});
+}
+
+function buildAppealLink(order,appealTitle){
+  return 'credit-appeal.html?'+buildQuery({
+    orderId:order.id,
+    orderTitle:order.title,
+    orderStatus:order.status,
+    orderTime:BanxingTimeUtils.formatTaskTime(order.time)||order.time,
+    orderAmount:order.amount,
+    orderLocation:order.location,
+    detailLink:buildOrderLink(order),
+    backLink:'notice-category.html?'+buildQuery({category:category}),
+    appealTitle:appealTitle||'订单相关信用分申诉'
+  });
+}
+
+function renderItemActions(item){
+  const actions=[];
+  if(item.order){
+    actions.push('<a class="ghost" href="'+buildOrderLink(item.order)+'">查看订单</a>');
+    if(item.canAppeal){
+      actions.push('<a class="primary" href="'+buildAppealLink(item.order,item.appealTitle)+'">信用分申诉</a>');
+    }
+  }
+  if(Array.isArray(item.actions)){
+    item.actions.forEach(function(action){
+      actions.push('<a class="'+(action.primary?'primary':'ghost')+'" href="'+action.href+'">'+action.label+'</a>');
+    });
+  }
+  return actions.length?'<div class="item-actions">'+actions.join('')+'</div>':'';
+}
+
+const categoryMeta={
+  order:{
+    icon:'🔔',
+    title:'订单状态变更',
+    unread:3,
+    color:'#EEF2FF',
+    textColor:'#4A6CF7',
+    tagBg:'#EEF2FF',
+    tagColor:'#4A6CF7',
+    items:[
+      {title:'上门喂猫订单已开始服务',time:'今天 14:05',desc:'服务者已开始履约，并上传了首条过程记录。你可以在订单详情里查看最新进展。',tag:'订单进行中',canAppeal:false,order:{id:'P8',title:'上门喂猫｜1.5 小时｜海淀区',status:'服务中',time:'今天 14:00-15:30',amount:'¥120',location:'中关村南大街XX小区',detailParams:{owner:'published',status:'serving',type:'cat',id:'p8',provider:'wang',returnRole:'all',returnStatus:'all'}}},
+      {title:'婚庆协助订单纠纷处理完成',time:'昨天 20:10',desc:'平台已完成责任核验，本次订单已进入退款结果确认阶段。',tag:'平台处理完成',canAppeal:false,order:{id:'P4',title:'婚庆协助｜全天｜海淀区',status:'已退款',time:'4月14日 07:30',amount:'¥500',location:'海淀逸林酒店',detailParams:{owner:'published',status:'refund',type:'wedding',id:'p4',provider:'chen',disputeHistory:'1',returnRole:'all',returnStatus:'all'}}},
+      {title:'户外任务已提交完成凭证',time:'昨天 18:36',desc:'服务者已提交完成说明和图片凭证，请尽快查看并确认是否完成。',tag:'待确认完成',canAppeal:false,order:{id:'P7',title:'户外任务｜1 小时｜朝阳区',status:'待确认完成',time:'昨天 17:00',amount:'¥80',location:'奥森公园南门',detailParams:{owner:'published',status:'confirm',type:'outdoor',id:'p7',provider:'liu',returnRole:'all',returnStatus:'all'}}}
+    ]
+  },
+  credit:{
+    icon:'📊',
+    title:'信用积分扣分通知',
+    unread:1,
+    color:'#F0FFF4',
+    textColor:'#52C41A',
+    tagBg:'#F0FFF4',
+    tagColor:'#52C41A',
+    items:[
+      {title:'迟到扣分已生效',time:'今天 09:10',desc:'由于本次订单迟到 15 分钟，你的信用积分已扣减 3 分。正常完成订单的加分不在前台逐条展示。',tag:'信用积分 -3',canAppeal:true,appealTitle:'迟到扣分申诉',order:{id:'P8',title:'上门喂猫｜1.5 小时｜海淀区',status:'服务中',time:'今天 14:00-15:30',amount:'¥120',location:'中关村南大街XX小区',detailParams:{owner:'published',status:'serving',type:'cat',id:'p8',provider:'wang',returnRole:'all',returnStatus:'all'}}},
+      {title:'纠纷责任判定同步扣分',time:'昨天 20:12',desc:'平台已同步婚庆协助订单的责任判定结果，本次信用积分扣减 5 分，可在信用积分页查看扣分明细。',tag:'信用积分 -5',canAppeal:true,appealTitle:'纠纷责任扣分申诉',order:{id:'P4',title:'婚庆协助｜全天｜海淀区',status:'已退款',time:'4月14日 07:30',amount:'¥500',location:'海淀逸林酒店',detailParams:{owner:'published',status:'refund',type:'wedding',id:'p4',provider:'chen',disputeHistory:'1',returnRole:'all',returnStatus:'all'}}}
+    ]
+  },
+  income:{
+    icon:'💰',
+    title:'收益到账通知',
+    unread:2,
+    color:'#FFF7E6',
+    textColor:'#D48806',
+    tagBg:'#FFF7E6',
+    tagColor:'#D48806',
+    items:[
+      {title:'户外陪跑收益 ¥76.00 已到账',time:'今天 08:30',desc:'订单结算完成后，平台已将收益打入钱包余额，可前往钱包页查看明细。',tag:'收益到账'},
+      {title:'婚庆协助订单退款原路退回',time:'昨天 20:15',desc:'因纠纷处理结果触发退款，本次款项已按原支付路径退回。',tag:'已退款'}
+    ]
+  },
+  points:{
+    icon:'🎟️',
+    title:'优惠券通知',
+    unread:5,
+    color:'#FFF1F0',
+    textColor:'#FF7A45',
+    tagBg:'#FFF1EC',
+    tagColor:'#FF7A45',
+    items:[
+      {title:'转发订单获得 ¥2 优惠券',time:'今天 10:00',desc:'你转发的陪诊订单触达新用户，平台已发放 1 张 ¥2 优惠券。',tag:'优惠券 +¥2',actions:[{label:'查看优惠券',href:'coupons.html'},{label:'去发布订单',href:'publish-items.html',primary:true}]},
+      {title:'拉新首单奖励 ¥2 优惠券',time:'昨天 09:00',desc:'你邀请的新用户已完成首单，额外优惠券奖励已到账。',tag:'优惠券 +¥2',actions:[{label:'查看优惠券',href:'coupons.html'},{label:'查看奖励中心',href:'points-center.html',primary:true}]},
+      {title:'订单使用优惠券 ¥20',time:'3月30日',desc:'你在下单时已使用累计满额的优惠券，当前版本暂不支持积分兑换。',tag:'优惠券 -¥20',actions:[{label:'查看优惠券',href:'coupons.html'},{label:'继续发布订单',href:'publish-items.html',primary:true}]}
+    ]
+  },
+  moments:{
+    icon:'🫧',
+    title:'动态互动通知',
+    unread:4,
+    color:'#EEF9FF',
+    textColor:'#1677FF',
+    tagBg:'#EEF9FF',
+    tagColor:'#1677FF',
+    items:[
+      {title:'张小花点赞了你的动态',time:'今天 10:08',desc:'你关联了“周末 8km 户外任务”的动态获得了新的点赞，对方已收到你的最新内容更新。',tag:'新增点赞',actions:[{label:'查看动态',href:'moments.html',primary:true}]},
+      {title:'周老师评论了你的动态',time:'今天 09:40',desc:'评论内容已通过审核并展示，你可以前往动态页继续回复互动。',tag:'评论已展示',actions:[{label:'查看动态',href:'moments.html',primary:true}]},
+      {title:'新关注提醒',time:'昨天 19:30',desc:'李明已关注你，后续你的公开动态会优先展示在对方的信息流中。',tag:'新增关注',actions:[{label:'查看关注列表',href:'following-list.html'},{label:'继续发动态',href:'moment-publish.html',primary:true}]},
+      {title:'举报处理结果通知',time:'昨天 17:10',desc:'你提交的举报已进入审核队列；若后续核实为恶意举报，将按规则处理举报者信用分。',tag:'举报处理中',actions:[{label:'查看动态',href:'moments.html',primary:true}]}
+    ]
+  }
+};
+
+let current=categoryMeta[category]||categoryMeta.order;
+if(category==='moments'&&window.BanxingMoments){
+  current={
+    ...current,
+    unread:BanxingMoments.getMomentNotifications().length,
+    items:BanxingMoments.getMomentNotifications()
+  };
+}
+
+document.getElementById('list').innerHTML=current.items.map(item=>`
+  <div class="item">
+    <div class="top">
+      <div class="title">${item.title}</div>
+      <div class="time">${BanxingTimeUtils.formatMaybe(item.time)}</div>
+    </div>
+    <div class="desc">${item.desc}</div>
+    <div class="tag" style="background:${current.tagBg};color:${current.tagColor}">${item.tag}</div>
+    ${item.order?`
+      <div class="order-box">
+        <div class="label">关联订单</div>
+        <div class="name">${item.order.title}</div>
+        <div class="meta">
+          <span>订单号 ${item.order.id}</span>
+          <span>${item.order.status}</span>
+          <span>${BanxingTimeUtils.formatTaskTime(item.order.time)||item.order.time}</span>
+          <span>${item.order.amount}</span>
+        </div>
+      </div>
+    `:''}
+    ${renderItemActions(item)}
+  </div>
+`).join('');
+</script>
+</body>
+</html>

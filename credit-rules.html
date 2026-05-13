@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>信用分规则 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:24px}
+.hero{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;margin:16px;border-radius:20px;padding:18px}
+.hero h2{font-size:20px}
+.hero p{font-size:13px;line-height:1.7;margin-top:8px;color:rgba(255,255,255,.9)}
+.section{background:#fff;margin:0 16px 12px;border-radius:16px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.rule-item{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f5}
+.rule-item:last-child{border:none;padding-bottom:0}
+.rule-item .label{font-size:14px;color:#1a1a2e}
+.rule-item .desc{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.rule-item .score{font-size:14px;font-weight:700;white-space:nowrap}
+.rule-item .score.plus{color:#52C41A}
+.rule-item .score.minus{color:#FF4D4F}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="credit-score.html" class="back">←</a>
+  <span class="title">信用分增加规则</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="hero">
+  <h2>信用分规则</h2>
+  <p>以下为当前平台试运行阶段的信用分规则示例。分数越高，越容易获得优先曝光、优质订单和更低的审核成本。</p>
+</div>
+
+<div class="section">
+  <div class="section-title">加分规则</div>
+  <div class="rule-item">
+    <div>
+      <div class="label">按时完成普通订单</div>
+      <div class="desc">订单正常完成且无纠纷，系统结算后自动加分。</div>
+    </div>
+    <div class="score plus">+1 分</div>
+  </div>
+  <div class="rule-item">
+    <div>
+      <div class="label">获得 5 星好评</div>
+      <div class="desc">每收到一次真实有效的 5 星评价，即可增加信用分。</div>
+    </div>
+    <div class="score plus">+2 分</div>
+  </div>
+  <div class="rule-item">
+    <div>
+      <div class="label">连续 7 天无违约履约</div>
+      <div class="desc">连续一周按时履约且无投诉，可获得额外信用激励。</div>
+    </div>
+    <div class="score plus">+3 分</div>
+  </div>
+  <div class="rule-item">
+    <div>
+      <div class="label">紧急 SOS 协助后配合调查</div>
+      <div class="desc">如触发 SOS 后积极配合平台核验且无责任问题，可恢复部分分数。</div>
+    </div>
+    <div class="score plus">+1 分</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">扣分规则</div>
+  <div class="rule-item">
+    <div>
+      <div class="label">迟到 10-30 分钟</div>
+      <div class="desc">经订单双方或平台核验属实后扣分。</div>
+    </div>
+    <div class="score minus">-3 分</div>
+  </div>
+  <div class="rule-item">
+    <div>
+      <div class="label">订单确认后无故取消</div>
+      <div class="desc">确认履约后单方取消，会同时影响信用和违约责任。</div>
+    </div>
+    <div class="score minus">-8 分</div>
+  </div>
+  <div class="rule-item">
+    <div>
+      <div class="label">纠纷判定主要责任</div>
+      <div class="desc">若平台判定承担主要责任，将按情节轻重扣减信用分。</div>
+    </div>
+    <div class="score minus">-5 至 -15 分</div>
+  </div>
+  <div class="rule-item">
+    <div>
+      <div class="label">恶意骚扰或脱离平台交易</div>
+      <div class="desc">一经核实，将直接进入高风险处理流程。</div>
+    </div>
+    <div class="score minus">-20 分</div>
+  </div>
+</div>
+</body>
+</html>

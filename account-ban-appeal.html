@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>解封申诉 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;flex:1;text-align:center}
+.nav .placeholder{width:24px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.title{font-size:15px;font-weight:700;margin-bottom:12px}
+.desc{font-size:13px;color:#6b7280;line-height:1.8}
+.status-card{display:none;background:#fff;margin:16px;border-radius:16px;padding:20px 16px;text-align:center}
+.status-card .badge{display:inline-flex;padding:5px 10px;border-radius:999px;background:#FFF7E6;color:#D48806;font-size:11px;font-weight:700;margin-bottom:12px}
+.status-card h2{font-size:18px;color:#1a1a2e;margin-bottom:8px}
+.status-card p{font-size:13px;color:#6b7280;line-height:1.8}
+.submitted-materials{margin-top:16px;text-align:left;border-top:1px solid #f0f2f5;padding-top:14px}
+.submitted-materials .material-title{font-size:13px;font-weight:700;color:#1a1a2e;margin-bottom:8px}
+.submitted-materials .material-block{padding:10px 12px;border-radius:12px;background:#f8faff;color:#475467;font-size:12px;line-height:1.7;margin-top:8px}
+.submitted-materials .material-images{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.submitted-materials .material-image{width:68px;height:68px;border-radius:12px;background:#EEF2FF;color:#4A6CF7;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.4;padding:6px}
+.field-label{font-size:13px;color:#667085;margin:16px 0 8px}
+.text-input{width:100%;min-height:132px;border:1px solid #d9deeb;border-radius:12px;padding:12px 14px;font-size:14px;color:#1a1a2e;line-height:1.7;resize:none;outline:none;background:#fff}
+.text-input:focus{border-color:#4A6CF7;box-shadow:0 0 0 3px rgba(74,108,247,.12)}
+.photo-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.photo-list .add,.photo-list .item{width:68px;height:68px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.4}
+.photo-list .add{border:1px dashed #d0d5dd;background:#fafbff;color:#98a2b3;cursor:pointer;font-size:22px}
+.photo-list .item{background:#EEF2FF;color:#4A6CF7;padding:6px}
+.actions{padding:0 16px;display:grid;gap:12px}
+.submit-btn,.home-link{width:100%;height:48px;border-radius:24px;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.submit-btn{border:none;background:#4A6CF7;color:#fff;cursor:pointer}
+.home-link{border:1px solid #DDE6FF;background:#fff;color:#4A6CF7;text-decoration:none}
+.hint{margin-top:12px;font-size:12px;color:#8c8c8c;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="account-banned.html" class="back" id="backLink">←</a>
+  <span class="title">解封申诉</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="status-card" id="pendingCard">
+  <div class="badge">申诉审核中</div>
+  <h2>申诉已提交，等待平台审核</h2>
+  <p id="pendingDesc">平台会在 3 个工作日内处理。</p>
+  <div class="submitted-materials" id="submittedMaterials"></div>
+</div>
+
+<div class="card" id="appealFormCard">
+  <div class="title">申诉材料</div>
+  <div class="desc">请说明你认为封禁有误的原因，并补充可复核的订单、沟通或履约信息。</div>
+  <div class="field-label">文字说明</div>
+  <textarea class="text-input" id="appealText" placeholder="例如：说明被误判的消息上下文、对应订单编号、已完成的服务情况等。"></textarea>
+  <div class="field-label">图片材料（选填）</div>
+  <div class="photo-list" id="photoList"></div>
+</div>
+
+<div class="actions" id="appealActions">
+  <button class="submit-btn" id="submitBtn" type="button">提交申诉</button>
+  <a class="home-link" id="homeLink" href="fuwuzhe_home.html">去首页</a>
+  <div class="hint" id="appealHint">提交后平台将在 3 个工作日内处理，结果会同步到消息中心。</div>
+</div>
+
+<script>
+const BAN_APPEAL_STORAGE_KEY='banxing.banAppeals';
+const params=new URLSearchParams(location.search);
+const source=params.get('from')||'';
+const explicitBack=params.get('back')||'';
+const appealText=document.getElementById('appealText');
+const photoList=document.getElementById('photoList');
+const uploadedImages=[];
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function readAppeals(){
+  try{
+    const list=JSON.parse(localStorage.getItem(BAN_APPEAL_STORAGE_KEY)||'[]');
+    return Array.isArray(list)?list:[];
+  }catch(error){
+    return [];
+  }
+}
+
+function saveAppeals(list){
+  localStorage.setItem(BAN_APPEAL_STORAGE_KEY,JSON.stringify(list));
+}
+
+function getActiveAppeal(){
+  return readAppeals().find(function(item){
+    return ['pending','reviewing'].includes(item.status);
+  });
+}
+
+function getBackHref(){
+  if(explicitBack && !/^https?:\/\//i.test(explicitBack) && !explicitBack.includes('//')){
+    return explicitBack;
+  }
+  const sourceBackMap={
+    help:'help.html',
+    login:'account-banned.html',
+    'moment-publish':'moments.html',
+    apply:'fuwuzhe_home.html',
+    'publish':'fuwuzhe_home.html',
+    'publish-confirm':'fuwuzhe_home.html'
+  };
+  return sourceBackMap[source]||'account-banned.html';
+}
+
+function getProgressHref(){
+  const nextSource=source||'login';
+  const nextParams=new URLSearchParams({from:nextSource});
+  if(explicitBack)nextParams.set('back',explicitBack);
+  return 'account-ban-appeal.html?'+nextParams.toString();
+}
+
+function renderSubmittedMaterials(appeal){
+  const attachments=Array.isArray(appeal.attachments)?appeal.attachments:[];
+  document.getElementById('submittedMaterials').innerHTML=
+    '<div class="material-title">已提交资料</div>'+
+    '<div class="material-block"><strong>文字说明</strong><br>'+escapeHtml(appeal.content||'未填写文字说明')+'</div>'+
+    '<div class="material-block"><strong>图片材料</strong>'+
+      (attachments.length
+        ? '<div class="material-images">'+attachments.map(function(item){return '<div class="material-image">'+escapeHtml(item)+'</div>';}).join('')+'</div>'
+        : '<br>未上传图片材料')+
+    '</div>';
+}
+
+function renderAppealState(){
+  const activeAppeal=getActiveAppeal();
+  if(!activeAppeal){
+    return;
+  }
+  document.getElementById('appealFormCard').style.display='none';
+  document.getElementById('submitBtn').style.display='none';
+  document.getElementById('homeLink').style.display='none';
+  document.getElementById('pendingCard').style.display='block';
+  document.getElementById('appealHint').textContent='';
+  document.getElementById('pendingDesc').textContent='最近申诉状态：'+(activeAppeal.statusText||'申诉审核中')+' · '+(activeAppeal.time||'刚刚')+'。';
+  renderSubmittedMaterials(activeAppeal);
+}
+
+function renderSourceActions(){
+  document.getElementById('backLink').href=getBackHref();
+  if(source!=='login'){
+    document.getElementById('homeLink').style.display='none';
+  }
+}
+
+function renderPhotos(){
+  photoList.innerHTML=uploadedImages.map(function(item){
+    return '<div class="item">'+escapeHtml(item)+'</div>';
+  }).join('')+'<button class="add" id="addPhotoBtn" type="button">+</button>';
+  document.getElementById('addPhotoBtn').onclick=function(){
+    if(uploadedImages.length>=4){
+      alert('最多上传 4 张图片材料');
+      return;
+    }
+    uploadedImages.push('图片材料 '+(uploadedImages.length+1));
+    renderPhotos();
+  };
+}
+
+document.getElementById('submitBtn').onclick=function(){
+  if(getActiveAppeal()){
+    renderAppealState();
+    return;
+  }
+  const text=appealText.value.trim();
+  if(!text){
+    appealText.style.borderColor='#FF4D4F';
+    return;
+  }
+  const records=readAppeals();
+  records.unshift({
+    id:'ban-appeal-'+Date.now(),
+    caseId:'BAN-3031',
+    title:'账号封禁解封申诉',
+    content:text,
+    time:new Date().toLocaleString('zh-CN'),
+    status:'pending',
+    statusText:'申诉待处理',
+    attachments:uploadedImages.slice()
+  });
+  saveAppeals(records);
+  alert('申诉材料已提交，平台将在 3 个工作日内处理。');
+  location.href=getProgressHref();
+};
+
+renderPhotos();
+renderSourceActions();
+renderAppealState();
+</script>
+</body>
+</html>

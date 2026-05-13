@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>确认完成 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.content{padding:16px}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.info-grid .item{font-size:12px;color:#8c8c8c}
+.info-grid .val{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.6;margin-top:3px}
+.field-label{font-size:13px;color:#666;margin-bottom:8px}
+.text-input{width:100%;min-height:120px;border:1px solid #d9deeb;border-radius:12px;padding:12px 14px;font-size:14px;color:#1a1a2e;line-height:1.7;resize:none;outline:none}
+.text-input:focus{border-color:#4A6CF7;box-shadow:0 0 0 3px rgba(74,108,247,.12)}
+.upload-actions{display:flex;gap:8px;flex-wrap:wrap}
+.upload-btn{width:68px;height:68px;border:1px dashed #d0d5dd;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#98a2b3;cursor:pointer;background:#fafbff;font-size:11px;line-height:1.4}
+.upload-btn:active{border-color:#4A6CF7;color:#4A6CF7}
+.upload-btn .icon{font-size:22px;margin-bottom:2px}
+.upload-btn.disabled{opacity:.45;cursor:not-allowed}
+.media-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.media-list .item{width:68px;height:68px;border-radius:12px;background:#EEF2FF;color:#4A6CF7;font-size:11px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.4;padding:6px}
+.helper{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:10px}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.actions button{width:100%;height:48px;border-radius:24px;font-size:16px;cursor:pointer;border:none}
+.actions .btn-primary{background:linear-gradient(135deg,#52C41A,#73D13D);color:#fff}
+.actions button:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="fuwuzhe_order-detail.html" class="back" id="backLink">←</a>
+  <span class="title">完成服务</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="content">
+  <div class="card">
+    <div class="card-title">订单信息</div>
+    <div class="info-grid" id="orderInfo"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">完成服务凭证</div>
+    <div class="field-label">文字说明</div>
+    <textarea class="text-input" id="completeText" placeholder="例如：已完成喂食、换水、猫砂清理，并确认门锁复位后离开。"></textarea>
+
+    <div class="field-label" style="margin-top:14px">上传凭证</div>
+    <div class="upload-actions">
+      <div class="upload-btn" id="uploadImageBtn">
+        <div class="icon">🖼️</div>
+        <span>上传图片</span>
+      </div>
+      <div class="upload-btn" id="uploadVideoBtn">
+        <div class="icon">🎬</div>
+        <span>上传视频</span>
+      </div>
+    </div>
+    <div class="media-list" id="mediaList"></div>
+    <div class="helper">最多上传 5 张图片和 1 个视频</div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="submitBtn">提交完成凭证并等待确认</button>
+  </div>
+</div>
+
+<script src="completion-confirmation.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'accepted';
+const status=params.get('status')||'serving';
+const type=params.get('type')||'cat';
+const id=params.get('id')||'a1';
+const returnRole=params.get('returnRole')||'accepted';
+const returnStatus=params.get('returnStatus')||'all';
+const queryTime=params.get('time')||'';
+const queryPrice=params.get('price')||'';
+const EVIDENCE_KEY='mockOrderEvidenceV2';
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach((value,key)=>{
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(([key,val])=>{
+    next[key]=val;
+  });
+  (removeKeys||[]).forEach(key=>{
+    delete next[key];
+  });
+  return next;
+}
+
+function readEvidenceStore(){
+  try{
+    return JSON.parse(localStorage.getItem(EVIDENCE_KEY)||'{}');
+  }catch(error){
+    return {};
+  }
+}
+
+function saveEvidenceStore(store){
+  localStorage.setItem(EVIDENCE_KEY,JSON.stringify(store));
+}
+
+function orderStoreKey(){
+  return [type,String(id||'').toLowerCase()].join(':');
+}
+
+function normalizeEntry(item){
+  return {
+    time:(item&&item.time)||'刚刚',
+    text:(item&&item.text)||(item&&item.desc)||'',
+    images:Array.isArray(item&&item.images)?item.images.filter(Boolean):[],
+    videos:Array.isArray(item&&item.videos)?item.videos.filter(Boolean):[]
+  };
+}
+
+const typeMeta={
+  cat:{
+    name:'上门喂猫｜1.5 小时｜海淀区',
+    publisher:'张小花（信用92）',
+    duration:'1小时28分钟',
+    amount:'¥120',
+    progressRecords:[
+      {time:'14:05',text:'已到达服务地点，在门口完成签到并确认可正常入户。',images:['门口照片']},
+      {time:'14:20',text:'已完成喂食、换水和猫砂清理，猫咪状态稳定。',images:['喂食照片','清理照片']},
+      {time:'15:26',text:'服务结束前补充了猫咪状态照片，并确认门锁已复位。',images:['猫咪状态照片']}
+    ]
+  },
+  outdoor:{
+    name:'户外任务｜1 小时｜朝阳区',
+    publisher:'李明（信用90）',
+    duration:'1小时17分钟',
+    amount:'¥80',
+    progressRecords:[
+      {time:'16:55',text:'已到达集合点，和发布者确认本次陪跑路线与配速。',images:['集合点照片']},
+      {time:'17:35',text:'已完成中段陪同、补水提醒和节奏调整。',images:['途中照片']},
+      {time:'18:12',text:'服务结束，双方已在终点完成确认。',images:['结束点照片']}
+    ]
+  },
+  health:{
+    name:'健康陪诊｜3 小时｜海淀区',
+    publisher:'王阿姨（信用94）',
+    duration:'2小时06分钟',
+    amount:'¥150',
+    progressRecords:[
+      {time:'09:02',text:'已到达医院并完成到院签到。',images:['到院照片']},
+      {time:'09:48',text:'候诊过程中已同步排队进度和陪同情况。',images:['候诊照片']},
+      {time:'10:35',text:'已完成取药并同步医嘱重点信息。',images:['取药照片']}
+    ]
+  },
+  wedding:{
+    name:'婚庆协助｜半天｜海淀区',
+    publisher:'孙先生（信用91）',
+    duration:'4小时37分钟',
+    amount:'¥420',
+    progressRecords:[
+      {time:'07:28',text:'已到达婚礼现场并完成到场确认。',images:['到场照片']},
+      {time:'09:10',text:'已完成迎宾、流程配合和现场物品照看。',images:['现场照片']},
+      {time:'12:05',text:'已确认现场交接完成，服务顺利结束。',images:['交接照片']}
+    ]
+  }
+};
+
+function getOrderEvidence(){
+  const defaults={
+    progressRecords:(typeMeta[type]||typeMeta.cat).progressRecords.map(normalizeEntry),
+    completionProofs:[]
+  };
+  const saved=readEvidenceStore()[orderStoreKey()];
+  if(!saved)return defaults;
+  return {
+    progressRecords:Array.isArray(saved.progressRecords)?saved.progressRecords.map(normalizeEntry):defaults.progressRecords,
+    completionProofs:Array.isArray(saved.completionProofs)?saved.completionProofs.map(normalizeEntry):defaults.completionProofs
+  };
+}
+
+function setOrderEvidence(nextEvidence){
+  const store=readEvidenceStore();
+  store[orderStoreKey()]=nextEvidence;
+  saveEvidenceStore(store);
+}
+
+const currentType=typeMeta[type]||typeMeta.cat;
+const currentTime=queryTime||'';
+const currentAmount=queryPrice||currentType.amount;
+const orderEvidence=getOrderEvidence();
+const backHref='fuwuzhe_order-detail.html?'+buildQuery(currentParams({owner,status:'serving',type,id,returnRole,returnStatus}));
+const confirmHref='fuwuzhe_order-detail.html?'+buildQuery(currentParams({owner,status:'confirm',type,id,returnRole,returnStatus}));
+document.getElementById('backLink').href=backHref;
+const draftImages=[];
+let draftVideo='';
+const canSubmitCompletion=owner==='accepted'&&status==='serving';
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function nowText(){
+  const now=new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+}
+
+document.getElementById('orderInfo').innerHTML=[
+  ['订单号',String(id||'').toUpperCase()],
+  ['任务名称',currentType.name],
+  ['服务时长',currentType.duration],
+  ['订单金额',currentAmount]
+].map(item=>'<div class="item">'+escapeHtml(item[0])+'<div class="val">'+escapeHtml(item[1])+'</div></div>').join('');
+
+function syncUploadState(){
+  document.getElementById('uploadImageBtn').classList.toggle('disabled',draftImages.length>=5);
+  document.getElementById('uploadVideoBtn').classList.toggle('disabled',!!draftVideo);
+}
+
+function renderDraftMedia(){
+  document.getElementById('mediaList').innerHTML=draftImages.map(item=>'<div class="item">🖼️ '+item+'</div>').join('')+(draftVideo?'<div class="item">🎬 '+draftVideo+'</div>':'');
+  syncUploadState();
+}
+
+document.getElementById('uploadImageBtn').addEventListener('click',()=>{
+  if(draftImages.length>=5)return;
+  draftImages.push('完成图片 '+(draftImages.length+1));
+  renderDraftMedia();
+});
+
+document.getElementById('uploadVideoBtn').addEventListener('click',()=>{
+  if(draftVideo)return;
+  draftVideo='完成视频 1';
+  renderDraftMedia();
+});
+
+document.getElementById('submitBtn').addEventListener('click',()=>{
+  if(!canSubmitCompletion){
+    alert('只有服务中订单可以提交完成服务凭证。');
+    location.href=backHref;
+    return;
+  }
+  const text=document.getElementById('completeText').value.trim();
+  if(!text&&!draftImages.length&&!draftVideo){
+    alert('请至少输入完成说明、上传图片或上传视频。');
+    return;
+  }
+  orderEvidence.completionProofs=[
+    normalizeEntry({
+      time:nowText(),
+      text:text||'已补充完成服务图片或视频。',
+      images:draftImages,
+      videos:draftVideo?[draftVideo]:[]
+    })
+  ];
+  setOrderEvidence(orderEvidence);
+  BanxingCompletionConfirm.markSubmitted({
+    type,
+    time:currentTime,
+    amount:currentAmount
+  });
+  alert('完成服务凭证已提交，等待发布者确认完成。');
+  location.href=confirmHref;
+});
+renderDraftMedia();
+</script>
+</body>
+</html>

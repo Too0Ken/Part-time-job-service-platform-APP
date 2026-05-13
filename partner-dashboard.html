@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>合伙人中心 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.mock-switch{background:#fff;margin:12px 16px 0;border-radius:14px;padding:12px;border:1px solid #edf0f5}
+.mock-switch .title{font-size:12px;color:#667085;font-weight:700}
+.mock-switch .desc{font-size:11px;color:#98a2b3;line-height:1.6;margin-top:4px}
+.mock-switch .group{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.mock-switch button{height:30px;padding:0 11px;border-radius:15px;border:1px solid #e5e7eb;background:#fff;color:#475467;font-size:12px;cursor:pointer}
+.mock-switch button.active{border-color:#14b8a6;background:#ecfdf5;color:#0f766e;font-weight:700}
+.hero{background:linear-gradient(135deg,#0f766e,#14b8a6);margin:16px;border-radius:20px;padding:20px 16px;color:#fff}
+.hero.pending{background:linear-gradient(135deg,#b7791f,#f59e0b)}
+.hero.rejected{background:linear-gradient(135deg,#dc2626,#fb7185)}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hero h2{font-size:22px}
+.hero p{font-size:12px;line-height:1.8;opacity:.94;margin-top:8px}
+.hero-badge{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.18);font-size:11px;white-space:nowrap}
+.hero-badge.rejected{background:rgba(255,255,255,.22)}
+.hero-actions{display:flex;gap:10px;margin-top:16px}
+.hero-actions a,.hero-actions button{flex:1;height:40px;border-radius:20px;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:13px;border:none;cursor:pointer}
+.hero-actions .primary{background:#fff;color:#0f766e;font-weight:700}
+.hero-actions .ghost{background:rgba(255,255,255,.16);color:#fff}
+.section{background:#fff;margin:0 16px 16px;border-radius:16px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.section-desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.check-list{display:grid;gap:10px;margin-top:12px}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid #edf0f5;border-radius:14px}
+.check-item .icon{width:24px;height:24px;border-radius:12px;background:#eefcf7;color:#0f766e;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.check-item strong{display:block;font-size:14px;color:#1a1a2e}
+.check-item span{display:block;font-size:12px;color:#98a2b3;line-height:1.7;margin-top:4px}
+.timeline{display:grid;gap:10px;margin-top:14px}
+.timeline-item{display:flex;gap:10px;align-items:flex-start}
+.timeline-item .dot{width:22px;height:22px;border-radius:11px;background:#d0d5dd;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px}
+.timeline-item.done .dot{background:#0f766e}
+.timeline-item.current .dot{background:#f59e0b}
+.timeline-item .content strong{display:block;font-size:14px;color:#1a1a2e}
+.timeline-item .content span{display:block;font-size:12px;color:#98a2b3;line-height:1.7;margin-top:4px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;margin-top:12px}
+.info-grid .item{font-size:12px;color:#98a2b3}
+.info-grid .item.full{grid-column:1/-1}
+.info-grid .val{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.7;margin-top:4px}
+.media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.media-card{border:1px solid #edf0f5;border-radius:14px;overflow:hidden;background:#fff}
+.media-thumb{aspect-ratio:1/1;background:#eef2ff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.media-name{padding:8px 10px;font-size:11px;color:#667085;line-height:1.5;word-break:break-word}
+.invite-card{margin-top:12px;padding:16px;border-radius:16px;background:linear-gradient(180deg,#f0fdf9 0%,#ffffff 100%);border:1px solid #d7f5eb}
+.invite-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.invite-top strong{display:block;font-size:17px;color:#1a1a2e}
+.invite-top span{display:block;font-size:12px;color:#667085;line-height:1.7;margin-top:6px}
+.invite-badge{padding:6px 10px;border-radius:999px;background:#0f766e;color:#fff;font-size:11px;white-space:nowrap}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip-row span{padding:6px 10px;border-radius:999px;background:#fff;color:#0f766e;font-size:11px;border:1px solid #c8f0e3}
+.invite-actions{display:flex;gap:10px;margin-top:14px}
+.invite-actions button{flex:1;height:40px;border:none;border-radius:20px;font-size:13px;cursor:pointer}
+.invite-actions .primary{background:#0f766e;color:#fff}
+.invite-actions .ghost{background:#ecfdf5;color:#0f766e}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.stats-grid div{padding:12px;border-radius:14px;background:#f8faff}
+.stats-grid strong{display:block;font-size:18px;color:#1a1a2e}
+.stats-grid span{display:block;font-size:11px;color:#98a2b3;line-height:1.6;margin-top:4px}
+.record-list{display:grid;gap:10px;margin-top:12px}
+.record-card{border:1px solid #edf0f5;border-radius:14px;padding:14px}
+.record-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.record-id{font-size:15px;font-weight:700;color:#1a1a2e}
+.record-time{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.record-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.record-meta div{padding:10px 12px;border-radius:12px;background:#f8faff}
+.record-meta b{display:block;font-size:13px;color:#1a1a2e}
+.record-meta span{display:block;font-size:11px;color:#98a2b3;line-height:1.6;margin-top:4px}
+.review-callout{margin-top:12px;padding:14px;border-radius:14px;background:#FFF7E8;border:1px solid #FFD591}
+.review-callout.rejected{background:#FFF1F0;border-color:#FFCCC7}
+.review-callout strong{display:block;font-size:13px;color:#1a1a2e}
+.review-callout span{display:block;font-size:12px;color:#667085;line-height:1.7;margin-top:6px}
+.empty-card{background:#fff;margin:16px;border-radius:16px;padding:24px 18px;text-align:center}
+.empty-card h3{font-size:18px;color:#1a1a2e}
+.empty-card p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:8px}
+.empty-card a{display:inline-flex;margin-top:16px;height:42px;padding:0 18px;border-radius:21px;background:#0f766e;color:#fff;text-decoration:none;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:70;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(15,118,110,.94)}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">合伙人中心</span><span class="placeholder"></span></div>
+
+<div id="mockSwitchMount"></div>
+<div id="heroMount"></div>
+<div id="contentMount"></div>
+<div class="toast" id="pageToast"></div>
+
+<script src="partner-data.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const mock=params.get('mock')||'';
+const partnerState=mock?BanxingPartner.syncMockState(mock):BanxingPartner.get();
+const mockOptions=[
+  {key:'reset',label:'未申请'},
+  {key:'pending',label:'审核中'},
+  {key:'approved',label:'已通过'},
+  {key:'rejected',label:'已驳回'}
+];
+const pageToast=document.getElementById('pageToast');
+let toastTimer;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function buildPartnerHref(page){
+  return mock?page+'?mock='+encodeURIComponent(mock):page;
+}
+
+function showToast(text,type){
+  clearTimeout(toastTimer);
+  pageToast.textContent=text;
+  pageToast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    pageToast.className='toast';
+  },2200);
+}
+
+function getCurrentMockKey(){
+  if(mock)return mock;
+  if(partnerState.status==='pending')return'pending';
+  if(partnerState.status==='approved')return'approved';
+  if(partnerState.status==='rejected')return'rejected';
+  return'reset';
+}
+
+function renderMockSwitch(){
+  const currentMock=getCurrentMockKey();
+  return `
+    <div class="mock-switch">
+      <div class="title">状态切换</div>
+      <div class="desc">用于快速预览合伙人审核的不同状态页面。</div>
+      <div class="group">
+        ${mockOptions.map(function(item){
+          return '<button type="button" data-switch-mock="'+escapeHtml(item.key)+'" class="'+(item.key===currentMock?'active':'')+'">'+escapeHtml(item.label)+'</button>';
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCheckItems(items){
+  return items.map(function(item){
+    return `
+      <div class="check-item">
+        <div class="icon">${escapeHtml(item.icon||'享')}</div>
+        <div>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.desc)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMediaGrid(images){
+  if(!Array.isArray(images)||!images.length)return '';
+  return `
+    <div class="media-grid">
+      ${images.map(function(item,index){
+        const source=typeof item==='string'?{name:item,dataUrl:''}:item||{};
+        const name=source.name||('图片'+(index+1));
+        const thumb=source.dataUrl
+          ?'<img alt="'+escapeHtml(name)+'" src="'+escapeHtml(source.dataUrl)+'">'
+          :'<span>'+escapeHtml(name)+'</span>';
+        return `
+          <div class="media-card">
+            <div class="media-thumb">${thumb}</div>
+            <div class="media-name">${escapeHtml(name)}</div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderHero(){
+  if(partnerState.status==='approved'){
+    return `
+      <div class="hero approved">
+        <div class="hero-top">
+          <div>
+            <h2>合伙人中心</h2>
+            <p>${escapeHtml(partnerState.review.desc)}</p>
+          </div>
+          <span class="hero-badge approved">${escapeHtml(partnerState.review.badge)}</span>
+        </div>
+        <div class="hero-actions">
+          <a class="primary" href="${buildPartnerHref('partner-bills.html')}">结算账单</a>
+          <a class="ghost" href="${buildPartnerHref('partner-profile.html')}">我的资料</a>
+        </div>
+      </div>
+    `;
+  }
+  if(partnerState.status==='pending'){
+    return `
+      <div class="hero pending">
+        <div class="hero-top">
+          <div>
+            <h2>合伙人中心</h2>
+            <p>${escapeHtml(partnerState.review.desc)}</p>
+          </div>
+          <span class="hero-badge pending">${escapeHtml(partnerState.review.badge)}</span>
+        </div>
+      </div>
+    `;
+  }
+  if(partnerState.status==='rejected'){
+    return `
+      <div class="hero rejected">
+        <div class="hero-top">
+          <div>
+            <h2>合伙人中心</h2>
+            <p>${escapeHtml(partnerState.review.desc)}</p>
+          </div>
+          <span class="hero-badge rejected">${escapeHtml(partnerState.review.badge)}</span>
+        </div>
+        <div class="hero-actions">
+          <a class="primary" href="${buildPartnerHref('partner-apply.html')}">重新申请</a>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="hero none">
+      <div class="hero-top">
+        <div>
+          <h2>合伙人中心</h2>
+          <p>还未申请合伙人。审核通过后，可邀请新用户注册，并按订单实收金额获取分佣与月度结算，打赏不参与分佣。</p>
+        </div>
+        <span class="hero-badge">未申请</span>
+      </div>
+      <div class="hero-actions">
+        <a class="primary" href="${buildPartnerHref('partner-apply.html')}">立即申请</a>
+      </div>
+    </div>
+  `;
+}
+
+function renderReferralRecords(records){
+  return records.map(function(item){
+    return `
+      <div class="record-card">
+        <div class="record-top">
+          <div>
+            <div class="record-id">${escapeHtml(item.userId)}</div>
+            <div class="record-time">注册时间：${escapeHtml(item.registeredAt)}</div>
+          </div>
+        </div>
+        <div class="record-meta">
+          <div>
+            <b>${escapeHtml(item.orderCount)}</b>
+            <span>接单次数</span>
+          </div>
+          <div>
+            <b>${escapeHtml(item.commission)}</b>
+            <span>带来佣金</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderContent(){
+  if(partnerState.status==='approved'){
+    const referral=partnerState.referral||{stats:[],records:[]};
+    return `
+      <div class="section">
+        <div class="section-title">拉新分佣</div>
+        <div class="section-desc"></div>
+        <div class="invite-card">
+          <div class="invite-top">
+            <div>
+              <strong>${escapeHtml(partnerState.application.type)}合伙人 · 前10单分佣比例 ${escapeHtml(partnerState.commission.current)}</strong>
+             
+            </div>
+            
+          </div>
+          <div class="chip-row">
+            <span>注册即绑定邀请关系</span>
+            <span>按订单实收金额分佣</span>
+            <span>${escapeHtml(partnerState.settlement.cycle)}</span>
+          </div>
+          <div class="invite-actions">
+            <button class="primary" type="button" id="copyInviteBtn">邀请好友（海报/复制链接/分享微信好友）</button>
+          
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">申请资料</div>
+        <div class="info-grid">
+          <div class="item"><div>合伙人类型</div><div class="val">${escapeHtml(partnerState.application.type||'个人')}</div></div>
+          <div class="item"><div>主体名称</div><div class="val">${escapeHtml(partnerState.application.name||'未填写')}</div></div>
+          <div class="item full"><div>推广渠道</div><div class="val">${escapeHtml(partnerState.application.channel||'未填写')}</div></div>
+          <div class="item"><div>预计月拉新</div><div class="val">${escapeHtml(partnerState.application.monthlyLeads||'未填写')}</div></div>
+          <div class="item"><div>结算联系人</div><div class="val">${escapeHtml(partnerState.application.contact||'未填写')}</div></div>
+          <div class="item full"><div>资质材料</div><div class="val">${escapeHtml(partnerState.application.materials||'未补充')}</div></div>
+          <div class="item full"><div>材料图片</div><div class="val">${partnerState.application.materialsImages&&partnerState.application.materialsImages.length?renderMediaGrid(partnerState.application.materialsImages):'未上传图片'}</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">拉新明细</div>
+        <div class="section-desc"></div>
+        <div class="stats-grid">
+          ${(referral.stats||[]).map(function(item){
+            return '<div><strong>'+escapeHtml(item.num)+'</strong><span>'+escapeHtml(item.label)+'</span></div>';
+          }).join('')}
+        </div>
+        <div class="record-list">${renderReferralRecords(referral.records||[])}</div>
+      </div>
+    `;
+  }
+  if(partnerState.status==='pending'){
+    return `
+      <div class="section" id="progressSection">
+        <div class="section-title">审核进度</div>
+        <div class="section-desc">${escapeHtml(partnerState.review.eta)}，审核通过后会自动开通拉新分佣和结算账单。</div>
+        <div class="timeline">
+          ${partnerState.review.steps.map(function(step,index){
+            return '<div class="timeline-item '+step.state+'"><div class="dot">'+(index+1)+'</div><div class="content"><strong>'+escapeHtml(step.label)+'</strong><span>'+escapeHtml(step.time)+'</span></div></div>';
+          }).join('')}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">已提交资料</div>
+        <div class="info-grid">
+          <div class="item"><div>合伙人类型</div><div class="val">${escapeHtml(partnerState.application.type)}</div></div>
+          <div class="item"><div>主体名称</div><div class="val">${escapeHtml(partnerState.application.name||'未填写')}</div></div>
+          <div class="item full"><div>推广渠道</div><div class="val">${escapeHtml(partnerState.application.channel||'未填写')}</div></div>
+          <div class="item"><div>预计月拉新</div><div class="val">${escapeHtml(partnerState.application.monthlyLeads||'未填写')}</div></div>
+          <div class="item"><div>结算联系人</div><div class="val">${escapeHtml(partnerState.application.contact||'未填写')}</div></div>
+          <div class="item full"><div>资质材料</div><div class="val">${escapeHtml(partnerState.application.materials||'未补充')}</div></div>
+          <div class="item full"><div>材料图片</div><div class="val">${partnerState.application.materialsImages&&partnerState.application.materialsImages.length?renderMediaGrid(partnerState.application.materialsImages):'未上传图片'}</div></div>
+        </div>
+      </div>
+    `;
+  }
+  if(partnerState.status==='rejected'){
+    return `
+      <div class="section">
+        <div class="section-title">审核结果</div>
+        <div class="section-desc">上一次申请未通过，请根据驳回原因和修改建议完善资料后重新提交。</div>
+        <div class="review-callout rejected">
+          <strong>驳回原因</strong>
+          <span>${escapeHtml(partnerState.review.reason||'请补充资料后重新提交')}</span>
+        </div>
+        <div class="review-callout">
+          <strong>修改建议</strong>
+          <span>${escapeHtml(partnerState.review.nextAction||'补充资料后重新提交')}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">最近一次申请资料</div>
+        <div class="info-grid">
+          <div class="item"><div>提交时间</div><div class="val">${escapeHtml(partnerState.application.submittedAt||'未记录')}</div></div>
+          <div class="item"><div>驳回时间</div><div class="val">${escapeHtml(partnerState.review.rejectedAt||'未记录')}</div></div>
+          <div class="item"><div>合伙人类型</div><div class="val">${escapeHtml(partnerState.application.type||'个人')}</div></div>
+          <div class="item"><div>主体名称</div><div class="val">${escapeHtml(partnerState.application.name||'未填写')}</div></div>
+          <div class="item full"><div>推广渠道</div><div class="val">${escapeHtml(partnerState.application.channel||'未填写')}</div></div>
+          <div class="item"><div>预计月拉新</div><div class="val">${escapeHtml(partnerState.application.monthlyLeads||'未填写')}</div></div>
+          <div class="item"><div>结算联系人</div><div class="val">${escapeHtml(partnerState.application.contact||'未填写')}</div></div>
+          <div class="item full"><div>资质材料</div><div class="val">${escapeHtml(partnerState.application.materials||'未补充')}</div></div>
+          <div class="item full"><div>材料图片</div><div class="val">${partnerState.application.materialsImages&&partnerState.application.materialsImages.length?renderMediaGrid(partnerState.application.materialsImages):'未上传图片'}</div></div>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="section">
+      <div class="section-title">申请后可获得</div>
+      <div class="section-desc">申请通过后，合伙人账号会自动开通以下能力。</div>
+      <div class="check-list">
+        ${renderCheckItems([
+          {icon:'佣',title:'获取拉新分佣',desc:'邀请新用户注册并完成订单后（前10单），可按你的合伙人分佣比例对订单实收金额进行分佣，打赏不参与分佣。'},
+	          {icon:'结',title:'按月生成账单',desc:'平台每月汇总有效收益，后台确认结算后实时进入平台余额。'},
+          {icon:'账',title:'查看账单明细',desc:'可按年月查看不同月份的收益账单、逐单收益和退款回冲情况。'},
+          {icon:'明',title:'查看拉新明细',desc:'每位拉新用户的脱敏 ID、注册时间、接单次数和带来佣金都能清晰查看。'}
+        ])}
+      </div>
+    </div>
+  `;
+}
+
+function copyText(value,successText){
+  if(!value){
+    showToast('暂无可复制内容');
+    return;
+  }
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(value).then(function(){
+      showToast(successText,'success');
+    }).catch(function(){
+      showToast('复制失败，请稍后重试');
+    });
+    return;
+  }
+  const input=document.createElement('textarea');
+  input.value=value;
+  document.body.appendChild(input);
+  input.select();
+  try{
+    document.execCommand('copy');
+    showToast(successText,'success');
+  }catch(error){
+    showToast('复制失败，请手动复制');
+  }
+  document.body.removeChild(input);
+}
+
+function bindPageEvents(){
+  const referral=partnerState.referral||{};
+  const copyInviteBtn=document.getElementById('copyInviteBtn');
+  const copyInviteCodeBtn=document.getElementById('copyInviteCodeBtn');
+  if(copyInviteBtn){
+    copyInviteBtn.addEventListener('click',function(){
+      copyText(referral.inviteLink,'邀请链接已复制');
+    });
+  }
+  if(copyInviteCodeBtn){
+    copyInviteCodeBtn.addEventListener('click',function(){
+      copyText(referral.inviteCode,'邀请码已复制');
+    });
+  }
+  const mockSwitch=document.getElementById('mockSwitchMount');
+  if(mockSwitch){
+    mockSwitch.addEventListener('click',function(event){
+      const button=event.target.closest('[data-switch-mock]');
+      if(!button)return;
+      const nextMock=button.dataset.switchMock||'reset';
+      const query='?mock='+encodeURIComponent(nextMock);
+      location.href='partner-dashboard.html'+query;
+    });
+  }
+}
+
+document.getElementById('mockSwitchMount').innerHTML=renderMockSwitch();
+document.getElementById('heroMount').innerHTML=renderHero();
+document.getElementById('contentMount').innerHTML=renderContent();
+bindPageEvents();
+</script>
+</body>
+</html>
+
+<!-- 未申请：partner-dashboard.html?mock=reset
+审核中：partner-dashboard.html?mock=pending
+已通过：partner-dashboard.html?mock=approved
+已拒绝：partner-dashboard.html?mock=rejected -->

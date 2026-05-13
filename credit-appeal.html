@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>信用分申诉 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:24px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.mode-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px;font-weight:600;margin-bottom:10px}
+.title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.desc{font-size:13px;color:#6b7280;line-height:1.7}
+.field-label{font-size:13px;color:#667085;margin:16px 0 8px}
+.selected-order{margin-top:4px;padding:14px;border-radius:14px;background:#fff;border:1px solid #e6ebf5}
+.selected-order.empty{background:#F8FAFF;border-color:#DDE6FF;cursor:pointer}
+.selected-order-empty-title{font-size:14px;color:#1a1a2e;font-weight:700;line-height:1.5}
+.selected-order-empty-action{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0 12px;border:none;border-radius:17px;background:#4A6CF7;color:#fff;font-size:12px;font-weight:600;margin-top:12px}
+.selected-order-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.selected-order-name{font-size:14px;font-weight:700;color:#1a1a2e;line-height:1.5}
+.selected-order-id{font-size:11px;color:#98a2b3;margin-top:4px}
+.selected-order-status{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px}
+.selected-order-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:12px}
+.selected-order-grid .item{font-size:11px;color:#98a2b3}
+.selected-order-grid .item strong{display:block;font-size:13px;color:#1a1a2e;margin-top:4px}
+.selected-order-grid .item.full{grid-column:1/-1}
+.selected-order-actions{display:flex;gap:10px;margin-top:12px}
+.selected-order-actions a,.selected-order-actions button{flex:1;height:36px;border-radius:18px;font-size:12px;display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}
+.selected-order-actions a{background:#fff;border:1px solid #DDE6FF;color:#4A6CF7}
+.selected-order-actions button{border:none;background:#EEF2FF;color:#4A6CF7;font-weight:600}
+.text-input{width:100%;min-height:120px;border:1px solid #d9deeb;border-radius:12px;padding:12px 14px;font-size:14px;color:#1a1a2e;line-height:1.7;resize:none;outline:none;background:#fff}
+.text-input:focus{border-color:#4A6CF7;box-shadow:0 0 0 3px rgba(74,108,247,.12)}
+.photo-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.photo-list .add,.photo-list .item{width:68px;height:68px;border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:11px;line-height:1.4}
+.photo-list .add{border:1px dashed #d0d5dd;background:#fafbff;color:#98a2b3;cursor:pointer;font-size:22px}
+.photo-list .item{background:#EEF2FF;color:#4A6CF7;padding:6px}
+.actions{padding:0 16px}
+.submit-btn{width:100%;height:48px;border:none;border-radius:24px;background:#4A6CF7;color:#fff;font-size:16px;cursor:pointer}
+.drawer-mask{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:flex-end;justify-content:center;z-index:40}
+.drawer-mask.show{display:flex}
+.drawer{width:100%;max-width:375px;background:#fff;border-radius:24px 24px 0 0;max-height:72vh;overflow:hidden;box-shadow:0 -16px 32px rgba(17,24,39,.18)}
+.drawer-handle{width:42px;height:4px;border-radius:999px;background:#d0d7de;margin:10px auto 6px}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:0 16px 14px}
+.drawer-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.drawer-close{width:28px;height:28px;border:none;border-radius:14px;background:#f5f6fa;color:#667085;font-size:16px;cursor:pointer}
+.drawer-list{padding:0 16px 20px;max-height:calc(72vh - 56px);overflow:auto}
+.order-card{border:1px solid #e6ebf5;border-radius:14px;padding:14px;background:#fff;cursor:pointer;transition:.2s ease;margin-top:10px}
+.order-card:first-child{margin-top:0}
+.order-card.selected{border-color:#4A6CF7;background:#F8FAFF;box-shadow:0 0 0 3px rgba(74,108,247,.08)}
+.order-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.order-name{font-size:14px;font-weight:700;color:#1a1a2e;line-height:1.5}
+.order-id{font-size:11px;color:#98a2b3;margin-top:4px}
+.order-status{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px}
+.order-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:12px}
+.order-meta .meta-item{font-size:11px;color:#98a2b3}
+.order-meta .meta-item strong{display:block;font-size:13px;color:#1a1a2e;margin-top:4px}
+.order-meta .meta-item.full{grid-column:1/-1}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="credit-score.html" class="back" id="backLink">←</a>
+  <span class="title">信用分申诉</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="card">
+  <div class="title">申诉材料</div>
+  <div class="field-label">关联订单</div>
+  <div class="selected-order" id="selectedOrderCard"></div>
+
+  <div class="field-label">文字说明</div>
+  <textarea class="text-input" id="appealText" placeholder="请先选择关联订单，再说明你认为本次扣分有误的原因，以及希望平台复核的内容。"></textarea>
+
+  <div class="field-label">图片材料</div>
+  <div class="photo-list" id="photoList"></div>
+</div>
+
+<div class="actions">
+  <button class="submit-btn" id="submitBtn">提交申诉</button>
+</div>
+
+<div class="drawer-mask" id="drawerMask">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-head">
+      <div class="drawer-title">选择关联订单</div>
+      <button class="drawer-close" id="drawerCloseBtn" type="button">✕</button>
+    </div>
+    <div class="drawer-list" id="drawerList"></div>
+  </div>
+</div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script>
+const CREDIT_APPEAL_STORAGE_KEY='banxing.creditAppeals';
+const params=new URLSearchParams(location.search);
+const backLink=params.get('backLink')||'credit-score.html';
+const appealText=document.getElementById('appealText');
+const selectedOrderCard=document.getElementById('selectedOrderCard');
+const drawerMask=document.getElementById('drawerMask');
+const drawerList=document.getElementById('drawerList');
+const uploadedImages=[];
+let selectedOrderId='';
+
+document.getElementById('backLink').href=backLink;
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+const ORDER_OVERRIDES={
+  P8:{title:'上门喂猫｜1.5 小时｜海淀区',location:'北京市 海淀区 中关村南大街XX小区'},
+  P4:{title:'婚庆协助｜全天｜海淀区',location:'北京市 海淀区 海淀逸林酒店'},
+  A5:{title:'上门喂猫｜1 小时｜朝阳区',location:'北京市 朝阳区 朝阳公寓 3 号楼'},
+  A3:{title:'健康陪诊｜3 小时｜海淀区',location:'北京市 海淀区 北医三院'}
+};
+
+function getMaskedLocationText(text){
+  const source=String(text||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  const display=BanxingLocationUtils.getOrderLocationDisplay(source,{exactVisible:false,maskStyle:'asterisk',includeDistance:false});
+  if(display.regionText)return display.regionText+' ******';
+  return display.text||source.replace(/\s*·\s*距你约[^·]+$/,'');
+}
+
+function normalizeOrder(item){
+  if(!item||!item.id)return null;
+  const id=String(item.id).toUpperCase();
+  const override=ORDER_OVERRIDES[id]||{};
+  if(!item.title&&!override.title)return null;
+  return {
+    id:id,
+    title:override.title||item.title||'订单',
+    status:item.status||'待处理',
+    time:BanxingTimeUtils.formatTaskTime(item.time)||item.time||'待补充',
+    amount:item.amount||'待补充',
+    location:getMaskedLocationText(override.location||item.location||'待补充'),
+    detailLink:item.detailLink||''
+  };
+}
+
+const paramOrder=normalizeOrder({
+  id:params.get('orderId'),
+  title:params.get('orderTitle'),
+  status:params.get('orderStatus'),
+  time:BanxingTimeUtils.formatTaskTime(params.get('orderTime'))||params.get('orderTime'),
+  amount:params.get('orderAmount'),
+  location:params.get('orderLocation'),
+  detailLink:params.get('detailLink')
+});
+
+const presetAppealTitle=(params.get('appealTitle')||'').trim();
+
+function buildOrderOptions(){
+  const defaults=[
+    {id:'P8',title:'上门喂猫｜1.5 小时｜海淀区',status:'服务中',time:'今天 14:00-15:30',amount:'¥120',location:'中关村南大街XX小区',detailLink:'order-detail.html?owner=published&status=serving&type=cat&id=p8&provider=wang&returnRole=all&returnStatus=all'},
+    {id:'P4',title:'婚庆协助｜全天｜海淀区',status:'已退款',time:'4月14日 07:30',amount:'¥500',location:'海淀逸林酒店',detailLink:'order-detail.html?owner=published&status=refund&type=wedding&id=p4&provider=chen&disputeHistory=1&returnRole=all&returnStatus=all'},
+    {id:'A5',title:'上门喂猫｜1 小时｜朝阳区',status:'纠纷中',time:'4月12日 19:00',amount:'¥160',location:'朝阳公寓 3 号楼',detailLink:'fuwuzhe_order-detail.html?owner=accepted&status=dispute&type=cat&id=a5&returnRole=all&returnStatus=all'},
+    {id:'A3',title:'健康陪诊｜3 小时｜海淀区',status:'已完成',time:'周三 09:00',amount:'¥150',location:'北医三院',detailLink:'fuwuzhe_order-detail.html?owner=accepted&status=done&type=health&id=a3&returnRole=all&returnStatus=all'}
+  ].map(normalizeOrder).filter(Boolean);
+  if(paramOrder){
+    return [paramOrder].concat(defaults.filter(function(item){return item.id!==paramOrder.id;}));
+  }
+  return defaults;
+}
+
+const orderOptions=buildOrderOptions();
+
+function normalizeRecord(item,index){
+  return {
+    id:(item&&item.id)||('appeal-'+index),
+    title:(item&&item.title)||'信用分申诉',
+    content:(item&&item.content)||'',
+    time:BanxingTimeUtils.formatMaybe(item&&item.time)||'刚刚',
+    status:(item&&item.status)||'processing',
+    statusText:(item&&item.statusText)||'审核中',
+    progressText:(item&&item.progressText)||'材料已提交，预计 3 个工作日内完成审核。',
+    attachments:Array.isArray(item&&item.attachments)?item.attachments:[],
+    relatedOrder:normalizeOrder(item&&item.relatedOrder)
+  };
+}
+
+function readAppeals(){
+  try{
+    const list=JSON.parse(localStorage.getItem(CREDIT_APPEAL_STORAGE_KEY)||'[]');
+    return Array.isArray(list)?list.map(normalizeRecord):[];
+  }catch(error){
+    return [];
+  }
+}
+
+function saveAppeals(list){
+  localStorage.setItem(CREDIT_APPEAL_STORAGE_KEY,JSON.stringify(list));
+}
+
+function seedAppeals(){
+  const existing=readAppeals();
+  if(existing.length)return existing;
+  const seeds=[
+    {
+      id:'appeal-1001',
+      title:'迟到扣分申诉',
+      content:'你提交了聊天记录截图和到场定位截图，说明本次迟到是因小区门禁临时管控导致，申请平台复核扣分结果。',
+      time:'4月2日 11:20',
+      status:'processing',
+      statusText:'审核中',
+      progressText:'当前进度：材料已提交，预计 3 个工作日内完成审核。',
+      attachments:['图片 1','图片 2'],
+      relatedOrder:{id:'P8',title:'上门喂猫｜1.5 小时｜海淀区',status:'服务中',time:'今天 14:00-15:30',amount:'¥120',location:'中关村南大街XX小区',detailLink:'order-detail.html?owner=published&status=serving&type=cat&id=p8&provider=wang&returnRole=all&returnStatus=all'}
+    },
+    {
+      id:'appeal-1002',
+      title:'纠纷责任扣分申诉',
+      content:'平台复核后认定你提供的现场照片和聊天记录有效，原先的 -5 分已恢复，本次申诉结论已同步到信用分明细。',
+      time:'3月25日 18:06',
+      status:'done',
+      statusText:'申诉成功',
+      progressText:'处理结果：3月27日 10:30 已完成复核并恢复信用分。',
+      attachments:['图片 1','图片 2','图片 3'],
+      relatedOrder:{id:'P4',title:'婚庆协助｜全天｜海淀区',status:'已退款',time:'4月14日 07:30',amount:'¥500',location:'海淀逸林酒店',detailLink:'order-detail.html?owner=published&status=refund&type=wedding&id=p4&provider=chen&disputeHistory=1&returnRole=all&returnStatus=all'}
+    },
+    {
+      id:'appeal-1003',
+      title:'无故取消订单扣分申诉',
+      content:'平台核验订单确认时间、聊天记录和取消原因后，认为本次扣分符合规则，申诉未通过。',
+      time:'3月11日 09:42',
+      status:'reject',
+      statusText:'申诉未通过',
+      progressText:'处理结果：3月12日 16:20 已驳回，本次信用分保持原结果。',
+      attachments:['图片 1'],
+      relatedOrder:{id:'A5',title:'上门喂猫｜1 小时｜朝阳区',status:'纠纷中',time:'4月12日 19:00',amount:'¥160',location:'朝阳公寓 3 号楼',detailLink:'fuwuzhe_order-detail.html?owner=accepted&status=dispute&type=cat&id=a5&returnRole=all&returnStatus=all'}
+    }
+  ];
+  saveAppeals(seeds);
+  return seeds.map(normalizeRecord);
+}
+
+function renderImages(){
+  document.getElementById('photoList').innerHTML=uploadedImages.map(function(item){
+    return '<div class="item">'+escapeHtml(item)+'</div>';
+  }).join('')+'<button class="add" type="button" id="uploadBtn">＋</button>';
+}
+
+function getSelectedOrder(){
+  return orderOptions.find(function(item){return item.id===selectedOrderId;})||null;
+}
+
+function buildAppealTitle(order){
+  if(presetAppealTitle)return presetAppealTitle;
+  if(!order)return'信用分申诉';
+  return order.title+'相关信用分申诉';
+}
+
+function openDrawer(){
+  drawerMask.classList.add('show');
+}
+
+function closeDrawer(){
+  drawerMask.classList.remove('show');
+}
+
+function updatePlaceholder(){
+  const selectedOrder=getSelectedOrder();
+  if(!selectedOrder){
+    appealText.placeholder='请先选择关联订单，再说明你认为本次扣分有误的原因，以及希望平台复核的内容。';
+    selectedOrderCard.className='selected-order empty';
+    selectedOrderCard.innerHTML=
+      '<div class="selected-order-empty-title">选择需要申诉的订单</div>'+
+      '<span class="selected-order-empty-action">选择订单</span>';
+    selectedOrderCard.onclick=openDrawer;
+    return;
+  }
+  appealText.placeholder='请说明你对“'+buildAppealTitle(selectedOrder)+'”的异议点，例如到场情况、聊天记录、现场凭证或责任判定，并写明希望平台复核的内容。';
+  selectedOrderCard.className='selected-order';
+  selectedOrderCard.innerHTML=
+    '<div class="selected-order-top">'+
+      '<div><div class="selected-order-name">'+escapeHtml(selectedOrder.title)+'</div><div class="selected-order-id">订单号 '+escapeHtml(selectedOrder.id)+'</div></div>'+
+      '<span class="selected-order-status">'+escapeHtml(selectedOrder.status)+'</span>'+
+    '</div>'+
+    '<div class="selected-order-grid">'+
+      '<div class="item">服务时间<strong>'+escapeHtml(BanxingTimeUtils.formatTaskTime(selectedOrder.time)||selectedOrder.time)+'</strong></div>'+
+      '<div class="item">订单金额<strong>'+escapeHtml(selectedOrder.amount)+'</strong></div>'+
+      '<div class="item full">服务地点<strong>'+escapeHtml(selectedOrder.location)+'</strong></div>'+
+    '</div>'+
+    '<div class="selected-order-actions">'+
+      (selectedOrder.detailLink?'<a href="'+escapeHtml(selectedOrder.detailLink)+'">查看订单详情</a>':'<a href="javascript:void(0)" style="pointer-events:none;color:#98a2b3;border-color:#eceff5">暂无详情</a>')+
+      '<button type="button" id="switchOrderBtn">切换其他订单</button>'+
+    '</div>';
+  const switchOrderBtn=document.getElementById('switchOrderBtn');
+  if(switchOrderBtn){
+    switchOrderBtn.addEventListener('click',openDrawer);
+  }
+  selectedOrderCard.onclick=null;
+}
+
+function renderDrawerList(){
+  if(!orderOptions.length){
+    drawerList.innerHTML='<div class="order-card"><div class="order-name">暂无可关联订单</div><div class="order-id">请稍后再试</div></div>';
+    return;
+  }
+  drawerList.innerHTML=orderOptions.map(function(item){
+    return (
+      '<div class="order-card'+(item.id===selectedOrderId?' selected':'')+'" data-order-id="'+escapeHtml(item.id)+'">'+
+        '<div class="order-top">'+
+          '<div><div class="order-name">'+escapeHtml(item.title)+'</div><div class="order-id">订单号 '+escapeHtml(item.id)+'</div></div>'+
+          '<span class="order-status">'+escapeHtml(item.status)+'</span>'+
+        '</div>'+
+        '<div class="order-meta">'+
+          '<div class="meta-item">服务时间<strong>'+escapeHtml(BanxingTimeUtils.formatTaskTime(item.time)||item.time)+'</strong></div>'+
+          '<div class="meta-item">订单金额<strong>'+escapeHtml(item.amount)+'</strong></div>'+
+          '<div class="meta-item full">服务地点<strong>'+escapeHtml(item.location)+'</strong></div>'+
+        '</div>'+
+      '</div>'
+    );
+  }).join('');
+  document.querySelectorAll('#drawerList .order-card').forEach(function(card){
+    card.addEventListener('click',function(){
+      selectedOrderId=card.dataset.orderId;
+      renderDrawerList();
+      updatePlaceholder();
+      closeDrawer();
+    });
+  });
+}
+
+seedAppeals();
+
+if(paramOrder){
+  selectedOrderId=paramOrder.id;
+}
+
+renderDrawerList();
+updatePlaceholder();
+renderImages();
+
+document.getElementById('drawerCloseBtn').addEventListener('click',closeDrawer);
+drawerMask.addEventListener('click',function(event){
+  if(event.target===drawerMask){
+    closeDrawer();
+  }
+});
+
+document.getElementById('photoList').addEventListener('click',function(event){
+  if(!event.target.closest('#uploadBtn'))return;
+  uploadedImages.push('申诉材料 '+(uploadedImages.length+1));
+  renderImages();
+});
+
+document.getElementById('submitBtn').addEventListener('click',function(){
+  const text=appealText.value.trim();
+  const selectedOrder=getSelectedOrder();
+  if(!selectedOrder){
+    alert('请先选择关联订单。');
+    return;
+  }
+  if(!text&&!uploadedImages.length){
+    alert('请至少填写文字说明或上传一张图片。');
+    return;
+  }
+  const appeals=seedAppeals();
+  appeals.unshift(normalizeRecord({
+    id:'appeal-'+Date.now(),
+    title:buildAppealTitle(selectedOrder),
+    content:text||'已上传图片材料，请平台结合订单信息进一步核查。',
+    time:'刚刚',
+    status:'processing',
+    statusText:'审核中',
+    progressText:'当前进度：材料已提交，预计 3 个工作日内完成审核。',
+    attachments:uploadedImages.slice(),
+    relatedOrder:selectedOrder
+  },0));
+  saveAppeals(appeals);
+  alert('申诉材料已提交，平台将在 3 个工作日内完成审核。');
+  location.href='credit-appeal-history.html';
+});
+</script>
+</body>
+</html>

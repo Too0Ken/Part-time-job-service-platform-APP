@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>帮助与客服 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}.nav .placeholder{width:32px}
+.search{margin:16px;position:relative}.search input{width:100%;height:40px;border:none;border-radius:20px;padding:0 16px;font-size:14px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.06);outline:none}
+.quick-actions{display:flex;gap:12px;margin:0 16px 16px}.quick-actions .qa{flex:1;background:#fff;border-radius:12px;padding:16px;text-align:center;cursor:pointer}.quick-actions .qa .icon{font-size:28px;margin-bottom:6px}.quick-actions .qa .text{font-size:13px;color:#333}
+.ban-appeal{display:none;margin:0 16px 16px;background:#fff;border:1px solid #FFD6D4;border-radius:12px;padding:14px 16px;color:#1a1a2e}
+.ban-appeal .tag{display:inline-flex;padding:4px 8px;border-radius:999px;background:#FF4D4F;color:#fff;font-size:11px;font-weight:700;margin-bottom:8px}
+.ban-appeal .name{font-size:15px;font-weight:700;margin-bottom:4px}
+.ban-appeal .desc{font-size:12px;color:#667085;line-height:1.6}
+.ban-appeal .appeal-btn{margin-top:12px;height:40px;border-radius:20px;background:#4A6CF7;color:#fff;text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.faq{background:#fff;margin:0 16px 16px;border-radius:12px;padding:16px}.faq .title{font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:12px}
+.faq-item{padding:12px 0;border-bottom:1px solid #f8f8f8;cursor:pointer}.faq-item:last-child{border:none}.faq-item .q{font-size:14px;color:#1a1a2e}.faq-item .a{font-size:13px;color:#666;margin-top:6px;line-height:1.6;display:none}.faq-item.open .a{display:block}.faq-item .arrow{float:right;color:#ccc}
+</style></head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">帮助与客服</span><span class="placeholder"></span></div>
+<div class="search"><input placeholder="搜索常见问题..."></div>
+<div class="quick-actions">
+  <div class="qa" onclick="alert('正在连接AI客服...')"><div class="icon">🤖</div><div class="text">AI智能客服</div></div>
+</div>
+<div class="ban-appeal" id="banAppealEntry">
+  <div class="tag" id="banAppealTag">账号已封禁</div>
+  <div class="name">提交解封申诉</div>
+  <div class="desc">当前账号处于封禁状态，可在这里提交复核说明并查看后续处理结果。</div>
+  <a class="appeal-btn" href="account-ban-appeal.html?from=help">去申诉</a>
+</div>
+<div class="faq">
+  <div class="title">常见问题</div>
+  <div class="faq-item" onclick="this.classList.toggle('open')"><span class="q">如何完成实名认证？<span class="arrow">›</span></span><div class="a">进入"我的→认证中心→实名认证"，填写姓名和身份证号后进行人脸识别即可。认证通过后可使用发布和接单功能。</div></div>
+  <div class="faq-item" onclick="this.classList.toggle('open')"><span class="q">信用分如何恢复？<span class="arrow">›</span></span><div class="a">信用分低于60分时，可通过"申诉"（3个工作日内审核）或"缴费恢复"（20-40元恢复至60分）两种方式。同一自然年缴费恢复最多3次。</div></div>
+  <div class="faq-item" onclick="this.classList.toggle('open')"><span class="q">如何申请提现？<span class="arrow">›</span></span><div class="a">在"钱包"页面点击"提现"，当前版本仅支持微信零钱到账。单日最高500元，前3次免费。</div></div>
+  <div class="faq-item" onclick="this.classList.toggle('open')"><span class="q">发生纠纷怎么处理？<span class="arrow">›</span></span><div class="a">在订单详情页点击"申请纠纷"，选择纠纷类型、填写详细描述并上传证据。系统会自动汇总聊天记录、打卡照片等材料，由平台完成裁定；对方发起纠纷时，你也可以补充自己的证据。</div></div>
+  <div class="faq-item" onclick="this.classList.toggle('open')"><span class="q">SOS报警后会发生什么？<span class="arrow">›</span></span><div class="a">触发SOS后，系统会记录订单、定位、触发时间和处理进度，通知紧急联系人与平台安全团队。记录仅供后台查询，前台不再提供入口。</div></div>
+</div>
+<script>
+function readAuthState(){
+  try{return JSON.parse(localStorage.getItem('authState')||'{}')}catch(error){return {}}
+}
+const authState=readAuthState();
+if(['banned','frozen'].includes(authState.accountStatus)){
+  document.getElementById('banAppealTag').textContent=authState.accountStatus==='frozen'?'账号已冻结':'账号已封禁';
+  document.getElementById('banAppealEntry').style.display='block';
+}
+</script>
+</body></html>

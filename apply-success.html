@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>申请成功 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#fff;max-width:375px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.content{flex:1;display:flex;flex-direction:column;align-items:center;padding:60px 30px;text-align:center}
+.success-icon{width:72px;height:72px;background:#F0FFF4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:20px}
+.success-icon.text{color:#52C41A}
+h2{font-size:20px;color:#1a1a2e;margin-bottom:8px}
+p{font-size:14px;color:#999;line-height:1.6;margin-bottom:24px}
+.card{width:100%;background:#f5f6fa;border-radius:12px;padding:16px;text-align:left;margin-bottom:24px}
+.card .row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid #eee}
+.card .row:last-child{border:none}
+.card .row .label{color:#999}
+.card .row .val{color:#1a1a2e;font-weight:500}
+.btn-primary{display:block;width:100%;height:48px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;margin-bottom:12px}
+.btn-primary:active{opacity:.85}
+.btn-secondary{display:block;width:100%;height:48px;background:#fff;color:#4A6CF7;border:1px solid #4A6CF7;border-radius:24px;font-size:16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="content">
+  <div class="success-icon text">✓</div>
+  <h2>接单申请已提交</h2>
+  <p>发布者将在您申请后确认接单，请耐心等待<br>审核结果将以消息通知您</p>
+  <div class="card">
+    <div class="row"><span class="label">任务名称</span><span class="val" id="typeText">上门喂猫｜1.5 小时｜海淀区</span></div>
+    <div class="row"><span class="label">任务金额</span><span class="val" id="priceText" style="color:#FF6B35;font-weight:700">¥120</span></div>
+    <div class="row"><span class="label">服务时间</span><span class="val" id="timeText">明天 14:00-15:30</span></div>
+    <div class="row"><span class="label">申请状态</span><span class="val" style="color:#4A6CF7">⏳ 待发布者确认</span></div>
+  </div>
+  <button class="btn-primary" onclick="location.href='order-list.html?role=applied&status=all'">查看我申请的任务</button>
+  <button class="btn-secondary" onclick="location.href='fuwuzhe_home.html'">继续浏览任务</button>
+</div>
+<script src="time-utils.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const type=params.get('type')||'cat';
+const taskId=params.get('taskId')||('default-'+type);
+const taskTitle=params.get('taskTitle')||'上门喂猫｜1.5 小时｜海淀区';
+const time=BanxingTimeUtils.formatTaskTime(params.get('time')||'明天 14:00-15:30')||'2026/04/23 14:00 - 15:30';
+const locationText=params.get('location')||'中关村南大街';
+const price=params.get('price')||'¥120';
+const insurance=params.get('insurance')||'🛡️ 已购保险';
+const publisherName=params.get('publisherName')||'张小花';
+const publisherCredit=params.get('publisherCredit')||'信用 92';
+const publisherStats=params.get('publisherStats')||'已发布16单 · 好评率96%';
+
+const typeMeta={
+  cat:'🐱 上门喂猫',
+  outdoor:'🏃 户外任务',
+  health:'🏥 健康陪诊',
+  wedding:'💒 婚庆协助'
+};
+
+document.getElementById('typeText').textContent=taskTitle||typeMeta[type]||typeMeta.cat;
+document.getElementById('priceText').textContent=price;
+document.getElementById('timeText').textContent=time;
+
+function formatTimeLabel(value){
+  return BanxingTimeUtils.formatTaskTime(value)||BanxingTimeUtils.now();
+}
+
+function defaultAppliedHistory(){
+  return [
+    {
+      recordId:'seed-applying-cat-1',
+      taskId:'cat-history-1',
+      type:'cat',
+      title:'上门喂猫｜1 小时｜朝阳区',
+      time:'明天 19:00',
+      location:'望京花园',
+      price:'¥88',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'林同学',
+      publisherCredit:'信用 91',
+      publisherStats:'已发布8单 · 好评率97%',
+      status:'applying',
+      appliedAtText:'4月2日 10:12',
+      updatedAtText:'4月2日 10:12',
+      resultNote:'已提交申请，等待发布者确认。'
+    },
+    {
+      recordId:'seed-failed-health-1',
+      taskId:'health-history-1',
+      type:'health',
+      title:'健康陪诊｜半天｜东城区',
+      time:'上周一 09:00',
+      location:'北京协和医院',
+      price:'¥220',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'周阿姨',
+      publisherCredit:'信用 90',
+      publisherStats:'已发布14单 · 好评率95%',
+      status:'failed',
+      appliedAtText:'3月24日 08:15',
+      updatedAtText:'3月24日 08:42',
+      resultNote:'发布者已选择其他服务者，本次未接单成功。'
+    }
+  ];
+}
+
+function ensureSeedAppliedHistory(history){
+  const list=Array.isArray(history)?history.slice():[];
+  const seeds=defaultAppliedHistory();
+  const hasApplying=list.some(item=>item&&item.status==='applying');
+  const hasFailed=list.some(item=>item&&item.status==='failed');
+  if(!hasApplying){
+    list.push(seeds[0]);
+  }
+  if(!hasFailed){
+    list.push(seeds[1]);
+  }
+  return list;
+}
+
+let appliedHistory=[];
+try{
+  appliedHistory=JSON.parse(localStorage.getItem('appliedTaskHistory')||'[]');
+}catch(error){
+  appliedHistory=[];
+}
+
+if(!Array.isArray(appliedHistory)||!appliedHistory.length){
+  appliedHistory=defaultAppliedHistory();
+}
+appliedHistory=ensureSeedAppliedHistory(appliedHistory);
+
+const now=new Date();
+const applyingRecord={
+  recordId:'apply-'+taskId+'-'+now.getTime(),
+  taskId,
+  type,
+  title:taskTitle,
+  time,
+  location:locationText,
+  price,
+  priceUnit:'/次',
+  insurance,
+  publisherName,
+  publisherCredit,
+  publisherStats,
+  status:'applying',
+  appliedAt:now.toISOString(),
+  updatedAt:now.toISOString(),
+  appliedAtText:formatTimeLabel(now),
+  updatedAtText:formatTimeLabel(now),
+  resultNote:'已提交申请，等待发布者确认。'
+};
+
+const existingIndex=appliedHistory.findIndex(item=>item.taskId===taskId&&item.status==='applying');
+if(existingIndex>=0){
+  appliedHistory[existingIndex]={
+    ...appliedHistory[existingIndex],
+    ...applyingRecord,
+    recordId:appliedHistory[existingIndex].recordId
+  };
+}else{
+  appliedHistory.unshift(applyingRecord);
+}
+
+localStorage.setItem('appliedTaskHistory',JSON.stringify(appliedHistory));
+</script>
+</body>
+</html>

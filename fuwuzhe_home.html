@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>首页 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:76px}
+.status-bar{height:44px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:12px}
+.header{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);padding:0 16px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.location-trigger{border:none;background:none;color:#fff;display:flex;align-items:flex-start;gap:8px;flex:1;cursor:pointer;text-align:left}
+.location-trigger .pin{font-size:18px;line-height:1.2}
+.location-trigger .text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.location-trigger .name{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.location-trigger .meta{font-size:12px;color:rgba(255,255,255,.85);line-height:1.5}
+.location-trigger .switch{font-size:11px;color:#fff;background:rgba(255,255,255,.15);padding:4px 8px;border-radius:999px;margin-top:2px}
+.module-name{color:rgba(255,255,255,.88);font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.14);white-space:nowrap}
+.banners{margin:12px 16px 16px;position:relative;height:110px;border-radius:14px;overflow:hidden;box-shadow:0 8px 20px rgba(74,108,247,.16)}
+.banner-track{display:flex;height:100%;transition:transform .35s ease}
+.banner-slide{min-width:100%;padding:18px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end}
+.banner-slide h3{font-size:18px;margin-bottom:6px}
+.banner-slide p{font-size:12px;opacity:.9;line-height:1.5}
+.banner-slide.outdoor{background:linear-gradient(135deg,#1d976c,#49c16d)}
+.banner-slide.protect{background:linear-gradient(135deg,#3b82f6,#6d5efc)}
+.banner-slide.bonus{background:linear-gradient(135deg,#ff7a18,#ffb347)}
+.banner-dots{position:absolute;right:12px;bottom:10px;display:flex;gap:6px}
+.banner-dots span{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4)}
+.banner-dots span.active{width:18px;border-radius:999px;background:#fff}
+.filter-wrap{position:sticky;top:0;z-index:25;padding:8px 0 10px;transition:box-shadow .2s ease,background .2s ease}
+.filter-wrap.compact{background:transparent;box-shadow:none;backdrop-filter:none}
+.filter-surface{background:#fff;border-radius:0 0 24px 24px;padding:4px 0 14px;box-shadow:0 14px 28px rgba(17,24,39,.08)}
+.filter-wrap.compact .filter-surface{box-shadow:0 10px 22px rgba(17,24,39,.1)}
+.search-row{display:flex;align-items:center;gap:10px;margin:12px 16px 10px}
+.task-search{display:flex;align-items:center;gap:8px;flex:1;height:42px;margin:0;padding:0 10px 0 12px;border-radius:16px;background:#fff;border:1px solid #eef1f6;box-shadow:0 6px 16px rgba(15,23,42,.04)}
+.task-search .icon{font-size:15px;color:#98a2b3}
+.task-search input{flex:1;border:none;background:transparent;outline:none;font-size:14px;color:#1a1a2e}
+.task-search input::placeholder{color:#b6bdca}
+.task-search .search-btn{height:30px;padding:0 12px;border:none;border-radius:999px;background:#FF6B35;color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex:none}
+.filter-btn{display:inline-flex;align-items:center;justify-content:center;min-width:92px;height:42px;padding:0 14px;border:none;border-radius:16px;background:#EEF2FF;color:#4A6CF7;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(15,23,42,.04)}
+.filter-bar{display:flex;align-items:center;padding:0 16px;gap:8px;font-size:13px;color:#666}
+.filter-chip{background:#fff;padding:6px 12px;border-radius:14px;border:1px solid #eee;cursor:pointer}
+.filter-chip.main{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 16px;border-radius:18px;font-size:14px;font-weight:600;box-shadow:0 6px 16px rgba(15,23,42,.06)}
+.filter-chip.active{background:#EEF2FF;color:#4A6CF7;border-color:#C9D4FF}
+.filter-panel{display:none;background:#fff;margin:10px 16px 0;border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(17,24,39,.08)}
+.filter-panel.active{display:block}
+.filter-group+.filter-group{margin-top:14px}
+.filter-label{font-size:12px;color:#999;margin-bottom:8px}
+.filter-options{display:flex;gap:8px;flex-wrap:wrap}
+.option{padding:6px 12px;border-radius:14px;background:#f5f6fa;color:#666;font-size:12px;cursor:pointer}
+.option.active{background:#4A6CF7;color:#fff}
+.distance-control{padding:2px 0 0}
+.distance-value{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#667085;margin-bottom:8px}
+.distance-value strong{font-size:15px;color:#4A6CF7}
+.distance-slider{width:100%;accent-color:#4A6CF7}
+.task-list{padding-top:12px}
+.task-row{position:relative;margin:0 16px 10px;overflow:hidden;border-radius:14px;touch-action:pan-y}
+.task-actions{position:absolute;top:0;right:0;height:100%;display:flex;z-index:1}
+.task-action{width:78px;border:none;color:#fff;font-size:13px;cursor:pointer}
+.task-action.favorite{background:#FA8C16}
+.task-action.block{background:#9CA3AF}
+.task-link{display:block;text-decoration:none;color:inherit;position:relative;z-index:2;transition:transform .25s ease}
+.task-row.dragging .task-link{transition:none}
+.task-card{background:#fff;border-radius:14px;padding:14px;position:relative;min-height:130px}
+.task-card.urgent-card{background:linear-gradient(180deg,#FFF1F0 0%,#fff 100%);border:1px solid #FFD6D3}
+.task-card .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.task-card .task-name{font-size:15px;font-weight:600;color:#1a1a2e;line-height:1.4;flex:1}
+.task-card .price{font-size:18px;font-weight:700;color:#FF6B35;white-space:nowrap}
+.task-card .price small{font-size:12px;font-weight:400}
+.task-card .meta{display:flex;align-items:center;gap:12px;font-size:12px;color:#999;margin-bottom:10px;flex-wrap:wrap}
+.task-card .meta span{display:flex;align-items:center;gap:2px}
+.status-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.task-status{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.task-status.open{background:#EEF2FF;color:#4A6CF7}
+.task-status.urgent-status{background:#FFF1F0;color:#FF4D4F}
+.task-status.reserve{background:#FFF7E6;color:#FA8C16}
+.task-status.pending{background:#F5F3FF;color:#7C3AED}
+.task-status.full{background:#F3F4F6;color:#6B7280}
+.task-status.closed{background:#F3F4F6;color:#9CA3AF}
+.insurance-badge{position:absolute;top:14px;right:14px;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.insurance-badge.insured{background:#e8fff1;color:#199c55}
+.insurance-badge.uninsured{background:#f1f3f5;color:#8b95a7}
+.credit-need{display:flex;align-items:center;gap:6px;margin:10px 0 2px;font-size:12px;color:#6b7280}
+.credit-need strong{color:#1a1a2e}
+.credit-need strong.insured{color:#199c55}
+.credit-need strong.uninsured{color:#8b95a7}
+.empty{text-align:center;padding:60px 20px;color:#999;font-size:14px}
+.empty .icon{font-size:48px;margin-bottom:12px}
+.bottom-tab{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;display:flex;border-top:1px solid #eee;z-index:30;overflow:visible}
+.bottom-tab a{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 0 10px;text-decoration:none;font-size:10px;color:#999}
+.bottom-tab a.active{color:#4A6CF7}
+.bottom-tab a .tab-icon{font-size:22px;margin-bottom:2px}
+.bottom-tab .publish-tab{flex:none;width:72px;height:72px;border-radius:50%;background:#4A6CF7;color:#fff;justify-content:center;padding:0;transform:translateY(-18px);box-shadow:0 12px 28px rgba(74,108,247,.28);font-size:10px;font-weight:700;line-height:1.2}
+.bottom-tab .publish-tab .tab-icon{font-size:24px;margin-bottom:2px}
+.location-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-end;justify-content:center;z-index:60}
+.location-modal.active{display:flex}
+.location-sheet{width:375px;max-height:88vh;background:#fff;border-radius:24px 24px 0 0;padding:14px 0 22px;overflow:auto}
+.location-toolbar{display:flex;align-items:center;gap:10px;padding:0 16px 14px}
+.location-city{display:inline-flex;align-items:center;gap:4px;border:none;background:none;color:#1f2937;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap}
+.location-search{flex:1;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:#F5F7FB}
+.location-search .icon{font-size:15px;color:#98A2B3}
+.location-search input{flex:1;border:none;background:transparent;font-size:14px;color:#1a1a2e;outline:none}
+.location-search input::placeholder{color:#B6BDCA}
+.location-close{width:28px;height:28px;border:none;border-radius:14px;background:#f5f6fa;color:#98a2b3;font-size:18px;cursor:pointer}
+.location-group{padding:0 16px}
+.location-group+.location-group{margin-top:18px}
+.location-group-title{font-size:14px;font-weight:600;color:#6B7280;margin-bottom:10px}
+.location-current{display:flex;align-items:center;gap:10px;padding:14px 0;border-bottom:1px solid #F2F4F7;background:#fff;cursor:pointer}
+.location-current .icon{font-size:18px;color:#4B5563}
+.location-current .info{flex:1;min-width:0}
+.location-current .name{font-size:16px;font-weight:600;color:#1F2937}
+.location-current .meta{font-size:12px;color:#98A2B3;line-height:1.6;margin-top:3px}
+.location-current .tag{font-size:14px;color:#FF7A00;background:none;padding:0}
+.location-map{height:148px;margin-top:10px;background:
+  linear-gradient(180deg,rgba(248,250,252,.95),rgba(255,255,255,1)),
+  repeating-linear-gradient(0deg,rgba(226,232,240,.7),rgba(226,232,240,.7) 1px,transparent 1px,transparent 36px),
+  repeating-linear-gradient(90deg,rgba(226,232,240,.7),rgba(226,232,240,.7) 1px,transparent 1px,transparent 36px);
+  position:relative;overflow:hidden}
+.location-map::before{content:'📍';position:absolute;left:50%;top:50%;transform:translate(-50%,-60%);font-size:28px}
+.location-map::after{content:'拖动地图后，可点击下方地址快速切换';position:absolute;left:18px;right:18px;bottom:14px;font-size:12px;line-height:1.6;color:#98A2B3;text-align:center}
+.location-results{display:flex;flex-direction:column}
+.location-item{display:flex;align-items:flex-start;gap:10px;padding:14px 0;border-bottom:1px solid #F2F4F7;cursor:pointer}
+.location-item:last-child{border-bottom:none}
+.location-item.active .name{color:#4A6CF7}
+.location-item .icon{font-size:16px;color:#4A6CF7;line-height:1.4}
+.location-item .info{flex:1;min-width:0}
+.location-item .name{font-size:16px;color:#1F2937;font-weight:600;line-height:1.5}
+.location-item .meta{font-size:12px;color:#F59E0B;line-height:1.6;margin-top:2px}
+.location-item .status{font-size:12px;color:#98A2B3;white-space:nowrap;padding-top:2px}
+.location-empty{padding:24px 0;text-align:center;font-size:13px;color:#98a2b3}
+.toast{position:fixed;top:92px;left:50%;transform:translateX(-50%) translateY(-8px);background:rgba(26,26,46,.92);color:#fff;padding:10px 14px;border-radius:14px;font-size:12px;opacity:0;pointer-events:none;transition:.22s ease;z-index:80;max-width:320px;text-align:center;box-shadow:0 12px 28px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{background:rgba(19,194,194,.94)}
+</style>
+</head>
+<body>
+<div class="status-bar">
+  <span>9:41</span>
+  <span>📶 🔋</span>
+</div>
+<div class="header">
+  <button class="location-trigger" id="locationTrigger">
+    <span class="pin">📍</span>
+    <span class="text">
+      <span class="name" id="headerLocationName"></span>
+      <span class="meta" id="headerLocationMeta"></span>
+    </span>
+    <span class="switch">切换</span>
+  </button>
+</div>
+<div class="filter-wrap" id="filterWrap">
+  <div class="filter-surface">
+    <div class="search-row">
+      <button class="filter-chip main filter-btn" id="allFilterBtn" type="button">⚙️ 筛选 ▾</button>
+      <div class="task-search">
+        <span class="icon">⌕</span>
+        <input id="taskSearchInput" type="search" placeholder="搜索任务类型或任务，例如：喂猫、陪诊、户外">
+        <button class="search-btn" id="taskSearchBtn" type="button">搜索</button>
+      </div>
+    </div>
+    <div class="filter-panel" id="filterPanel">
+      <div class="filter-group">
+        <div class="filter-label">常用任务</div>
+        <div class="filter-options" data-group="type">
+          <span class="option active" data-value="all">全部</span>
+          <span class="option" data-value="outdoor">户外任务</span>
+          <span class="option" data-value="cat">上门喂猫</span>
+          <span class="option" data-value="health">陪诊</span>
+          <span class="option" data-value="wedding">婚庆</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">时间筛选</div>
+        <div class="filter-options" data-group="time">
+          <span class="option active" data-value="all">全部</span>
+          <span class="option" data-value="today">今天</span>
+          <span class="option" data-value="tomorrow">明天</span>
+          <span class="option" data-value="week">本周内</span>
+          <span class="option" data-value="month">本月内</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">距离筛选</div>
+        <div class="distance-control">
+          <div class="distance-value"><span>只看当前定位附近</span><strong id="distanceValue">5km</strong></div>
+          <input class="distance-slider" id="distanceRange" type="range" min="1" max="100" step="1" value="5">
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">金额筛选</div>
+        <div class="filter-options" data-group="amount">
+          <span class="option active" data-value="all">全部</span>
+          <span class="option" data-value="0-100">100元内</span>
+          <span class="option" data-value="100-150">100-150元</span>
+          <span class="option" data-value="150+">150元以上</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="banners">
+  <div class="banner-track" id="bannerTrack">
+    <div class="banner-slide bonus">
+      <h3>定位可切到目的地</h3>
+      <p>人在广州，也能先把首页切到黄山，提前看下个月的爬山陪同单。</p>
+    </div>
+    <div class="banner-slide protect">
+      <h3>当前位置单独保存</h3>
+      <p>切换过城市后，搜索定位里仍然能一键回到“获取当前位置”。</p>
+    </div>
+    <div class="banner-slide outdoor">
+      <h3>附近推荐智能扩圈</h3>
+      <p>默认先看 5km 内任务，不足 10 条时自动每次扩大 5km。</p>
+    </div>
+  </div>
+  <div class="banner-dots" id="bannerDots">
+    <span class="active"></span><span></span><span></span>
+  </div>
+</div>
+<div class="task-list" id="taskList"></div>
+<div class="empty" id="emptyState" style="display:none">
+  <div class="icon">🔍</div>
+  <div id="emptyText">当前筛选条件下暂无任务，试试切换定位或放宽筛选。</div>
+</div>
+<div class="bottom-tab">
+  <a href="index.html" class="active"><span class="tab-icon">🧭</span>首页</a>
+  <a href="moments.html"><span class="tab-icon">🫧</span>动态</a>
+  <a href="publish-items.html" class="publish-tab"><span class="tab-icon">⊕</span>发布任务</a>
+  <a href="messages.html"><span class="tab-icon">💬</span>消息</a>
+  <a href="profile.html"><span class="tab-icon">👤</span>我的</a>
+</div>
+
+<div class="location-modal" id="locationModal">
+  <div class="location-sheet">
+    <div class="location-toolbar">
+      <button class="location-city" id="locationCityBtn" type="button"><span id="selectedCityName">北京</span><span>▾</span></button>
+      <label class="location-search">
+        <span class="icon">⌕</span>
+        <input id="locationSearchInput" type="text" placeholder="请输入地址">
+      </label>
+      <button class="location-close" id="closeLocationBtn">×</button>
+    </div>
+    <div class="location-group">
+      <div class="location-group-title">当前位置</div>
+      <div class="location-current" id="useCurrentLocationBtn">
+        <div class="icon">⦿</div>
+        <div class="info">
+          <div class="name" id="currentLocationName"></div>
+          <div class="meta" id="currentLocationMeta"></div>
+        </div>
+        <span class="tag">重新定位</span>
+      </div>
+      <div class="location-map" id="locationMapCard"></div>
+    </div>
+    <div class="location-group">
+      <div class="location-group-title" id="historyTitle">地址</div>
+      <div class="location-results" id="locationResults"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="pageToast"></div>
+
+<script src="moments-data.js"></script>
+<script src="prototype-data.js"></script>
+<script src="task-preferences.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="publish-flow-config.js"></script>
+<script src="publish-launcher.js"></script>
+<script>
+const DATA=window.BANXING_DATA;
+const STORAGE_KEYS={
+  current:'banxing.currentLocationId',
+  browse:'banxing.browseLocationId'
+};
+const TYPE_META={
+  cat:{icon:'🐱',label:'上门喂猫',className:''},
+  outdoor:{icon:'🏃',label:'户外任务',className:'outdoor'},
+  health:{icon:'🏥',label:'健康陪诊',className:'health'},
+  wedding:{icon:'💒',label:'婚庆协助',className:'wedding'}
+};
+const chipLabels={
+  type:{all:'全部',outdoor:'户外任务',cat:'上门喂猫',health:'陪诊',wedding:'婚庆'},
+  amount:{all:'全部','0-100':'100元内','100-150':'100-150元','150+':'150元以上'},
+  time:{all:'全部',today:'今天',tomorrow:'明天',week:'本周内',month:'本月内'},
+  distance:{}
+};
+const state={
+  type:'all',
+  amount:'all',
+  time:'all',
+  distance:'5',
+  keyword:'',
+  selectedLocationId:'',
+  visibleTasks:[],
+  activeRadius:5
+};
+const filterPanel=document.getElementById('filterPanel');
+const filterWrap=document.getElementById('filterWrap');
+const taskList=document.getElementById('taskList');
+const emptyState=document.getElementById('emptyState');
+const locationModal=document.getElementById('locationModal');
+const locationSearchInput=document.getElementById('locationSearchInput');
+const taskSearchInput=document.getElementById('taskSearchInput');
+const taskSearchBtn=document.getElementById('taskSearchBtn');
+const distanceRange=document.getElementById('distanceRange');
+const distanceValue=document.getElementById('distanceValue');
+const pageToast=document.getElementById('pageToast');
+const SWIPE_ACTION_WIDTH=156;
+let bannerIndex=0;
+let activeRow=null;
+let swipeSession=null;
+let toastTimer=null;
+const locationHintById={
+  'current-beijing-haidian':'当前位置',
+  'beijing-aosen-south':' ',
+  'beijing-pumch-east':' ',
+  'guangzhou-zhujiang':' ',
+  'huangshan-transfer':' '
+};
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function showToast(text,type){
+  clearTimeout(toastTimer);
+  pageToast.textContent=text;
+  pageToast.className='toast show'+(type?' '+type:'');
+  toastTimer=setTimeout(function(){
+    pageToast.className='toast';
+  },2200);
+}
+
+function getCurrentLocation(){
+  let id=localStorage.getItem(STORAGE_KEYS.current);
+  if(!DATA.getLocationById(id)){
+    id=DATA.defaultCurrentLocationId;
+    localStorage.setItem(STORAGE_KEYS.current,id);
+  }
+  return DATA.getLocationById(id);
+}
+
+function getSelectedLocation(){
+  let id=localStorage.getItem(STORAGE_KEYS.browse);
+  if(!DATA.getLocationById(id)){
+    id=getCurrentLocation().id;
+    localStorage.setItem(STORAGE_KEYS.browse,id);
+  }
+  return DATA.getLocationById(id);
+}
+
+function setSelectedLocation(id){
+  const location=DATA.getLocationById(id);
+  if(!location)return;
+  localStorage.setItem(STORAGE_KEYS.browse,location.id);
+  state.selectedLocationId=location.id;
+  closeLocationModal();
+  closeRows();
+  renderAll();
+}
+
+function formatDistance(distanceKm){
+  if(distanceKm<10)return distanceKm.toFixed(1)+'km';
+  return Math.round(distanceKm)+'km';
+}
+
+function normalizeTaskDuration(durationText){
+  const source=String(durationText||'').trim();
+  if(!source)return '';
+  const cleaned=source.replace(/^约/,'');
+  const hourMatch=cleaned.match(/(\d+(?:\.\d+)?)h/i);
+  if(hourMatch)return hourMatch[1]+' 小时';
+  const minuteMatch=cleaned.match(/(\d+)\s*分钟/);
+  if(minuteMatch)return minuteMatch[1]+' 分钟';
+  if(/全天/.test(cleaned))return '全天';
+  if(/半天/.test(cleaned))return '半天';
+  return cleaned.replace(/\s+/g,' ');
+}
+
+function extractTaskDistrict(locationText){
+  const source=String(locationText||'').trim();
+  if(!source)return '';
+  const resolved=window.BanxingLocationUtils&&typeof BanxingLocationUtils.resolveLocation==='function'
+    ?BanxingLocationUtils.resolveLocation(source)
+    :null;
+  const base=resolved&&resolved.region?resolved.region:source;
+  const matches=String(base).match(/[^省市区县旗\s·,，/]+(?:区|县|旗|市)/g);
+  if(matches&&matches.length){
+    const filtered=matches.filter(function(item){
+      return !/^(北京市|上海市|天津市|重庆市)$/.test(item);
+    });
+    return filtered[filtered.length-1]||matches[matches.length-1];
+  }
+  const parts=source.split(/[·,，/]/).map(function(item){
+    return item.trim();
+  }).filter(Boolean);
+  return parts[parts.length-1]||source;
+}
+
+function getTaskDisplayTitle(task){
+  const meta=TYPE_META[task.type]||{label:'任务'};
+  return [
+    meta.label,
+    normalizeTaskDuration(task.duration),
+    extractTaskDistrict(task.locationName)
+  ].filter(Boolean).join('｜')||task.title;
+}
+
+function getTaskMaskedLocation(task){
+  const resolved=window.BanxingLocationUtils&&typeof BanxingLocationUtils.resolveLocation==='function'
+    ?BanxingLocationUtils.resolveLocation(task.locationName)
+    :null;
+  const region=resolved&&resolved.region?resolved.region:extractTaskDistrict(task.locationName);
+  const distanceText=formatDistance(task.distanceKm);
+  return [region,distanceText?'距你约'+distanceText:''].filter(Boolean).join(' · ');
+}
+
+function buildTaskHref(task){
+  const displayTime=BanxingTimeUtils.formatTaskTime(task.timeText)||task.timeText;
+  const params=new URLSearchParams({
+    from:'fuwuzhe_home',
+    type:task.type,
+    taskId:task.id,
+    title:getTaskDisplayTitle(task),
+    time:displayTime,
+    location:task.locationName,
+    price:'¥'+task.price,
+    insurance:'🛡️ '+task.insuranceText
+  });
+  return 'fuwuzhe_task-detail.html?'+params.toString();
+}
+
+function matchAmount(price){
+  if(state.amount==='all')return true;
+  if(state.amount==='0-100')return price<=100;
+  if(state.amount==='100-150')return price>100&&price<=150;
+  return price>=150;
+}
+
+function matchTime(timeKey){
+  if(state.time==='all')return true;
+  if(state.time==='week')return ['today','tomorrow','week'].includes(timeKey);
+  if(state.time==='month')return true;
+  return timeKey===state.time;
+}
+
+function matchMonth(task){
+  if(state.time!=='month')return true;
+  const source=String(task.timeText||'');
+  return ['today','tomorrow','week'].includes(task.timeKey)||source.indexOf('4月')===0;
+}
+
+function matchKeyword(task){
+  const keyword=String(state.keyword||'').trim().toLowerCase();
+  if(!keyword)return true;
+  const typeMeta=TYPE_META[task.type]||{label:''};
+  const haystack=[
+    task.title,
+    getTaskDisplayTitle(task),
+    typeMeta.label,
+    task.search,
+    task.locationName
+  ].join(' ').toLowerCase();
+  return haystack.indexOf(keyword)>-1;
+}
+
+function getFilteredTasks(){
+  const selected=getSelectedLocation();
+  const blockedNames=BanxingMoments.getBlockedNames();
+  return DATA.tasks
+    .filter(function(task){
+      const matchesType=state.type==='all'||task.type===state.type;
+      const matchesAmount=matchAmount(task.price);
+      const matchesTime=matchTime(task.timeKey)&&matchMonth(task);
+      const matchesKeyword=matchKeyword(task);
+      const visiblePublisher=!blockedNames.includes(task.publisher);
+      return matchesType&&matchesAmount&&matchesTime&&matchesKeyword&&visiblePublisher;
+    })
+    .map(function(task){
+      const distanceKm=DATA.distanceKm(selected,task);
+      return Object.assign({},task,{distanceKm:distanceKm});
+    })
+    .sort(function(a,b){return a.distanceKm-b.distanceKm;});
+}
+
+function getAdaptiveVisibleTasks(){
+  const allFiltered=getFilteredTasks();
+  const activeRadius=Math.max(1,Math.min(100,Number(state.distance)||5));
+  const visible=allFiltered.filter(function(task){return task.distanceKm<=activeRadius;});
+  state.activeRadius=activeRadius;
+  return visible;
+}
+
+function renderLocationHeader(){
+  const selected=getSelectedLocation();
+  const current=getCurrentLocation();
+  const isCurrent=selected.id===current.id;
+  document.getElementById('headerLocationName').textContent=selected.shortName;
+  document.getElementById('headerLocationMeta').textContent=selected.region+(isCurrent?' · 当前位置':' · 已切换目的地');
+  document.getElementById('currentLocationName').textContent=current.shortName;
+  document.getElementById('currentLocationMeta').textContent=current.name;
+  document.getElementById('selectedCityName').textContent=selected.city||'北京';
+}
+
+function renderTaskList(){
+  activeRow=null;
+  swipeSession=null;
+  if(state.visibleTasks.length===0){
+    taskList.innerHTML='';
+    document.getElementById('emptyText').textContent=state.keyword
+      ?'没有搜索到“'+state.keyword+'”相关任务，试试换个关键词或放宽筛选。'
+      :getSelectedLocation().shortName+' 附近暂无符合条件的任务，试试切换定位或放宽筛选。';
+    emptyState.style.display='block';
+    return;
+  }
+  emptyState.style.display='none';
+  taskList.innerHTML=state.visibleTasks.map(function(task){
+    const taskTitle=getTaskDisplayTitle(task);
+    const taskLocation=getTaskMaskedLocation(task);
+    const taskTime=BanxingTimeUtils.formatTaskTime(task.timeText)||task.timeText;
+    const statusText=String(task.statusText||'').trim();
+    const isUrgent=task.badgeText==='急单'||task.statusClass==='urgent-status';
+    const statusHtml=statusText&&statusText!=='待确认档期'
+      ?'<div class="task-status '+escapeHtml(task.statusClass)+'">'+escapeHtml(statusText)+'</div>'
+      :'';
+    const statusRow=statusHtml?'<div class="status-row">'+statusHtml+'</div>':'';
+    return (
+      '<div class="task-row" data-task-id="'+escapeHtml(task.id)+'">'+
+        '<div class="task-actions">'+
+          '<button class="task-action favorite" type="button" onclick="favoriteTask(\''+escapeHtml(task.id)+'\')">'+(BanxingTaskPrefs.isFavorited(task.id)?'已收藏':'收藏')+'</button>'+
+          '<button class="task-action block" type="button" onclick="blockPublisher(\''+escapeHtml(task.id)+'\')">拉黑</button>'+
+        '</div>'+
+        '<a class="task-link" href="'+escapeHtml(buildTaskHref(task))+'">'+
+          '<div class="task-card '+(isUrgent?'urgent-card':'')+'">'+
+            '<span class="insurance-badge '+escapeHtml(task.insuranceClass)+'">🛡️ '+escapeHtml(task.insuranceText)+'</span>'+
+            '<div class="title-row"><span class="task-name">'+escapeHtml(taskTitle)+'</span><span class="price">¥'+task.price+'<small>/次</small></span></div>'+
+            '<div class="meta"><span>📍 '+escapeHtml(taskLocation)+'</span><span>🕐 '+escapeHtml(taskTime)+'</span></div>'+
+            statusRow+
+          '</div>'+
+        '</a>'+
+      '</div>'
+    );
+  }).join('');
+  bindSwipeActions();
+}
+
+function bindSwipeActions(){
+  document.querySelectorAll('.task-row').forEach(function(row){
+    const link=row.querySelector('.task-link');
+    row.dataset.offset='0';
+    setRowOffset(row,0);
+    row.addEventListener('pointerdown',function(event){
+      startSwipe(row,event);
+    });
+    row.addEventListener('pointermove',function(event){
+      updateSwipe(row,event);
+    });
+    row.addEventListener('pointerup',function(event){
+      endSwipe(row,event);
+    });
+    row.addEventListener('pointercancel',function(event){
+      endSwipe(row,event);
+    });
+    link.addEventListener('click',function(event){
+      if(row.dataset.skipClick==='1'){
+        event.preventDefault();
+        return;
+      }
+      if(activeRow===row){
+        event.preventDefault();
+        closeRow(row);
+      }else if(activeRow){
+        event.preventDefault();
+        closeRows();
+      }
+    });
+  });
+}
+
+function getRowOffset(row){
+  return Number(row&&row.dataset&&row.dataset.offset||0);
+}
+
+function setRowOffset(row,offset,immediate){
+  if(!row)return;
+  const nextOffset=Math.max(-SWIPE_ACTION_WIDTH,Math.min(0,Number(offset)||0));
+  const link=row.querySelector('.task-link');
+  row.dataset.offset=String(nextOffset);
+  row.classList.toggle('dragging',Boolean(immediate));
+  if(link){
+    link.style.transform='translateX('+nextOffset+'px)';
+  }
+}
+
+function openRow(row){
+  if(!row)return;
+  closeRows(row);
+  setRowOffset(row,-SWIPE_ACTION_WIDTH,false);
+  activeRow=row;
+}
+
+function closeRow(row){
+  if(!row)return;
+  setRowOffset(row,0,false);
+  row.classList.remove('dragging');
+  if(activeRow===row)activeRow=null;
+}
+
+function markSkipClick(row){
+  if(!row)return;
+  row.dataset.skipClick='1';
+  setTimeout(function(){
+    if(row){
+      row.dataset.skipClick='0';
+    }
+  },220);
+}
+
+function startSwipe(row,event){
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  swipeSession={
+    row:row,
+    pointerId:event.pointerId,
+    startX:event.clientX,
+    startY:event.clientY,
+    startOffset:getRowOffset(row),
+    dragging:false,
+    cancelled:false
+  };
+}
+
+function updateSwipe(row,event){
+  if(!swipeSession||swipeSession.row!==row||swipeSession.pointerId!==event.pointerId)return;
+  if(swipeSession.cancelled)return;
+  const deltaX=event.clientX-swipeSession.startX;
+  const deltaY=event.clientY-swipeSession.startY;
+  if(!swipeSession.dragging){
+    if(Math.abs(deltaX)<8&&Math.abs(deltaY)<8)return;
+    if(Math.abs(deltaY)>Math.abs(deltaX)){
+      swipeSession.cancelled=true;
+      return;
+    }
+    swipeSession.dragging=true;
+    closeRows(row);
+  }
+  event.preventDefault();
+  setRowOffset(row,swipeSession.startOffset+deltaX,true);
+}
+
+function endSwipe(row,event){
+  if(!swipeSession||swipeSession.row!==row||swipeSession.pointerId!==event.pointerId)return;
+  const session=swipeSession;
+  swipeSession=null;
+  row.classList.remove('dragging');
+  if(session.cancelled)return;
+  if(!session.dragging)return;
+  markSkipClick(row);
+  if(getRowOffset(row)<=-(SWIPE_ACTION_WIDTH/2)){
+    openRow(row);
+  }else{
+    closeRow(row);
+  }
+}
+
+function closeRows(exceptRow){
+  document.querySelectorAll('.task-row').forEach(function(row){
+    if(row===exceptRow)return;
+    closeRow(row);
+  });
+  if(!exceptRow)activeRow=null;
+}
+
+function renderLocationResults(query){
+  const selected=getSelectedLocation();
+  const current=getCurrentLocation();
+  const resultBox=document.getElementById('locationResults');
+  const normalized=String(query||'').trim();
+  const matches=(normalized?DATA.searchLocations(normalized):DATA.locations.slice())
+    .filter(function(item){return item.id!==current.id;})
+    .slice(0,8);
+  document.getElementById('historyTitle').textContent='地址';
+  if(!matches.length){
+    resultBox.innerHTML='<div class="location-empty">没有搜到匹配地址，试试输入城市、医院、小区或景区名。</div>';
+    return;
+  }
+  resultBox.innerHTML=matches.map(function(item){
+    const metaText=locationHintById[item.id]||(item.city!==current.city?' ':'');
+    return (
+      '<div class="location-item '+(item.id===selected.id?'active':'')+'" data-location-id="'+escapeHtml(item.id)+'">'+
+        '<div class="icon">⌖</div>'+
+        '<div class="info">'+
+          '<div class="name">'+escapeHtml(item.shortName)+'</div>'+
+          '<div class="meta">'+escapeHtml(metaText||item.name)+'</div>'+
+        '</div>'+
+        '<div class="status">'+escapeHtml(item.id===selected.id?'当前':'')+'</div>'+
+      '</div>'
+    );
+  }).join('');
+  document.querySelectorAll('.location-item').forEach(function(node){
+    node.addEventListener('click',function(){
+      setSelectedLocation(node.dataset.locationId);
+    });
+  });
+}
+
+function updateFilterChips(){
+  const defaultStateCount=[
+    state.type!=='all',
+    state.amount!=='all',
+    state.time!=='all',
+    state.distance!=='5'
+  ].filter(Boolean).length;
+  document.getElementById('allFilterBtn').textContent='⚙️ 筛选 ▾';
+  document.getElementById('allFilterBtn').classList.toggle('active',defaultStateCount>0);
+  distanceValue.textContent=state.distance+'km';
+  if(distanceRange.value!==String(state.distance)){
+    distanceRange.value=String(state.distance);
+  }
+}
+
+function renderAll(){
+  state.visibleTasks=getAdaptiveVisibleTasks();
+  renderLocationHeader();
+  renderTaskList();
+  updateFilterChips();
+  emptyState.style.display=state.visibleTasks.length===0?'block':'none';
+}
+
+function openLocationModal(){
+  locationModal.classList.add('active');
+  locationSearchInput.value='';
+  renderLocationResults('');
+}
+
+function closeLocationModal(){
+  locationModal.classList.remove('active');
+}
+
+document.getElementById('locationTrigger').addEventListener('click',openLocationModal);
+document.getElementById('closeLocationBtn').addEventListener('click',closeLocationModal);
+document.getElementById('useCurrentLocationBtn').addEventListener('click',function(){
+  setSelectedLocation(getCurrentLocation().id);
+});
+locationSearchInput.addEventListener('input',function(){
+  renderLocationResults(locationSearchInput.value);
+});
+locationModal.addEventListener('click',function(event){
+  if(event.target===locationModal)closeLocationModal();
+});
+document.querySelectorAll('.option').forEach(function(option){
+  option.addEventListener('click',function(){
+    const group=option.parentElement.dataset.group;
+    option.parentElement.querySelectorAll('.option').forEach(function(item){
+      item.classList.remove('active');
+    });
+    option.classList.add('active');
+    state[group]=option.dataset.value;
+    renderAll();
+  });
+});
+
+function applyTaskSearch(){
+  state.keyword=taskSearchInput.value.trim();
+  closeRows();
+  renderAll();
+}
+
+taskSearchBtn.addEventListener('click',applyTaskSearch);
+taskSearchInput.addEventListener('keydown',function(event){
+  if(event.key==='Enter'){
+    event.preventDefault();
+    applyTaskSearch();
+  }
+});
+
+distanceRange.addEventListener('input',function(){
+  state.distance=distanceRange.value;
+  renderAll();
+});
+
+document.getElementById('allFilterBtn').addEventListener('click',function(){
+  filterPanel.classList.toggle('active');
+  updateFilterChips();
+});
+
+document.addEventListener('click',function(event){
+  if(!event.target.closest('.task-row')&&!event.target.closest('.task-search')&&!event.target.closest('.filter-chip')&&!event.target.closest('.filter-panel')){
+    closeRows();
+    filterPanel.classList.remove('active');
+    updateFilterChips();
+  }
+});
+
+window.favoriteTask=function(taskId){
+  const task=DATA.tasks.find(function(item){return item.id===taskId;});
+  if(task){
+    const result=BanxingTaskPrefs.toggleFavorite(taskId);
+    showToast(result.favorited?'已收藏任务':'已取消收藏','success');
+    renderTaskList();
+  }
+  closeRows();
+};
+
+window.blockPublisher=function(taskId){
+  const task=DATA.tasks.find(function(item){return item.id===taskId;});
+  if(task){
+    BanxingMoments.blockAuthorByName(task.publisher);
+    showToast('已拉黑发布者：'+task.publisher+'，其动态和任务将不再展示。');
+    renderAll();
+  }
+  closeRows();
+};
+
+const bannerTrack=document.getElementById('bannerTrack');
+const bannerDots=[].slice.call(document.querySelectorAll('#bannerDots span'));
+setInterval(function(){
+  bannerIndex=(bannerIndex+1)%3;
+  bannerTrack.style.transform='translateX(-'+(bannerIndex*100)+'%)';
+  bannerDots.forEach(function(dot,index){
+    dot.classList.toggle('active',index===bannerIndex);
+  });
+},2800);
+
+window.addEventListener('scroll',function(){
+  filterWrap.classList.toggle('compact',window.scrollY>120);
+});
+
+state.selectedLocationId=getSelectedLocation().id;
+renderAll();
+</script>
+</body>
+</html>

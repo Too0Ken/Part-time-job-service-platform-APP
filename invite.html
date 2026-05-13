@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>页面已迁移 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.wrap{padding:20px 16px;flex:1}
+.card{background:#fff;border-radius:20px;padding:28px 20px;text-align:center}
+.icon{width:68px;height:68px;border-radius:22px;margin:0 auto;background:linear-gradient(135deg,#0f766e,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff}
+h2{font-size:22px;color:#1a1a2e;margin-top:16px}
+p{font-size:13px;color:#667085;line-height:1.9;margin-top:10px}
+.btn{display:inline-flex;height:44px;padding:0 20px;border-radius:22px;background:#0f766e;color:#fff;text-decoration:none;align-items:center;justify-content:center;font-size:14px;font-weight:700;margin-top:18px}
+.sub{font-size:12px;color:#98a2b3;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">页面已迁移</span><span class="placeholder"></span></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="icon">🤝</div>
+    <h2>拉新奖励页已并入合伙人中心</h2>
+    <p>原有拉新奖励页面已经下线，申请入口、审核进度、拉新分佣、结算账单和资料查看都统一收口到新的合伙人中心里。</p>
+    <a class="btn" href="partner-dashboard.html">进入合伙人中心</a>
+    <div class="sub">页面将在 1.5 秒后自动跳转</div>
+  </div>
+</div>
+
+<script>
+setTimeout(function(){
+  location.href='partner-dashboard.html';
+},1500);
+</script>
+</body>
+</html>

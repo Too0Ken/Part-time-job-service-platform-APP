@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>评价 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#fff;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.content{padding:30px 20px;text-align:center}
+.user-info{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:30px}
+.user-info .avatar{width:50px;height:50px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:20px;color:#4A6CF7}
+.user-info .name{font-size:16px;font-weight:600;color:#1a1a2e;text-align:left}
+.user-info .name small{display:block;font-size:12px;color:#999;font-weight:400;margin-top:2px}
+.stars{margin-bottom:24px}
+.stars .label{font-size:14px;color:#666;margin-bottom:10px}
+.stars .row{display:flex;gap:8px;justify-content:center;font-size:32px;cursor:pointer}
+.stars .row span{color:#ddd}
+.stars .row span.active{color:#FAAD14}
+.task-summary{background:#f5f6fa;border-radius:12px;padding:16px;text-align:left;margin-bottom:24px}
+.task-summary .row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:#666}
+.task-summary .row .val{color:#1a1a2e}
+textarea{width:100%;height:100px;border:1px solid #e8e8e8;border-radius:10px;padding:12px;font-size:14px;outline:none;resize:none}
+textarea:focus{border-color:#4A6CF7}
+.char-count{text-align:right;font-size:12px;color:#ccc;margin-top:4px}
+.submit-btn{display:block;width:100%;height:48px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer;margin-top:24px}
+.submit-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="order-detail.html" class="back" id="backLink">←</a>
+  <span class="title">评价服务</span>
+  <span class="placeholder"></span>
+</div>
+<div class="content">
+  <div class="user-info">
+    <div class="avatar" id="counterpartAvatar">张</div>
+    <div class="name" id="counterpartTitle">评价张小花的服务<small id="counterpartMeta">🐱 上门喂猫 · 2026年4月19日 14:00</small></div>
+  </div>
+  <div class="stars">
+    <div class="label">服务评分</div>
+    <div class="row" id="starRow">
+      <span onclick="setStars(1)">★</span><span onclick="setStars(2)">★</span><span onclick="setStars(3)">★</span><span onclick="setStars(4)">★</span><span onclick="setStars(5)">★</span>
+    </div>
+  </div>
+  <div class="task-summary">
+    <div class="row"><span>任务名称</span><span class="val" id="summaryType">上门喂猫｜1.5 小时｜海淀区</span></div>
+    <div class="row"><span>服务时间</span><span class="val" id="summaryTime">2026年4月19日 14:00</span></div>
+    <div class="row"><span>任务金额</span><span class="val" id="summaryPrice" style="color:#FF6B35">¥120</span></div>
+    <div class="row"><span>打卡次数</span><span class="val" id="summaryRecordCount">3次</span></div>
+  </div>
+  <textarea placeholder="说说您的服务体验（选填，最多200字）" maxlength="200" oninput="document.getElementById('cc').textContent=this.value.length+'/200'"></textarea>
+  <div class="char-count"><span id="cc">0/200</span></div>
+  <button class="submit-btn" id="submitBtn">提交评价</button>
+</div>
+<script src="time-utils.js"></script>
+<script src="completion-confirmation.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const type=params.get('type')||'cat';
+const id=params.get('id')||'p1';
+const returnRole=params.get('returnRole')||owner;
+const returnStatus=params.get('returnStatus')||'all';
+const title=params.get('title')||'';
+const time=params.get('time')||'';
+const price=params.get('price')||'';
+
+const typeMeta={
+  cat:{label:'上门喂猫｜1.5 小时｜海淀区',icon:'🐱',recordCount:'3次',counterpart:'张小花'},
+  outdoor:{label:'户外任务｜1 小时｜朝阳区',icon:'🏃',recordCount:'3次',counterpart:'李明'},
+  health:{label:'健康陪诊｜3 小时｜海淀区',icon:'🏥',recordCount:'3次',counterpart:'王阿姨'},
+  wedding:{label:'婚庆协助｜半天｜海淀区',icon:'💒',recordCount:'3次',counterpart:'孙先生'}
+};
+const currentType=typeMeta[type]||typeMeta.cat;
+const counterpartName=params.get('chatName')||currentType.counterpart;
+const summaryLabel=title||currentType.label;
+const summaryTime=BanxingTimeUtils.formatTaskTime(time)||time||'待确认';
+const summaryPrice=price||'¥0';
+const flowMeta={type,time:summaryTime,amount:summaryPrice};
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach((value,key)=>{
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(([key,val])=>{
+    next[key]=val;
+  });
+  (removeKeys||[]).forEach(key=>{
+    delete next[key];
+  });
+  return next;
+}
+
+const backPage=owner==='accepted'?'fuwuzhe_order-detail.html':'order-detail.html';
+document.getElementById('backLink').href=backPage+'?'+buildQuery(currentParams({owner,status:'review',type,id,returnRole,returnStatus,chatName:counterpartName}));
+document.getElementById('counterpartAvatar').textContent=counterpartName.slice(0,1);
+document.getElementById('counterpartTitle').childNodes[0].textContent='评价'+counterpartName+'的服务';
+document.getElementById('counterpartMeta').textContent=currentType.icon+' '+summaryLabel+' · '+summaryTime;
+document.getElementById('summaryType').textContent=summaryLabel;
+document.getElementById('summaryTime').textContent=summaryTime;
+document.getElementById('summaryPrice').textContent=summaryPrice;
+document.getElementById('summaryRecordCount').textContent=currentType.recordCount;
+document.getElementById('submitBtn').addEventListener('click',()=>{
+  BanxingCompletionConfirm.markRated(flowMeta,owner);
+  const donePage=owner==='accepted'?'fuwuzhe_order-detail.html':'order-detail.html';
+  const nextStatus=BanxingCompletionConfirm.areBothRated(flowMeta)?'done':'review';
+  alert(nextStatus==='done'?'评价已提交，订单已进入已评价。':'评价已提交，等待对方评价。');
+  location.href=donePage+'?'+buildQuery(currentParams({owner,status:nextStatus,type,id,returnRole,returnStatus,chatName:counterpartName}));
+});
+
+function setStars(n){const s=document.getElementById('starRow').children;for(let i=0;i<5;i++)s[i].className=i<n?'active':''}
+</script>
+</body>
+</html>

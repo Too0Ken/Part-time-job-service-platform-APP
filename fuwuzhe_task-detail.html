@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>任务详情 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:80px}
+.status-bar{height:44px;background:#4A6CF7;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:12px}
+.nav{height:44px;background:#4A6CF7;display:flex;align-items:center;padding:0 16px;gap:12px}
+.nav .back{font-size:20px;color:#fff;text-decoration:none}
+.nav .title{font-size:16px;font-weight:600;color:#fff;flex:1;text-align:center}
+.nav .action{font-size:13px;color:rgba(255,255,255,.92);text-decoration:none;cursor:pointer}
+.nav .action.active{color:#FFE58F}
+.safety-banner{background:#FFFBE6;padding:10px 16px;font-size:12px;color:#FA8C16;display:flex;align-items:center;gap:6px;line-height:1.5}
+.publisher{background:#fff;margin-top:10px;padding:16px;display:flex;align-items:center;gap:12px}
+.publisher .avatar{width:44px;height:44px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4A6CF7}
+.publisher .info{flex:1}
+.publisher .info .name{font-size:15px;font-weight:600;color:#1a1a2e}
+.publisher .info .stats{font-size:12px;color:#999;margin-top:2px}
+.publisher .credit{background:#F0FFF4;color:#52C41A;padding:3px 10px;border-radius:10px;font-size:12px;font-weight:600}
+.section{background:#fff;margin-top:10px;padding:16px}
+.section-title{font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:12px}
+.task-info{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.task-info .item{font-size:13px;color:#666}
+.task-info .item.location-item{grid-column:1/-1}
+.task-info .item .val{color:#1a1a2e;font-weight:500;margin-top:2px;line-height:1.5}
+.task-info .item .val.price{color:#FF6B35;font-size:20px;font-weight:700}
+.task-info .item .nav-link{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:0;border:none;background:none;color:#4A6CF7;font-size:12px;font-weight:600;cursor:pointer}
+.location-hint{font-size:12px;color:#98a2b3;line-height:1.6;margin-top:6px}
+.detail-text{font-size:14px;color:#333;line-height:1.75}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail-grid .item{font-size:13px;color:#666}
+.detail-grid .item .val{color:#1a1a2e;font-weight:500;margin-top:2px;line-height:1.5}
+.note{background:#fff;margin-top:10px;padding:16px}
+.note .label{font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:12px}
+.note .content{font-size:14px;color:#333;line-height:1.7}
+.photos{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.photo-box{width:80px;height:80px;border-radius:8px;background:#eee;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:12px}
+.bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid #eee;z-index:20}
+.share-btn{display:flex;flex-direction:column;align-items:center;color:#999;font-size:10px;cursor:pointer;background:none;border:none}
+.share-btn .icon{font-size:22px;margin-bottom:2px}
+.apply-btn{flex:1;height:44px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;border:none;border-radius:22px;font-size:16px;font-weight:500;cursor:pointer}
+.apply-btn:active{opacity:.85}
+.insurance-tag{background:#F0FFF4;color:#52C41A;padding:3px 8px;border-radius:4px;font-size:11px;display:inline-block;margin-top:10px}
+.share-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.share-modal.active{display:flex}
+.share-sheet{width:100%;max-width:375px;background:#fff;border-radius:24px 24px 0 0;padding:16px 16px 20px}
+.share-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.share-head h3{font-size:16px;color:#1a1a2e}
+.share-close{border:none;background:none;font-size:20px;color:#999;cursor:pointer}
+.share-card{background:linear-gradient(135deg,#f8fbff,#eef3ff);border:1px solid #d9e4ff;border-radius:18px;padding:16px;overflow:hidden;cursor:pointer}
+.share-top{display:flex;align-items:center;justify-content:flex-start;gap:12px}
+.share-top>div:last-child{flex:1;min-width:0}
+.share-icon{width:44px;height:44px;border-radius:14px;background:#4A6CF7;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.share-type{font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:6px;line-height:1.45;word-break:break-word}
+.share-meta{display:grid;gap:8px;margin-top:12px;font-size:13px;color:#5f6b7a;line-height:1.5}
+.share-meta-row{display:flex;align-items:flex-start;gap:8px}
+.share-meta-label{color:#8b95a7;white-space:nowrap}
+.share-meta-value{flex:1;min-width:0;color:#344054;word-break:break-word}
+.share-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:14px;border-top:1px dashed #d6def7}
+.share-insurance{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.share-insurance.insured{background:#e8fff1;color:#199c55}
+.share-insurance.uninsured{background:#f1f3f5;color:#8b95a7}
+.share-cta{border:none;background:transparent;font-size:13px;font-weight:700;color:#4A6CF7;white-space:nowrap;cursor:pointer}
+.share-actions{display:flex;gap:10px;margin-top:16px}
+.share-actions button{flex:1;height:40px;border:none;border-radius:20px;font-size:14px;cursor:pointer}
+.ghost-btn{background:#f3f4f6;color:#4b5563}
+.primary-btn{background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff}
+</style>
+</head>
+<body>
+<div class="status-bar"><span>9:41</span><span>📶 🔋</span></div>
+<div class="nav">
+  <a href="fuwuzhe_home.html" class="back" id="backLink">←</a>
+  <span class="title">任务详情</span>
+  <a class="action" id="favoriteAction">☆ 收藏</a>
+</div>
+<div class="safety-banner" id="safetyBanner"></div>
+<div class="section">
+  <div class="section-title">任务信息</div>
+  <div class="task-info" id="taskInfo"></div>
+  <span class="insurance-tag" id="insuranceTag"></span>
+</div>
+<div class="section">
+  <div class="section-title">任务要求</div>
+  <div class="detail-text" id="requirementContent"></div>
+</div>
+<div class="section" id="otherSupplementSection" style="display:none">
+  <div class="section-title">其他补充</div>
+  <div class="detail-grid" id="otherSupplementList"></div>
+</div>
+<div class="note">
+  <div class="label">详细说明</div>
+  <div class="content" id="noteContent"></div>
+  <div class="photos" id="photoList"></div>
+</div>
+<div class="publisher">
+  <div class="avatar" id="publisherAvatar">张</div>
+  <div class="info">
+    <div class="name" id="publisherName"></div>
+    <div class="stats" id="publisherStats"></div>
+  </div>
+  <span class="credit" id="publisherCredit"></span>
+</div>
+<div class="bottom-bar">
+  <button class="share-btn" id="shareBtn"><span class="icon">↗</span>转发</button>
+  <button class="apply-btn" id="applyBtn">立即接单</button>
+</div>
+
+<div class="share-modal" id="shareModal">
+  <div class="share-sheet">
+    <div class="share-head">
+      <h3>转发任务</h3>
+      <button class="share-close" id="shareCloseBtn">×</button>
+    </div>
+    <div class="share-card" id="shareCard" role="button" tabindex="0" aria-label="查看任务详情">
+      <div class="share-top">
+        <div class="share-icon" id="shareTypeIcon"></div>
+        <div style="flex:1">
+          <div class="share-type" id="shareTypeName"></div>
+        </div>
+      </div>
+      <div class="share-meta">
+        <div class="share-meta-row"><span class="share-meta-label">时间</span><span class="share-meta-value" id="shareTime"></span></div>
+        <div class="share-meta-row"><span class="share-meta-label">位置</span><span class="share-meta-value" id="shareLocation"></span></div>
+      </div>
+      <div class="share-footer">
+        <div class="share-insurance" id="shareInsurance"></div>
+        <button class="share-cta" id="shareDetailLink" type="button">点击查看详情 →</button>
+      </div>
+    </div>
+    <div class="share-actions">
+      <button class="ghost-btn" id="previewCloseBtn">取消</button>
+      <button class="primary-btn" id="generateBtn">生成转发卡片</button>
+    </div>
+  </div>
+</div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script>
+const detailMap={
+  cat:{
+    safety:'⚠️ 上门服务类任务：建议安排人在场，勿在备注透露门禁密码',
+    publisher:{avatar:'张',name:'张小花',stats:'已发布32单 · 好评率96%',credit:'信用 92'},
+    info:[
+      ['类型','🐱 上门喂猫'],
+      ['酬劳','¥120','price'],
+      ['服务时间','明天 14:00-15:30'],
+      ['服务时长','约1.5小时'],
+      ['服务地址','中关村南大街·XX小区']
+    ],
+    insurance:'🛡️ 已购财物险（保额¥2,000）',
+    insuranceState:'insured',
+    share:{icon:'🐱',typeName:'上门喂猫',location:'中关村南大街·XX小区',time:'期望时间：明天 14:00-15:30',insurance:'🛡️ 已购保险'},
+    requirements:'需要细心、有上门服务经验，能严格按喂养说明执行，结束后同步照片和服务情况。',
+    otherSupplement:[{label:'上门方式',value:'密码锁入户'},{label:'猫咪数量',value:'2只'},{label:'特殊说明',value:'冻干零食在冰箱，结束后帮忙拍一张猫砂盆状态照片。'}],
+    detailDescription:'猫粮在柜子第二层，猫砂盆在阳台。到场后先补粮换水，再清理猫砂，最后陪小橘玩一会儿。门锁为密码锁，接单后我会单独同步进门方式和注意事项。',
+    photos:['照片1','照片2']
+  },
+  outdoor:{
+    safety:'⚠️ 户外任务请提前确认天气、路线和配速，必要时携带饮水与急救用品',
+    publisher:{avatar:'李',name:'李明',stats:'已发布18单 · 好评率94%',credit:'信用 88'},
+    info:[
+      ['类型','🏃 户外任务'],
+      ['酬劳','¥80','price'],
+      ['服务时间','今天 17:00'],
+      ['服务时长','约1小时'],
+      ['集合地点','奥森南门地铁口']
+    ],
+    insurance:'🛡️ 已购运动意外险（保额¥10,000）',
+    insuranceState:'insured',
+    share:{icon:'🏃',typeName:'户外任务',location:'奥森公园南门',time:'期望时间：今天 17:00',insurance:'🛡️ 已购保险'},
+    requirements:'需要熟悉常见跑步路线，体能稳定，能根据现场状态协助控配速并提醒热身和拉伸。',
+    otherSupplement:[{label:'目标距离',value:'5km'},{label:'目标配速',value:'6\'00"-7\'00"/km'}],
+    detailDescription:'今天主要想在奥森完成约 5km 走跑结合训练，如果现场体感不错也可能临时调整节奏。建议自备运动鞋和饮水，集合后先简单热身，再按路线陪同完成任务。',
+    photos:['路线图','集合点']
+  },
+  health:{
+    safety:'⚠️ 陪诊任务请注意隐私保护，病历、检查结果和联系方式勿外传',
+    publisher:{avatar:'王',name:'王阿姨',stats:'已发布11单 · 好评率98%',credit:'信用 95'},
+    info:[
+      ['类型','🏥 健康陪诊'],
+      ['酬劳','¥150','price'],
+      ['服务时间','周三 09:00'],
+      ['服务时长','约3小时'],
+      ['服务医院','北医三院']
+    ],
+    insurance:'🛡️ 已购服务责任险（保额¥5,000）',
+    insuranceState:'insured',
+    share:{icon:'🏥',typeName:'健康陪诊',location:'北医三院',time:'期望时间：周三 09:00',insurance:'🛡️ 已购保险'},
+    requirements:'需要耐心细致，能协助挂号、候诊、陪同检查和取药，并注意保护就诊隐私。',
+    otherSupplement:[{label:'就诊科室',value:'骨科复诊'},{label:'陪同内容',value:'挂号、候诊、检查、取药'}],
+    detailDescription:'这次是骨科复诊，老人步行较慢，现场可能需要搀扶。希望接单人能全程陪同看号、协助往返检查点位，并在结束后帮忙确认药品和医嘱信息。',
+    photos:['门诊楼','取药窗口']
+  },
+  wedding:{
+    safety:'⚠️ 婚庆任务时间跨度长，请提前确认服装要求、流程表和现场联系人',
+    publisher:{avatar:'赵',name:'赵同学',stats:'已发布7单 · 好评率91%',credit:'信用 90'},
+    info:[
+      ['类型','💒 婚庆协助'],
+      ['酬劳','¥500','price'],
+      ['服务时间','4月15日 07:30'],
+      ['服务时长','全天'],
+      ['服务地点','海淀逸林酒店']
+    ],
+    insurance:'🛡️ 暂未购买保险，请提前确认风险',
+    insuranceState:'uninsured',
+    share:{icon:'💒',typeName:'婚庆协助',location:'海淀逸林酒店',time:'期望时间：4月15日 07:30',insurance:'🛡️ 未购保险'},
+    requirements:'需要性格开朗、执行力强，能配合婚礼流程安排，有现场协助或活动执行经验更合适。',
+    otherSupplement:[{label:'角色需求',value:'伴娘 / 婚礼协助'},{label:'着装要求',value:'浅色礼服，自备高跟鞋'}],
+    detailDescription:'当天需要协助迎宾、流程配合、礼金桌照看和部分拍照留念，着装要求为浅色礼服。到场时间会早于正式仪式，接单后会同步更完整的流程表和现场联系人。',
+    photos:['礼服参考','酒店宴会厅']
+  }
+};
+
+const params=new URLSearchParams(location.search);
+const type=params.get('type')||'cat';
+const fromPage=params.get('from');
+const detail=detailMap[type]||detailMap.cat;
+const locationLabels=['服务地址','集合地点','服务医院','服务地点'];
+const favoriteAction=document.getElementById('favoriteAction');
+const shareModal=document.getElementById('shareModal');
+const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+function isAccountBlocked(){
+  return ['banned','frozen'].includes(authState.accountStatus);
+}
+function getCurrentBackParam(){
+  return location.pathname.split('/').pop()+location.search;
+}
+function confirmAccountAppeal(scene){
+  const label=authState.accountStatus==='frozen'?'冻结':'封禁';
+  if(confirm('账号已'+label+'，暂不可'+scene+'。是否前往提交解封申诉？')){
+    location.href='account-ban-appeal.html?from=apply&back='+encodeURIComponent(getCurrentBackParam());
+  }
+}
+const taskSnapshotMap={
+  'cat-1':{title:'上门喂猫｜1.5 小时｜海淀区',time:'明天 14:00-15:30',location:'中关村南大街·XX小区',price:'¥120',insurance:'🛡️ 已购保险'},
+  'outdoor-1':{title:'户外任务｜1 小时｜朝阳区',time:'今天 17:00',location:'奥森公园南门',price:'¥80',insurance:'🛡️ 已购保险'},
+  'health-1':{title:'健康陪诊｜3 小时｜海淀区',time:'周三 09:00',location:'北医三院',price:'¥150',insurance:'🛡️ 已购保险'},
+  'wedding-1':{title:'婚庆协助｜全天｜海淀区',time:'4月15日 07:30',location:'海淀逸林酒店',price:'¥500',insurance:'🛡️ 未购保险'},
+  'cat-2':{title:'上门喂猫｜1 小时｜朝阳区',time:'今天 20:30',location:'朝阳公寓',price:'¥95',insurance:'🛡️ 未购保险'},
+  'outdoor-2':{title:'户外任务｜4 小时｜海淀区',time:'周六 08:00',location:'香山公园',price:'¥180',insurance:'🛡️ 已购保险'},
+  'health-2':{title:'健康陪诊｜2 小时｜海淀区',time:'明天 10:00',location:'社区医院',price:'¥130',insurance:'🛡️ 未购保险'},
+  'wedding-2':{title:'婚庆协助｜半天｜海淀区',time:'4月10日 08:00',location:'海淀逸林酒店',price:'¥420',insurance:'🛡️ 未购保险'}
+};
+
+if(fromPage==='favorites'){
+  document.getElementById('backLink').href='favorites.html';
+}
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function getMaskedLocationText(text){
+  const source=String(text||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{exactVisible:false}).text||source;
+}
+
+function normalizeTaskDuration(durationText){
+  const source=String(durationText||'').trim();
+  if(!source)return '';
+  const cleaned=source.replace(/^约/,'');
+  const hourMatch=cleaned.match(/(\d+(?:\.\d+)?)\s*小时?/);
+  if(hourMatch)return hourMatch[1]+' 小时';
+  const minuteMatch=cleaned.match(/(\d+)\s*分钟/);
+  if(minuteMatch)return minuteMatch[1]+' 分钟';
+  if(/全天/.test(cleaned))return '全天';
+  if(/半天/.test(cleaned))return '半天';
+  return cleaned.replace(/\s+/g,' ');
+}
+
+function extractTaskDistrict(locationText){
+  const source=String(locationText||'').trim();
+  if(!source)return '';
+  const resolved=window.BanxingLocationUtils&&typeof BanxingLocationUtils.resolveLocation==='function'
+    ?BanxingLocationUtils.resolveLocation(source)
+    :null;
+  const base=resolved&&resolved.region?resolved.region:source;
+  const matches=String(base).match(/[^省市区县旗\s·,，/]+(?:区|县|旗|市)/g);
+  if(matches&&matches.length){
+    const filtered=matches.filter(function(item){
+      return !/^(北京市|上海市|天津市|重庆市)$/.test(item);
+    });
+    return filtered[filtered.length-1]||matches[matches.length-1];
+  }
+  const parts=source.split(/[·,，/]/).map(function(item){
+    return item.trim();
+  }).filter(Boolean);
+  return parts[parts.length-1]||source;
+}
+
+function launchNavigation(){
+  alert('接单成功并进入服务中后，才会展示具体导航地址。');
+}
+
+function formatTaskTime(text){
+  return BanxingTimeUtils.formatTaskTime(text)||String(text||'');
+}
+
+document.getElementById('safetyBanner').textContent=detail.safety;
+document.getElementById('publisherAvatar').textContent=detail.publisher.avatar;
+document.getElementById('publisherName').textContent=detail.publisher.name;
+document.getElementById('publisherStats').textContent=detail.publisher.stats;
+document.getElementById('publisherCredit').textContent=detail.publisher.credit;
+document.getElementById('insuranceTag').textContent=detail.insurance;
+document.getElementById('requirementContent').textContent=detail.requirements;
+document.getElementById('noteContent').textContent=detail.detailDescription;
+if(Array.isArray(detail.otherSupplement)&&detail.otherSupplement.length){
+  document.getElementById('otherSupplementSection').style.display='block';
+  document.getElementById('otherSupplementList').innerHTML=detail.otherSupplement.map(function(item){
+    return '<div class="item">'+escapeHtml(item.label)+'<div class="val">'+escapeHtml(item.value)+'</div></div>';
+  }).join('');
+}
+
+document.getElementById('taskInfo').innerHTML=detail.info.map(function(item){
+  const label=item[0];
+  const value=label==='类型'
+    ?[
+      detail.share.typeName,
+      normalizeTaskDuration(detail.info.find(function(entry){return entry[0]==='服务时长';})&&detail.info.find(function(entry){return entry[0]==='服务时长';})[1]),
+      extractTaskDistrict(params.get('location')||detail.share.location)
+    ].filter(Boolean).join('｜')
+    :item[1];
+  const className=item[2]||'';
+  const isLocation=locationLabels.includes(label);
+  const displayValue=isLocation?getMaskedLocationText(value):(label==='服务时间'?formatTaskTime(value):value);
+  const displayLabel=label==='类型'?'任务名称':label;
+  return '<div class="item'+(isLocation?' location-item':'')+'">'+
+    escapeHtml(displayLabel)+
+    '<div class="val'+(className?' '+className:'')+'">'+escapeHtml(displayValue)+'</div>'+
+    (isLocation?'<div class="location-hint">接单成功并进入服务中后，才会展示具体地址信息。</div>':'')+
+  '</div>';
+}).join('');
+document.getElementById('photoList').innerHTML=detail.photos.map(name=>'<div class="photo-box">'+name+'</div>').join('');
+window.launchNavigation=launchNavigation;
+
+const defaultTaskIdMap={cat:'cat-1',outdoor:'outdoor-1',health:'health-1',wedding:'wedding-1'};
+const taskId=params.get('taskId')||defaultTaskIdMap[type]||'cat-1';
+const baseTaskSnapshot=taskSnapshotMap[taskId]||{
+  title:detail.share.typeName,
+  time:detail.share.time.replace('期望时间：',''),
+  location:detail.share.location,
+  price:detail.info[1][1],
+  insurance:detail.share.insurance
+};
+const taskSnapshot={
+  title:params.get('title')||[
+    detail.share.typeName,
+    normalizeTaskDuration(detail.info.find(function(entry){return entry[0]==='服务时长';})&&detail.info.find(function(entry){return entry[0]==='服务时长';})[1]),
+    extractTaskDistrict(params.get('location')||baseTaskSnapshot.location)
+  ].filter(Boolean).join('｜')||baseTaskSnapshot.title,
+  time:formatTaskTime(params.get('time')||baseTaskSnapshot.time),
+  location:getMaskedLocationText(params.get('location')||baseTaskSnapshot.location),
+  price:params.get('price')||baseTaskSnapshot.price,
+  insurance:params.get('insurance')||baseTaskSnapshot.insurance
+};
+const returnRole=params.get('returnRole')||'';
+const returnStatus=params.get('returnStatus')||'all';
+const applyBtn=document.getElementById('applyBtn');
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function getAppliedTaskStore(){
+  try{
+    return JSON.parse(localStorage.getItem('appliedTasks')||'{}');
+  }catch(error){
+    return {};
+  }
+}
+
+function defaultAppliedHistory(){
+  return [
+    {
+      recordId:'seed-applying-cat-1',
+      taskId:'cat-history-1',
+      type:'cat',
+      title:'上门喂猫｜1 小时｜朝阳区',
+      time:'明天 19:00',
+      location:'望京花园',
+      price:'¥88',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'林同学',
+      publisherCredit:'信用 91',
+      publisherStats:'已发布8单 · 好评率97%',
+      status:'applying',
+      appliedAtText:'4月2日 10:12',
+      updatedAtText:'4月2日 10:12',
+      resultNote:'已提交申请，等待发布者确认。'
+    },
+    {
+      recordId:'seed-failed-health-1',
+      taskId:'health-history-1',
+      type:'health',
+      title:'健康陪诊｜半天｜东城区',
+      time:'上周一 09:00',
+      location:'北京协和医院',
+      price:'¥220',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'周阿姨',
+      publisherCredit:'信用 90',
+      publisherStats:'已发布14单 · 好评率95%',
+      status:'failed',
+      appliedAtText:'3月24日 08:15',
+      updatedAtText:'3月24日 08:42',
+      resultNote:'发布者已选择其他服务者，本次未接单成功。'
+    }
+  ];
+}
+
+function ensureSeedAppliedHistory(history){
+  const list=Array.isArray(history)?history.slice():[];
+  const seeds=defaultAppliedHistory();
+  const hasApplying=list.some(item=>item&&item.status==='applying');
+  const hasFailed=list.some(item=>item&&item.status==='failed');
+  if(!hasApplying){
+    list.push(seeds[0]);
+  }
+  if(!hasFailed){
+    list.push(seeds[1]);
+  }
+  return list;
+}
+
+function formatTimeLabel(value){
+  return BanxingTimeUtils.formatTaskTime(value)||'';
+}
+
+function readAppliedHistory(){
+  let history=[];
+  try{
+    history=JSON.parse(localStorage.getItem('appliedTaskHistory')||'[]');
+  }catch(error){
+    history=[];
+  }
+  history=ensureSeedAppliedHistory(history);
+  const legacyTasks=getAppliedTaskStore();
+  Object.values(legacyTasks).forEach(item=>{
+    if(!history.some(record=>record.taskId===item.taskId&&record.status===item.status)){
+      history.unshift({
+        recordId:'legacy-'+(item.taskId||Date.now()),
+        taskId:item.taskId||'legacy-task',
+        type:item.type||'cat',
+        title:item.title||'已申请任务',
+        time:item.time||'待确认',
+        location:item.location||'待确认',
+        price:item.price||'¥0',
+        priceUnit:item.priceUnit||'/次',
+        insurance:item.insurance||'🛡️ 已购保险',
+        publisherName:item.publisherName||detail.publisher.name,
+        publisherCredit:item.publisherCredit||detail.publisher.credit,
+        publisherStats:item.publisherStats||detail.publisher.stats,
+        status:item.status||'applying',
+        appliedAtText:item.appliedAtText||formatTimeLabel(item.appliedAt),
+        updatedAtText:item.updatedAtText||formatTimeLabel(item.appliedAt),
+        resultNote:item.resultNote||'已提交申请，等待发布者确认。'
+      });
+    }
+  });
+  history=ensureSeedAppliedHistory(history);
+  localStorage.setItem('appliedTaskHistory',JSON.stringify(history));
+  return history;
+}
+
+function getLatestApplicationRecord(id){
+  return readAppliedHistory().find(record=>record.taskId===id) || null;
+}
+
+const applicationRecord=getLatestApplicationRecord(taskId);
+const applicationStatus=applicationRecord?applicationRecord.status:(params.get('applied')==='1'?'applying':'');
+const isApplied=Boolean(applicationStatus);
+
+if(fromPage==='order-list'&&returnRole){
+  document.getElementById('backLink').href='order-list.html?'+buildQuery({role:returnRole,status:returnStatus});
+}
+
+let isFavorited=false;
+favoriteAction.addEventListener('click',()=>{
+  isFavorited=!isFavorited;
+  favoriteAction.textContent=isFavorited?'★ 已收藏':'☆ 收藏';
+  favoriteAction.classList.toggle('active',isFavorited);
+  alert(isFavorited?'已收藏当前任务':'已取消收藏');
+});
+
+const shareBtn=document.getElementById('shareBtn');
+const shareCloseBtn=document.getElementById('shareCloseBtn');
+const previewCloseBtn=document.getElementById('previewCloseBtn');
+const generateBtn=document.getElementById('generateBtn');
+
+function openShareModal(){
+  document.getElementById('shareTypeIcon').textContent=detail.share.icon;
+  document.getElementById('shareTypeName').textContent=taskSnapshot.title;
+  document.getElementById('shareLocation').textContent=taskSnapshot.location;
+  document.getElementById('shareTime').textContent=formatTaskTime(taskSnapshot.time);
+  const insuranceEl=document.getElementById('shareInsurance');
+  insuranceEl.textContent=taskSnapshot.insurance;
+  insuranceEl.className='share-insurance '+detail.insuranceState;
+  shareModal.classList.add('active');
+}
+
+function closeShareModal(){
+  shareModal.classList.remove('active');
+}
+
+function getShareDetailHref(){
+  return 'fuwuzhe_task-detail.html?'+buildQuery({
+    from:'share',
+    type,
+    taskId,
+    title:taskSnapshot.title,
+    time:taskSnapshot.time,
+    location:params.get('location')||baseTaskSnapshot.location,
+    price:taskSnapshot.price,
+    insurance:taskSnapshot.insurance
+  });
+}
+
+function openShareDetail(){
+  location.href=getShareDetailHref();
+}
+
+shareBtn.addEventListener('click',openShareModal);
+shareCloseBtn.addEventListener('click',closeShareModal);
+previewCloseBtn.addEventListener('click',closeShareModal);
+document.getElementById('shareCard').addEventListener('click',openShareDetail);
+document.getElementById('shareCard').addEventListener('keydown',event=>{
+  if(event.key==='Enter'||event.key===' '){
+    event.preventDefault();
+    openShareDetail();
+  }
+});
+document.getElementById('shareDetailLink').addEventListener('click',event=>{
+  event.stopPropagation();
+  openShareDetail();
+});
+shareModal.addEventListener('click',event=>{
+  if(event.target===shareModal)closeShareModal();
+});
+generateBtn.addEventListener('click',()=>{
+  alert('转发卡片已生成，可发送给微信好友或分享到群聊');
+});
+
+if(applicationStatus==='applying'){
+  applyBtn.textContent='已申请，查看进度';
+}
+if(applicationStatus==='failed'){
+  applyBtn.textContent='未接单成功，查看记录';
+}
+if(applicationStatus==='accepted'){
+  applyBtn.textContent='已接单，查看订单';
+}
+
+applyBtn.addEventListener('click',()=>{
+  if(applicationStatus==='accepted'){
+    location.href='order-list.html?'+buildQuery({role:'accepted',status:'all'});
+    return;
+  }
+  if(applicationStatus==='applying'||applicationStatus==='failed'){
+    location.href='applied-order-detail.html?'+buildQuery({
+      recordId:applicationRecord?applicationRecord.recordId:'',
+      taskId,
+      returnRole:'applied',
+      returnStatus:applicationStatus==='applying'?'applied_pending':'failed'
+    });
+    return;
+  }
+  if(isAccountBlocked()){
+    confirmAccountAppeal('接单');
+    return;
+  }
+  const isHighRisk=type==='cat'||type==='outdoor';
+  if(!authState.realnameVerified){
+    alert('接单前需先完成实名认证。你也可以在“我的→认证中心”主动完成。');
+    location.href='realname-auth.html?source=apply&type='+type;
+    return;
+  }
+	  if(isHighRisk&&!authState.eduVerified){
+	    alert('接此类任务需要学历认证，你也可以在“我的→认证中心”主动完成。');
+	    location.href='edu-auth.html?source=apply&type='+type;
+	    return;
+	  }
+	  const requiredSkillByType={health:'陪诊服务证书',education:'家教/辅导能力证明',sports:'运动陪练证书'};
+	  if(requiredSkillByType[type]&&!authState.skillCertVerified){
+	    alert('接此类任务需要先完成技能认证：'+requiredSkillByType[type]);
+	    location.href='skill-cert.html?source=apply&type='+type;
+	    return;
+	  }
+	  if(!authState.emergencyContactBound){
+    alert('实名认证完成后，接单引导流程中必须先绑定紧急联系人。');
+    location.href='emergency-contact.html?source=apply&type='+type;
+    return;
+  }
+  location.href='safety-notice.html?'+buildQuery({
+    type,
+    from:fromPage,
+    taskId,
+    taskTitle:taskSnapshot.title,
+    time:taskSnapshot.time,
+    location:taskSnapshot.location,
+    price:taskSnapshot.price,
+    insurance:taskSnapshot.insurance,
+    publisherName:detail.publisher.name,
+    publisherCredit:detail.publisher.credit,
+    publisherStats:detail.publisher.stats
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>取消任务 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:20px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:20px}
+.card .title{font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:16px}
+.reason-list .reason{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid #f8f8f8;cursor:pointer}
+.reason-list .reason:last-child{border:none}
+.reason-list .reason .radio{width:20px;height:20px;border-radius:50%;border:2px solid #ddd;margin-right:12px;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;flex-shrink:0}
+.reason-list .reason .radio.checked{border-color:#FF4D4F;background:#FF4D4F;color:#fff}
+.reason-list .reason .text{font-size:14px;color:#333}
+.extra-reason{display:none;margin-top:14px}
+.extra-reason.show{display:block}
+.extra-reason textarea{width:100%;min-height:82px;border:1px solid #e8e8e8;border-radius:10px;padding:12px;font-size:13px;color:#333;resize:none;outline:none}
+.extra-reason textarea:focus{border-color:#FF6B35}
+.extra-reason .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:#999}
+.penalty,.summary-box{background:#fff1f0;border-radius:12px;padding:16px;margin:0 16px}
+.penalty .title,.summary-box .title{font-size:14px;font-weight:700;color:#FF4D4F;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.penalty .row,.summary-box .row{display:flex;justify-content:space-between;font-size:13px;color:#666;padding:6px 0;gap:14px}
+.penalty .row .val,.summary-box .row .val{color:#1a1a2e;font-weight:600;text-align:right}
+.penalty .desc,.summary-box .desc{font-size:12px;color:#8c8c8c;margin-top:8px;line-height:1.6}
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:8px;top:4px;bottom:4px;width:2px;background:#ececec}
+.node{position:relative;padding-bottom:18px}
+.node::before{content:'';position:absolute;left:-20px;top:4px;width:12px;height:12px;border-radius:50%;background:#d0d7de;border:2px solid #fff;box-shadow:0 0 0 2px #f2f2f2}
+.node.done::before{background:#FF4D4F;box-shadow:0 0 0 2px #FFE1E1}
+.node.current::before{background:#FA8C16;box-shadow:0 0 0 2px #FFF0D6}
+.node .time{font-size:11px;color:#999;margin-bottom:3px}
+.node .desc{font-size:13px;color:#333;line-height:1.6}
+.node .sub{font-size:12px;color:#8c8c8c;line-height:1.6;margin-top:3px}
+.cancel-btn{display:block;width:calc(100% - 32px);margin:20px auto 0;height:48px;background:#FF4D4F;color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.cancel-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="order-list.html" class="back" id="backLink">←</a>
+  <span class="title" id="pageTitle">取消任务</span>
+  <span class="placeholder"></span>
+</div>
+
+<div id="confirmMode" style="display:none">
+  <div class="card">
+    <div class="title">请选择取消原因</div>
+    <div class="reason-list">
+      <div class="reason" onclick="selectReason(this)"><div class="radio checked">✓</div><span class="text">找到其他途径</span></div>
+      <div class="reason" onclick="selectReason(this)"><div class="radio">✓</div><span class="text">临时不需要</span></div>
+      <div class="reason" onclick="selectReason(this)"><div class="radio">✓</div><span class="text">时间有冲突</span></div>
+      <div class="reason" onclick="selectReason(this)"><div class="radio">✓</div><span class="text">价格不合适</span></div>
+      <div class="reason" onclick="selectReason(this)"><div class="radio">✓</div><span class="text">其他原因</span></div>
+    </div>
+    <div class="extra-reason" id="extraReasonBox">
+      <textarea id="extraReasonInput" maxlength="20" placeholder="请填写具体原因，不超过20个字"></textarea>
+      <div class="meta">
+        <span>仅在选择“其他原因”时必填</span>
+        <span id="extraReasonCount">0/20</span>
+      </div>
+    </div>
+  </div>
+  <div class="penalty">
+    <div class="title">取消任务说明</div>
+    <div class="row"><span>当前状态</span><span class="val" id="confirmStatus">待接单</span></div>
+    <div class="row"><span>违约金</span><span class="val" id="confirmPenalty">¥0</span></div>
+    <div class="row"><span>信用分扣除</span><span class="val" id="confirmCredit">0分</span></div>
+    <div class="row"><span>退款说明</span><span class="val" id="confirmRefund">原路退回</span></div>
+    <div class="desc" id="confirmDesc"></div>
+  </div>
+  <button class="cancel-btn" id="confirmBtn">确认取消任务</button>
+</div>
+
+<div id="viewMode" style="display:none">
+  <div class="card">
+    <div class="title">取消信息</div>
+    <div class="summary-box">
+      <div class="row"><span>订单号</span><span class="val" id="viewOrderId">P9</span></div>
+      <div class="row"><span>取消时间</span><span class="val" id="viewCancelTime">昨天 20:10</span></div>
+      <div class="row"><span>取消方</span><span class="val" id="viewOperator">发布者</span></div>
+      <div class="row"><span>取消原因</span><span class="val" id="viewReason">时间安排发生变化</span></div>
+      <div class="row"><span>退款结果</span><span class="val" id="viewRefund">原路退回 ¥500</span></div>
+      <div class="row"><span>信用影响</span><span class="val" id="viewCredit">不扣分</span></div>
+      <div class="desc" id="viewDesc">平台已记录取消退款、保险费和责任说明；部分退款以人工裁定金额为准。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="title">取消处理进度</div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const mode=params.get('mode')||((params.get('detailStatus')||params.get('status'))==='cancel'?'view':'confirm');
+const status=params.get('detailStatus')||params.get('status')||'waiting';
+const type=params.get('type')||'cat';
+const orderId=(params.get('id')||'p1').toUpperCase();
+const provider=params.get('provider')||'';
+const applicants=params.get('applicants')||'';
+const title=params.get('title')||'';
+const time=params.get('time')||'';
+const orderLocation=params.get('location')||'';
+const price=params.get('price')||'';
+const coupon=params.get('coupon')||'';
+const paid=params.get('paid')||'';
+const insuranceFee=params.get('insuranceFee')||'';
+const paymentMethod=params.get('paymentMethod')||'';
+const urgentEnabled=params.get('urgentEnabled')||'';
+const urgentKm=params.get('urgentKm')||'';
+const urgentDuration=params.get('urgentDuration')||'';
+const urgentFee=params.get('urgentFee')||'';
+const urgentCreatedAt=params.get('urgentCreatedAt')||'';
+const urgentExpiresAt=params.get('urgentExpiresAt')||'';
+const urgentNextKm=params.get('urgentNextKm')||'';
+const urgentNextFee=params.get('urgentNextFee')||'';
+const urgentNextDuration=params.get('urgentNextDuration')||'';
+const urgentNextStartsAt=params.get('urgentNextStartsAt')||'';
+const urgentNextExpiresAt=params.get('urgentNextExpiresAt')||'';
+const urgentPrevKm=params.get('urgentPrevKm')||'';
+const urgentPrevDuration=params.get('urgentPrevDuration')||'';
+const urgentChangedRange=params.get('urgentChangedRange')||'';
+const returnRole=params.get('returnRole')||owner;
+const returnStatus=params.get('returnStatus')||'all';
+const extraReasonBox=document.getElementById('extraReasonBox');
+const extraReasonInput=document.getElementById('extraReasonInput');
+const extraReasonCount=document.getElementById('extraReasonCount');
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach((value,key)=>{
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(([key,val])=>{
+    next[key]=val;
+  });
+  (removeKeys||[]).forEach(key=>{
+    delete next[key];
+  });
+  return next;
+}
+
+function detailPage(){
+  return owner==='accepted'?'fuwuzhe_order-detail.html':'order-detail.html';
+}
+
+function detailHref(statusValue){
+  return detailPage()+'?'+buildQuery(currentParams({
+    owner,
+    status:statusValue,
+    type,
+    id:orderId.toLowerCase(),
+    provider,
+    applicants,
+    title,
+    time,
+    location:orderLocation,
+    price,
+    coupon,
+    paid,
+    insuranceFee,
+    paymentMethod,
+    urgentEnabled,
+    urgentKm,
+    urgentDuration,
+    urgentFee,
+    urgentCreatedAt,
+    urgentExpiresAt,
+    urgentNextKm,
+    urgentNextFee,
+    urgentNextDuration,
+    urgentNextStartsAt,
+    urgentNextExpiresAt,
+    urgentPrevKm,
+    urgentPrevDuration,
+    urgentChangedRange,
+    returnRole,
+    returnStatus
+  },['mode','detailStatus']));
+}
+
+document.getElementById('backLink').href=detailHref(mode==='view'?'cancel':status);
+
+function cancelReasonKey(){
+  return 'cancelReason_'+owner+'_'+orderId.toLowerCase();
+}
+
+function getStoredReason(){
+  try{
+    return JSON.parse(localStorage.getItem(cancelReasonKey())||'null');
+  }catch(error){
+    return null;
+  }
+}
+
+function getSelectedReasonText(){
+  const selected=document.querySelector('.reason .radio.checked');
+  if(!selected)return '';
+  return selected.parentElement.querySelector('.text').textContent.trim();
+}
+
+function syncExtraReason(){
+  const isOtherReason=getSelectedReasonText()==='其他原因';
+  extraReasonBox.classList.toggle('show',isOtherReason);
+}
+
+function nowFullText(){
+  const now=new Date();
+  return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+}
+
+function getCancelStartNode(){
+  if(owner==='accepted'){
+    return {state:'done',time:'已记录',desc:'订单已确认',sub:'服务订单已建立履约关系'};
+  }
+  return {
+    state:'done',
+    time:'已记录',
+    desc:provider?'订单已确认':'订单待接单',
+    sub:provider?'订单已确认服务者':'订单已发布并进入待接单流转'
+  };
+}
+
+const statusLabelMap={
+  waiting:'待接单',
+  applying:'已申请',
+  ready:'待服务',
+  serving:'服务中',
+  confirm:'待确认完成',
+  review:'已完成',
+  done:'已评价',
+  dispute:'纠纷中',
+  cancel:'已取消',
+  refund:'已退款'
+};
+
+const confirmMeta={
+  waiting:{penalty:'¥0',credit:'0分',refund:'原路退回',desc:'待接单阶段取消：不收违约金，不扣信用分，已支付金额原路退回。'},
+  applying:{penalty:'¥0',credit:'0分',refund:'原路退回',desc:'已申请阶段取消：平台不收违约金，服务者会收到任务取消通知。'},
+  ready:{penalty:'订单金额 20%',credit:'-5分',refund:'扣除违约金后退回',desc:'待服务阶段取消：可能产生违约责任，请谨慎操作。'},
+  serving:{penalty:'不可直接取消',credit:'按纠纷处理',refund:'需平台核验',desc:'服务中如有问题，请优先发起纠纷，由平台处理。'},
+  confirm:{penalty:'不可直接取消',credit:'按纠纷处理',refund:'需平台核验',desc:'待确认完成阶段如有异议，请优先发起纠纷，由平台处理。'},
+  review:{penalty:'不可取消',credit:'按申诉处理',refund:'不可直接退款',desc:'已完成订单不可直接取消，如对责任或扣分有异议，请走信用分申诉或纠纷流程。'},
+  done:{penalty:'不可取消',credit:'按申诉处理',refund:'不可直接退款',desc:'已评价订单已归档，不可直接取消。'},
+  dispute:{penalty:'纠纷处理中',credit:'待平台判定',refund:'待平台判定',desc:'纠纷中订单不可直接取消，请等待平台处理结果。'},
+  refund:{penalty:'已处理',credit:'以处理结果为准',refund:'已退款',desc:'已退款订单无需再次取消。'}
+};
+
+const viewMeta={
+  accepted:{
+    operator:'接单者',
+    reason:type==='outdoor'?'临时无法按时前往集合点':'接单者临时调整安排',
+    refund:'按规则退回已支付部分或释放待结算款项',
+    credit:'将按订单阶段同步信用影响'
+  },
+  published:{
+    operator:'发布者',
+    reason:type==='wedding'?'婚礼档期调整，取消本次协助需求':'时间安排发生变化',
+    refund:'原路退回已支付金额',
+    credit:'本次取消不额外扣分'
+  }
+};
+
+const cancelArchiveByOwner={
+  accepted:{
+    A6:{
+      cancelTime:'周五 21:10',
+      operator:'发布者',
+      reason:'发布者临时取消本次户外陪同需求',
+      refund:'订单未开始，系统已释放待结算金额',
+      credit:'服务者不扣分',
+      desc:'本次取消由发布者发起，服务者侧不会产生额外信用扣分或违约责任。',
+      timeline:[
+        {state:'done',time:'周五 21:08',desc:'发布者发起取消',sub:'系统已收到取消请求'},
+        {state:'done',time:'周五 21:10',desc:'订单已取消',sub:'服务流程已停止，不再允许开始服务'},
+        {state:'current',time:'当前',desc:'取消结果已归档',sub:'取消原因与责任说明已同步保存'}
+      ]
+    }
+  },
+  published:{}
+};
+
+if(mode==='view'){
+  const storedReason=getStoredReason();
+  const currentArchive=(cancelArchiveByOwner[owner]&&cancelArchiveByOwner[owner][orderId])||null;
+  document.getElementById('pageTitle').textContent='取消原因';
+  document.getElementById('viewMode').style.display='block';
+  document.getElementById('viewOrderId').textContent=orderId;
+  document.getElementById('viewOperator').textContent=currentArchive&&currentArchive.operator||storedReason&&storedReason.operator||viewMeta[owner].operator;
+  document.getElementById('viewReason').textContent=storedReason
+    ? (storedReason.reason==='其他原因'&&storedReason.extraReason
+        ? '【其他原因-'+storedReason.extraReason+'】'
+        : storedReason.reason)
+    : (currentArchive&&currentArchive.reason)||viewMeta[owner].reason;
+  document.getElementById('viewRefund').textContent=currentArchive&&currentArchive.refund||viewMeta[owner].refund;
+  document.getElementById('viewCredit').textContent=currentArchive&&currentArchive.credit||viewMeta[owner].credit;
+  document.getElementById('viewDesc').textContent=currentArchive&&currentArchive.desc||'平台已根据取消结果记录退款、保险费和责任说明；涉及部分退款时以人工裁定金额为准。';
+  if(urgentFee&&urgentFee!=='¥0'&&urgentFee!=='¥0.00'){
+    document.getElementById('viewRefund').textContent='仅退订单金额，急单置顶费 '+urgentFee+' 不退';
+    document.getElementById('viewDesc').textContent='平台已记录取消退款、保险费和责任说明；急单置顶费属于平台服务费，取消后不退。';
+  }
+  const timelineRecords=currentArchive&&Array.isArray(currentArchive.timeline)&&currentArchive.timeline.length
+    ?currentArchive.timeline
+    :[
+    getCancelStartNode(),
+    {state:'current',time:storedReason&&storedReason.cancelTime||'昨天 20:10',desc:'订单已取消',sub:'系统已停止后续履约流程，取消原因与费用说明已归档'}
+  ];
+  document.getElementById('viewCancelTime').textContent=currentArchive&&currentArchive.cancelTime||storedReason&&storedReason.cancelTime||'昨天 20:10';
+  document.getElementById('timeline').innerHTML=timelineRecords.map(item=>`
+    <div class="node ${item.state==='done'?'done':''} ${item.state==='current'?'current':''}">
+      <div class="time">${item.time}</div>
+      <div class="desc">${item.desc}</div>
+      <div class="sub">${item.sub}</div>
+    </div>
+  `).join('');
+}else{
+  document.getElementById('pageTitle').textContent='取消任务';
+  document.getElementById('confirmMode').style.display='block';
+  const current=confirmMeta[status]||confirmMeta.waiting;
+  const canCancel=['waiting','applying','ready'].includes(status);
+  document.getElementById('confirmStatus').textContent=statusLabelMap[status]||'待接单';
+  document.getElementById('confirmPenalty').textContent=current.penalty;
+  document.getElementById('confirmCredit').textContent=current.credit;
+  document.getElementById('confirmRefund').textContent=urgentFee&&urgentFee!=='¥0'&&urgentFee!=='¥0.00'
+    ? '仅退订单金额，急单置顶费不退'
+    : current.refund;
+  document.getElementById('confirmDesc').textContent=current.desc+(urgentFee&&urgentFee!=='¥0'&&urgentFee!=='¥0.00'
+    ? ' 急单置顶费属于平台服务费，取消后不退，仅退订单金额。'
+    : '');
+  document.getElementById('confirmBtn').addEventListener('click',()=>{
+    if(!canCancel){
+      alert((statusLabelMap[status]||'当前')+'状态不支持直接取消，请按订单详情页的可用操作继续处理。');
+      return;
+    }
+    const reason=getSelectedReasonText();
+    const extraReason=extraReasonInput.value.trim();
+    if(reason==='其他原因'&&!extraReason){
+      alert('请选择“其他原因”后，补充具体的文字描述。');
+      extraReasonInput.focus();
+      return;
+    }
+    localStorage.setItem(cancelReasonKey(),JSON.stringify({
+      reason,
+      extraReason,
+      statusBeforeCancel:status,
+      operator:owner==='accepted'?'接单者':'发布者',
+      cancelTime:nowFullText()
+    }));
+    alert('任务已取消，平台将同步退款和状态变更；涉及部分退款时以人工裁定金额为准。');
+    location.href='order-cancel.html?'+buildQuery(currentParams({
+      owner,
+      mode:'view',
+      status:'cancel',
+      detailStatus:'cancel',
+      type,
+      id:orderId.toLowerCase(),
+      provider,
+      applicants,
+      urgentFee,
+      returnRole,
+      returnStatus
+    }));
+  });
+}
+
+function selectReason(el){
+  document.querySelectorAll('.reason .radio').forEach(r=>r.classList.remove('checked'));
+  el.querySelector('.radio').classList.add('checked');
+  syncExtraReason();
+}
+
+extraReasonInput.addEventListener('input',()=>{
+  extraReasonCount.textContent=extraReasonInput.value.length+'/20';
+});
+
+syncExtraReason();
+</script>
+</body>
+</html>

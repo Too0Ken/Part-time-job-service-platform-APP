@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>SOS安全说明 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:18px}
+.badge{display:inline-flex;padding:5px 10px;border-radius:999px;background:#FFF1F0;color:#FF4D4F;font-size:11px;font-weight:700;margin-bottom:12px}
+h1{font-size:19px;line-height:1.4;margin-bottom:8px}
+p{font-size:13px;color:#667085;line-height:1.8}
+.info{display:grid;gap:10px;margin-top:14px}
+.item{padding:12px;border-radius:14px;background:#F8FAFC}
+.item strong{display:block;font-size:13px;margin-bottom:4px}
+.item span{font-size:12px;color:#667085;line-height:1.7}
+.actions{display:grid;gap:10px;margin:0 16px}
+.actions a{height:44px;border-radius:22px;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.primary{background:#4A6CF7;color:#fff}
+.secondary{background:#fff;color:#4A6CF7;border:1px solid #DDE6FF}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="help.html" class="back">←</a><span class="title">SOS安全说明</span><span class="placeholder"></span></div>
+
+<div class="card">
+  <div class="badge">C端不展示历史记录</div>
+  <h1>SOS 已由平台后台统一留痕和处理</h1>
+  <p>根据当前 PRD 口径，C 端只负责在订单详情触发 SOS，并通过订单页状态、消息中心和客服联系接收必要进展，不提供 SOS 历史列表或详情查询入口。</p>
+  <div class="info">
+    <div class="item"><strong>触发后展示</strong><span>订单详情展示“已触发/处理中”状态，避免用户重复触发或误判无人处理。</span></div>
+    <div class="item"><strong>后台留痕</strong><span>定位、时间、订单、联系人通知和处理备注永久保存在后台 SOS 记录。</span></div>
+    <div class="item"><strong>进展同步</strong><span>平台通过消息中心、电话或客服会话同步必要处理结果。</span></div>
+  </div>
+</div>
+
+<div class="actions">
+  <a class="primary" href="order-list.html">查看订单</a>
+  <a class="secondary" href="safety-center.html">返回安全中心</a>
+</div>
+</body>
+</html>

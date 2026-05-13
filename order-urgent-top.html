@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>急单置顶 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:28px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.order-name{font-size:16px;font-weight:700;color:#1a1a2e;line-height:1.5}
+.order-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.order-meta span{display:inline-flex;padding:5px 10px;border-radius:999px;background:#f8faff;color:#667085;font-size:11px}
+.helper{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.status-card{margin-top:12px;padding:14px;border-radius:14px;background:#FFF8F1;border:1px solid #FFD8C2}
+.status-card .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#666;padding:5px 0}
+.status-card .row .val{color:#1a1a2e;font-weight:700;text-align:right}
+.status-card .note{font-size:12px;color:#B76E00;line-height:1.7;margin-top:8px}
+.stepper-grid{display:grid;gap:12px}
+.stepper-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid #edf0f5;border-radius:16px;background:#fff}
+.stepper-label{font-size:13px;color:#667085}
+.stepper-controls{display:flex;align-items:center;gap:10px}
+.step-btn{width:30px;height:30px;border:none;border-radius:15px;background:#FFF1EC;color:#FF6B35;font-size:18px;line-height:1;cursor:pointer}
+.step-btn:disabled{background:#f3f4f6;color:#98a2b3;cursor:not-allowed}
+.step-value{min-width:88px;text-align:center;font-size:14px;font-weight:700;color:#1a1a2e}
+.summary{background:#FFF8F1;border:1px solid #FFD8C2;border-radius:14px;padding:14px;margin-top:14px}
+.summary .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#666;padding:5px 0}
+.summary .row .val{color:#1a1a2e;font-weight:700;text-align:right}
+.warn{margin-top:12px;padding:12px;border-radius:12px;background:#FFF7E6;color:#B76E00;font-size:12px;line-height:1.7}
+.payment-option{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #eee;border-radius:12px;cursor:pointer}
+.payment-option+.payment-option{margin-top:10px}
+.payment-option.active{border-color:#FF6B35;background:#FFF7E6}
+.payment-radio{width:18px;height:18px;border:2px solid #d0d5dd;border-radius:50%;margin-top:2px;position:relative;flex:none}
+.payment-option.active .payment-radio{border-color:#FF6B35}
+.payment-option.active .payment-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#FF6B35}
+.payment-info{flex:1}
+.payment-name{font-size:14px;font-weight:600;color:#1a1a2e}
+.payment-desc{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.payment-desc .recharge-link{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;background:#FFF1EC;color:#FF6B35;font-weight:700;text-decoration:none}
+.submit-btn{display:block;width:calc(100% - 32px);margin:20px auto 0;height:48px;border:none;border-radius:24px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;font-size:16px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="#" class="back" id="backLink">←</a>
+  <span class="title">急单置顶</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="card">
+  <div class="order-name" id="orderName">订单</div>
+  <div class="order-meta">
+    <span id="orderTime"></span>
+    <span id="orderLocation"></span>
+    <span id="orderAmount"></span>
+  </div>
+  <div class="status-card" id="currentTopCard" style="display:none">
+    <div class="row"><span>当前生效范围</span><span class="val" id="currentTopRange">10km</span></div>
+    <div class="row"><span>失效倒计时</span><span class="val" id="currentTopCountdown">剩余 00:00:00</span></div>
+    <div class="note" id="currentTopChangeNote" style="display:none"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="title">置顶设置</div>
+  <div class="stepper-grid">
+    <div class="stepper-row">
+      <span class="stepper-label">置顶范围</span>
+      <div class="stepper-controls">
+        <button class="step-btn" id="rangeMinusBtn" type="button">−</button>
+        <span class="step-value" id="rangeValue">10km</span>
+        <button class="step-btn" id="rangePlusBtn" type="button">＋</button>
+      </div>
+    </div>
+    <div class="stepper-row">
+      <span class="stepper-label">置顶时长</span>
+      <div class="stepper-controls">
+        <button class="step-btn" id="durationMinusBtn" type="button">−</button>
+        <span class="step-value" id="durationValue">2小时</span>
+        <button class="step-btn" id="durationPlusBtn" type="button">＋</button>
+      </div>
+    </div>
+  </div>
+  <div class="summary">
+    <div class="row"><span>置顶范围</span><span class="val" id="summaryRange">10km</span></div>
+    <div class="row"><span>置顶时长</span><span class="val" id="summaryDuration">2小时</span></div>
+    <div class="row"><span>置顶服务费</span><span class="val" id="summaryFee">¥5.00</span></div>
+  </div>
+  <div class="helper" id="renewChangeHelper" style="display:none"></div>
+  <div class="warn">若订单取消，不退置顶服务费，仅退订单金额。</div>
+</div>
+
+<div class="card">
+  <div class="title">支付方式</div>
+  <div class="payment-option active" data-method="balance">
+    <div class="payment-radio"></div>
+    <div class="payment-info">
+      <div class="payment-name">平台余额支付</div>
+      <div class="payment-desc">当前余额 ¥368.50</a></div>
+    </div>
+  </div>
+  <div class="payment-option" data-method="wechat">
+    <div class="payment-radio"></div>
+    <div class="payment-info">
+      <div class="payment-name">微信支付</div>
+      <div class="payment-desc"></div>
+    </div>
+  </div>
+</div>
+
+<button class="submit-btn" id="submitBtn">支付并置顶</button>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="urgent-top-data.js"></script>
+<script>
+const PUBLISHED_ORDER_KEY='banxing.latestPublishedOrder';
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const status=params.get('status')||'waiting';
+const type=params.get('type')||'cat';
+const orderId=(params.get('id')||'p1').toUpperCase();
+const provider=params.get('provider')||'';
+const applicants=params.get('applicants')||'';
+const returnRole=params.get('returnRole')||owner;
+const returnStatus=params.get('returnStatus')||'all';
+const orderName=params.get('title')||'订单';
+const orderTime=BanxingTimeUtils.formatTaskTime(params.get('time'))||params.get('time')||'待确认';
+const rawOrderLocation=params.get('location')||'待确认';
+const orderAmount=params.get('price')||'¥0.00';
+const existingPaid=params.get('paid')||'';
+let selectedKm=Number(params.get('urgentKm')||10);
+let selectedDurationHours=Number(params.get('urgentDuration')||2);
+let paymentMethod='balance';
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(function(entry){
+    const key=entry[0];
+    const val=entry[1];
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach(function(value,key){
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(function(entry){
+    next[entry[0]]=entry[1];
+  });
+  (removeKeys||[]).forEach(function(key){
+    delete next[key];
+  });
+  return next;
+}
+
+function getMaskedLocationText(text){
+  const source=String(text||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{exactVisible:false}).text||source;
+}
+
+const orderLocation=getMaskedLocationText(rawOrderLocation);
+const queryUrgentTop=(params.get('urgentEnabled')==='1'||params.get('urgentKm'))?BanxingUrgentTop.normalize({
+  orderId:orderId,
+  enabled:true,
+  km:Number(params.get('urgentKm')||10),
+  durationHours:Number(params.get('urgentDuration')||2),
+  fee:Number(String(params.get('urgentFee')||'').replace(/[^\d.]/g,''))||BanxingUrgentTop.getFeeByKm(Number(params.get('urgentKm')||10),Number(params.get('urgentDuration')||2)),
+  createdAt:params.get('urgentCreatedAt')||'',
+  expiresAt:params.get('urgentExpiresAt')||'',
+  nextKm:Number(params.get('urgentNextKm')||0)||0,
+  nextFee:Number(String(params.get('urgentNextFee')||'').replace(/[^\d.]/g,''))||0,
+  nextDurationHours:Number(params.get('urgentNextDuration')||0)||0,
+  nextStartsAt:params.get('urgentNextStartsAt')||'',
+  nextExpiresAt:params.get('urgentNextExpiresAt')||''
+}):null;
+const currentUrgentTop=BanxingUrgentTop.getByOrderId(orderId)||queryUrgentTop;
+if(currentUrgentTop){
+  selectedKm=currentUrgentTop.km;
+  selectedDurationHours=currentUrgentTop.durationHours;
+}
+
+function normalizeSelectedKm(value){
+  return Math.max(10,Math.min(100,Math.round(Number(value||10)/10)*10));
+}
+
+function normalizeSelectedDuration(value){
+  return Math.max(1,Math.min(24,Math.round(Number(value||2))));
+}
+
+function detailHref(extra){
+  return 'order-detail.html?'+buildQuery(currentParams({
+    owner,
+    status,
+    type,
+    id:orderId.toLowerCase(),
+    provider,
+    applicants,
+    returnRole,
+    returnStatus,
+    title:orderName,
+    time:orderTime,
+    location:orderLocation,
+    price:orderAmount,
+    paid:existingPaid,
+    urgentCreatedAt:currentUrgentTop&&currentUrgentTop.createdAt,
+    urgentExpiresAt:currentUrgentTop&&currentUrgentTop.expiresAt,
+    urgentNextKm:currentUrgentTop&&currentUrgentTop.nextKm,
+    urgentNextFee:currentUrgentTop&&currentUrgentTop.nextFee,
+    urgentNextDuration:currentUrgentTop&&currentUrgentTop.nextDurationHours,
+    urgentNextStartsAt:currentUrgentTop&&currentUrgentTop.nextStartsAt,
+    urgentNextExpiresAt:currentUrgentTop&&currentUrgentTop.nextExpiresAt,
+    urgentPrevKm:currentUrgentTop&&currentUrgentTop.previousKm,
+    urgentPrevDuration:currentUrgentTop&&currentUrgentTop.previousDurationHours,
+    urgentChangedRange:currentUrgentTop&&currentUrgentTop.changedRange?'1':'',
+    ...extra
+  }));
+}
+
+function parseMoney(text){
+  return Number(String(text||'').replace(/[^\d.]/g,''))||0;
+}
+
+function updateSummary(){
+  selectedKm=normalizeSelectedKm(selectedKm);
+  selectedDurationHours=normalizeSelectedDuration(selectedDurationHours);
+  const fee=BanxingUrgentTop.getFeeByKm(selectedKm,selectedDurationHours);
+  const durationLabel=BanxingUrgentTop.getDurationLabel(selectedDurationHours);
+  const addedMs=selectedDurationHours*60*60*1000;
+  document.getElementById('summaryRange').textContent=selectedKm+'km';
+  document.getElementById('summaryDuration').textContent=durationLabel;
+  document.getElementById('summaryFee').textContent=BanxingUrgentTop.formatMoney(fee);
+  document.getElementById('rangeValue').textContent=selectedKm+'km';
+  document.getElementById('durationValue').textContent=durationLabel;
+  document.getElementById('rangeMinusBtn').disabled=selectedKm<=10;
+  document.getElementById('rangePlusBtn').disabled=selectedKm>=100;
+  document.getElementById('durationMinusBtn').disabled=selectedDurationHours<=1;
+  document.getElementById('durationPlusBtn').disabled=selectedDurationHours>=24;
+  document.getElementById('submitBtn').textContent=(paymentMethod==='balance'?'余额':'微信')+'支付并置顶';
+  const renewChangeHelper=document.getElementById('renewChangeHelper');
+  if(currentUrgentTop&&BanxingUrgentTop.isActive(currentUrgentTop)){
+    renewChangeHelper.style.display='block';
+    const currentRemainText=BanxingUrgentTop.formatCurrentCountdown(currentUrgentTop).replace('剩余 ','');
+    const totalRemainText=BanxingUrgentTop.formatMs(BanxingUrgentTop.getRemainingMs(currentUrgentTop)+addedMs);
+    if(currentUrgentTop.km===selectedKm){
+      renewChangeHelper.textContent='当前置顶范围保持 '+selectedKm+'km，当前段剩余 '+currentRemainText+'；若现在续费，总剩余时长将累计为 '+totalRemainText+'。';
+    }else{
+      renewChangeHelper.textContent='当前置顶范围仍为 '+currentUrgentTop.km+'km，当前段剩余 '+currentRemainText+'；若现在续费，将在这段结束后把范围变更至 '+selectedKm+'km，并继续生效 '+durationLabel+'，总剩余时长为 '+totalRemainText+'。';
+    }
+  }else{
+    renewChangeHelper.style.display='none';
+    renewChangeHelper.textContent='';
+  }
+}
+
+document.getElementById('backLink').href=detailHref({
+  urgentEnabled:params.get('urgentEnabled')||'',
+  urgentKm:params.get('urgentKm')||'',
+  urgentDuration:params.get('urgentDuration')||'',
+  urgentFee:params.get('urgentFee')||'',
+  urgentNextKm:params.get('urgentNextKm')||'',
+  urgentNextFee:params.get('urgentNextFee')||'',
+  urgentNextDuration:params.get('urgentNextDuration')||'',
+  urgentNextStartsAt:params.get('urgentNextStartsAt')||'',
+  urgentNextExpiresAt:params.get('urgentNextExpiresAt')||''
+});
+document.getElementById('orderName').textContent=orderName;
+document.getElementById('orderTime').textContent=orderTime;
+document.getElementById('orderLocation').textContent=orderLocation;
+document.getElementById('orderAmount').textContent=orderAmount;
+if(currentUrgentTop&&BanxingUrgentTop.isActive(currentUrgentTop)){
+  document.getElementById('currentTopCard').style.display='block';
+  document.getElementById('currentTopRange').textContent=currentUrgentTop.km+'km';
+  document.getElementById('currentTopCountdown').textContent=BanxingUrgentTop.formatCountdown(currentUrgentTop);
+  const currentTopChangeNote=BanxingUrgentTop.getChangeNote(currentUrgentTop);
+  if(currentTopChangeNote){
+    document.getElementById('currentTopChangeNote').style.display='block';
+    document.getElementById('currentTopChangeNote').textContent=currentTopChangeNote;
+  }
+}
+
+document.getElementById('rangeMinusBtn').addEventListener('click',function(){
+  selectedKm=normalizeSelectedKm(selectedKm-10);
+  updateSummary();
+});
+document.getElementById('rangePlusBtn').addEventListener('click',function(){
+  selectedKm=normalizeSelectedKm(selectedKm+10);
+  updateSummary();
+});
+document.getElementById('durationMinusBtn').addEventListener('click',function(){
+  selectedDurationHours=normalizeSelectedDuration(selectedDurationHours-1);
+  updateSummary();
+});
+document.getElementById('durationPlusBtn').addEventListener('click',function(){
+  selectedDurationHours=normalizeSelectedDuration(selectedDurationHours+1);
+  updateSummary();
+});
+document.querySelectorAll('.payment-option').forEach(function(option){
+  option.addEventListener('click',function(){
+    paymentMethod=option.dataset.method||'balance';
+    document.querySelectorAll('.payment-option').forEach(function(item){item.classList.remove('active');});
+    option.classList.add('active');
+    updateSummary();
+  });
+});
+
+document.getElementById('submitBtn').addEventListener('click',function(){
+  const fee=BanxingUrgentTop.getFeeByKm(selectedKm,selectedDurationHours);
+  const durationLabel=BanxingUrgentTop.getDurationLabel(selectedDurationHours);
+  let redirectPaid=existingPaid?BanxingUrgentTop.formatMoney(parseMoney(existingPaid)+fee):BanxingUrgentTop.formatMoney(Math.max(0,parseMoney(orderAmount)+fee));
+  const saved=BanxingUrgentTop.saveForOrder(orderId,{
+    enabled:true,
+    km:selectedKm,
+    fee:fee,
+    durationHours:selectedDurationHours,
+    durationLabel:durationLabel,
+    paymentMethod:paymentMethod==='balance'?'平台余额':'微信支付',
+    paidAt:'2026-04-16'
+  });
+  try{
+    const latestOrder=JSON.parse(localStorage.getItem(PUBLISHED_ORDER_KEY)||'null');
+    if(latestOrder&&String(latestOrder.id||'').toUpperCase()===orderId){
+      const reward=parseMoney(latestOrder.finance&&latestOrder.finance.reward||latestOrder.price);
+      const insuranceFee=parseMoney(latestOrder.finance&&latestOrder.finance.insuranceFee);
+      const coupon=parseMoney(latestOrder.finance&&latestOrder.finance.coupon);
+      const actualPaid=BanxingUrgentTop.formatMoney(Math.max(0,reward+insuranceFee+fee-coupon));
+      latestOrder.urgentTop=saved;
+      latestOrder.finance=latestOrder.finance||{};
+      latestOrder.finance.topFee=BanxingUrgentTop.formatMoney(fee);
+      latestOrder.finance.paid=actualPaid;
+      redirectPaid=actualPaid;
+      localStorage.setItem(PUBLISHED_ORDER_KEY,JSON.stringify(latestOrder));
+    }
+  }catch(error){
+  }
+  if(paymentMethod==='wechat'){
+    alert('正在拉起微信支付...\n支付完成后将立即生效');
+  }else{
+    alert('急单置顶已生效，平台将按所选范围优先曝光你的订单。');
+  }
+  location.href=detailHref({
+    urgentEnabled:'1',
+    urgentKm:selectedKm,
+    urgentDuration:selectedDurationHours,
+    urgentFee:BanxingUrgentTop.formatMoney(fee),
+    urgentCreatedAt:saved&&saved.createdAt,
+    urgentExpiresAt:saved&&saved.expiresAt,
+    urgentNextKm:saved&&saved.nextKm,
+    urgentNextFee:saved&&saved.nextFee?BanxingUrgentTop.formatMoney(saved.nextFee):'',
+    urgentNextDuration:saved&&saved.nextDurationHours,
+    urgentNextStartsAt:saved&&saved.nextStartsAt,
+    urgentNextExpiresAt:saved&&saved.nextExpiresAt,
+    urgentPrevKm:saved&&saved.previousKm,
+    urgentPrevDuration:saved&&saved.previousDurationHours,
+    urgentChangedRange:saved&&saved.changedRange?'1':'',
+    paid:redirectPaid
+  });
+});
+
+updateSummary();
+if(currentUrgentTop&&BanxingUrgentTop.isActive(currentUrgentTop)){
+  setInterval(function(){
+    document.getElementById('currentTopCountdown').textContent=BanxingUrgentTop.formatCountdown(currentUrgentTop);
+    const currentTopChangeNote=BanxingUrgentTop.getChangeNote(currentUrgentTop);
+    if(currentTopChangeNote){
+      document.getElementById('currentTopChangeNote').style.display='block';
+      document.getElementById('currentTopChangeNote').textContent=currentTopChangeNote;
+    }
+    updateSummary();
+  },1000);
+}
+</script>
+</body>
+</html>

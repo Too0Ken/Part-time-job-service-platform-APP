@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>历史反馈 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.summary{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.summary .title{font-size:15px;font-weight:700;color:#1a1a2e}
+.summary .desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:8px}
+.list{padding:0 16px 16px}
+.item{display:block;background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;text-decoration:none}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.name{font-size:14px;font-weight:700;color:#1a1a2e}
+.time{font-size:11px;color:#98a2b3}
+.desc{font-size:12px;color:#667085;line-height:1.7;margin-top:8px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tag{padding:4px 10px;border-radius:999px;background:#EEF2FF;color:#4A6CF7;font-size:11px}
+.tag.status{background:#F5F7FB;color:#667085}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="feedback.html" class="back">←</a><span class="title">历史反馈</span><span class="placeholder"></span></div>
+
+
+
+<div class="list" id="historyList"></div>
+
+<script>
+const FEEDBACK_STORAGE_KEY='banxing.feedbackRecords';
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function normalizeRecord(item,index){
+  return {
+    id:(item&&item.id)||('feedback-'+index),
+    type:(item&&item.type)==='订单申诉'?'订单问题':((item&&item.type)||'其他问题'),
+    content:(item&&item.content)||'',
+    contact:(item&&item.contact)||'未填写',
+    time:(item&&item.time)||'刚刚',
+    status:(item&&item.status)||'已收到',
+    attachments:Array.isArray(item&&item.attachments)?item.attachments:[]
+  };
+}
+
+function readRecords(){
+  try{
+    const list=JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY)||'[]');
+    return Array.isArray(list)?list.map(normalizeRecord):[];
+  }catch(error){
+    return [];
+  }
+}
+
+function seedRecords(){
+  const existing=readRecords();
+  if(existing.length)return existing;
+  const seeds=[
+    {id:'feedback-1001',type:'产品建议',content:'建议在订单退款完成后，消息里直接展示退款金额和优惠券退回情况。',contact:'138****8821',time:'4月14日 18:22',status:'已收到',attachments:['截图 1']},
+    {id:'feedback-1002',type:'功能异常',content:'实名认证完成后，“我的”页刷新不及时，需要重新进入页面。',contact:'微信：banxing_user',time:'4月10日 10:08',status:'处理中',attachments:[]},
+    {id:'feedback-1003',type:'订单问题',content:'希望订单页能把退款原因和处理进度展示得更清楚。',contact:'135****2234',time:'4月7日 09:45',status:'已回复',attachments:['截图 1','截图 2']}
+  ];
+  localStorage.setItem(FEEDBACK_STORAGE_KEY,JSON.stringify(seeds));
+  return seeds.map(normalizeRecord);
+}
+
+const records=seedRecords();
+document.getElementById('historyList').innerHTML=records.map(function(item){
+  return (
+    '<a class="item" href="feedback-detail.html?id='+encodeURIComponent(item.id)+'">'+
+      '<div class="top"><div class="name">'+escapeHtml(item.type)+'</div><div class="time">'+escapeHtml(item.time)+'</div></div>'+
+      '<div class="desc">'+escapeHtml(item.content)+'</div>'+
+      '<div class="meta"><span class="tag">'+item.attachments.length+' 个附件</span><span class="tag status">'+escapeHtml(item.status)+'</span></div>'+
+    '</a>'
+  );
+}).join('')||'<div class="item"><div class="name">暂无历史反馈</div><div class="desc">你提交反馈后，会在这里看到完整记录。</div></div>';
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>设置 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.section{background:#fff;margin:16px;border-radius:18px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.section-desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.item-list{display:grid;gap:10px;margin-top:14px}
+.item{display:flex;align-items:center;padding:14px;border-radius:16px;background:#f8faff;text-decoration:none;color:#1a1a2e}
+.item .icon{width:40px;height:40px;border-radius:14px;background:#eef2ff;color:#4A6CF7;display:flex;align-items:center;justify-content:center;font-size:18px;margin-right:12px}
+.item strong{display:block;font-size:14px;color:#1a1a2e}
+.item span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.item .arrow{margin-left:auto;font-size:16px;color:#c0c4cc}
+.tips{display:grid;gap:10px;margin-top:12px}
+.tip{padding:12px;border-radius:14px;background:#fff7e6}
+.tip strong{display:block;font-size:14px;color:#1a1a2e}
+.tip span{display:block;font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:5px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="my-home.html" class="back">←</a><span class="title">设置</span><span class="placeholder"></span></div>
+
+<div class="section">
+  <div class="section-title">社交与隐私</div>
+  <div class="section-desc">设置页当前仅保留黑名单管理，其他个人资料统一在“我的主页”里维护。</div>
+  <div class="item-list">
+    <a class="item" href="blacklist.html">
+      <div class="icon">🚫</div>
+      <div>
+        <strong>黑名单</strong>
+        <span>管理已拉黑用户。拉黑后，对方的动态和任务都不会再展示。</span>
+      </div>
+      <div class="arrow">›</div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

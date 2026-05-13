@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>任务地点 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#fff;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:92px;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.topbar{position:sticky;top:0;z-index:20;background:#fff;padding:10px 12px 12px;border-bottom:1px solid #f0f2f5}
+.toolbar{display:flex;align-items:center;gap:10px}
+.city-btn{display:inline-flex;align-items:center;gap:4px;border:none;background:none;color:#1f2937;font-size:16px;font-weight:600;cursor:pointer;white-space:nowrap}
+.search-box{flex:1;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:#f5f7fb}
+.search-box .icon{font-size:15px;color:#98A2B3}
+.search-input{flex:1;border:none;background:transparent;font-size:14px;color:#1a1a2e;outline:none}
+.search-input::placeholder{color:#B6BDCA}
+.map-panel{position:relative;height:292px;background:
+  linear-gradient(180deg,rgba(246,250,255,.96),rgba(255,255,255,1)),
+  radial-gradient(circle at 22% 34%,rgba(164,230,177,.9) 0 16%,transparent 17%),
+  radial-gradient(circle at 58% 42%,rgba(164,230,177,.88) 0 18%,transparent 19%),
+  radial-gradient(circle at 40% 68%,rgba(155,214,255,.8) 0 14%,transparent 15%),
+  repeating-linear-gradient(0deg,rgba(225,231,240,.8),rgba(225,231,240,.8) 1px,transparent 1px,transparent 34px),
+  repeating-linear-gradient(90deg,rgba(225,231,240,.8),rgba(225,231,240,.8) 1px,transparent 1px,transparent 34px);
+  overflow:hidden}
+.map-road{position:absolute;background:#fff;border-radius:999px;box-shadow:0 0 0 1px rgba(220,227,236,.7)}
+.map-road.road-a{left:12px;right:18px;top:86px;height:12px;transform:rotate(-8deg)}
+.map-road.road-b{left:26px;right:42px;top:146px;height:10px;transform:rotate(12deg)}
+.map-road.road-c{left:118px;top:24px;bottom:36px;width:10px;transform:rotate(6deg)}
+.map-road.road-d{right:62px;top:18px;bottom:58px;width:12px;transform:rotate(-10deg)}
+.map-card{position:absolute;left:50%;top:132px;transform:translateX(-50%);max-width:250px;background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 10px 28px rgba(17,24,39,.14)}
+.map-card .name{font-size:16px;font-weight:700;color:#1f2937;line-height:1.5}
+.map-card .meta{font-size:12px;color:#98A2B3;line-height:1.6;margin-top:4px}
+.map-pin{position:absolute;left:50%;top:110px;transform:translateX(-50%);font-size:28px}
+.map-tools{position:absolute;right:12px;bottom:18px;display:flex;flex-direction:column;gap:10px}
+.map-tool{width:36px;height:36px;border:none;border-radius:12px;background:#fff;box-shadow:0 8px 18px rgba(17,24,39,.12);font-size:15px;color:#667085;cursor:pointer}
+.tip-strip{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff7e6;font-size:12px;color:#8a6700;line-height:1.6;border-bottom:1px solid #f7ead0}
+.address-list{padding:0 16px;background:#fff}
+.address-item{display:flex;align-items:flex-start;gap:10px;padding:14px 0;border-bottom:1px solid #f2f4f7;cursor:pointer}
+.address-item:last-child{border-bottom:none}
+.address-icon{font-size:16px;color:#f59e0b;line-height:1.4}
+.address-item.secondary .address-icon{color:#b8c0cc}
+.address-info{flex:1;min-width:0}
+.address-name{font-size:16px;font-weight:700;color:#1f2937;line-height:1.5}
+.address-meta{font-size:12px;color:#98A2B3;line-height:1.6;margin-top:4px}
+.address-meta .highlight{color:#f59e0b;font-weight:600}
+.address-check{width:22px;height:22px;border:2px solid #d0d5dd;border-radius:50%;margin-top:4px;flex:none;position:relative}
+.address-item.active .address-check{border-color:#facc15;background:#facc15}
+.address-item.active .address-check::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700}
+.empty{padding:24px 0;text-align:center;font-size:13px;color:#98a2b3;line-height:1.8}
+.confirm-bar{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:375px;padding:12px 16px 18px;background:#fff;box-shadow:0 -8px 24px rgba(15,23,42,.08)}
+.confirm-btn{display:block;width:100%;height:50px;background:linear-gradient(135deg,#FDE047,#FACC15);color:#3f3200;border:none;border-radius:25px;font-size:18px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="topbar">
+  <div class="toolbar">
+    <button class="city-btn" id="cityBtn" type="button"><span id="cityName">深圳</span><span>▾</span></button>
+    <label class="search-box">
+      <span class="icon">⌕</span>
+      <input class="search-input" id="searchInput" placeholder="搜索小区/写字楼等">
+    </label>
+  </div>
+</div>
+
+<div class="map-panel">
+  <div class="map-road road-a"></div>
+  <div class="map-road road-b"></div>
+  <div class="map-road road-c"></div>
+  <div class="map-road road-d"></div>
+  <div class="map-pin">📍</div>
+  <div class="map-card">
+    <div class="name" id="mapSelectedName"></div>
+    <div class="meta" id="mapSelectedMeta"></div>
+  </div>
+  <div class="map-tools">
+    <button class="map-tool" type="button">⇱</button>
+    <button class="map-tool" id="currentCard" type="button">◎</button>
+  </div>
+</div>
+
+<div class="tip-strip">
+  <span>◔</span>
+  <span id="pageDesc">为帮助骑手准确配送，请选择更精准的地址，如 1 号楼</span>
+</div>
+
+<div class="address-list" id="resultList"></div>
+
+<div class="confirm-bar">
+  <button class="confirm-btn" id="confirmBtn" type="button">确认地址</button>
+</div>
+
+<script src="prototype-data.js"></script>
+<script src="publish-flow-config.js"></script>
+<script>
+(function(){
+  const params=new URLSearchParams(location.search);
+  const draft=PublishFlowConfig.readDraft();
+  const projectKey=PublishFlowConfig.resolveProjectKey(params.get('project')||draft.projectKey||'');
+  const project=PublishFlowConfig.getProject(projectKey);
+  if(!project){
+    location.replace('publish-items.html');
+    return;
+  }
+
+  const DATA=window.BANXING_DATA;
+  const STORAGE_KEYS={current:'banxing.currentLocationId'};
+  let selectedLocationId=(draft.selectedLocationId&&DATA.getLocationById(draft.selectedLocationId))?draft.selectedLocationId:'';
+  const popularityHintById={};
+  DATA.locations.forEach(function(item,index){
+    if(index===1)popularityHintById[item.id]='';
+    if(index===2)popularityHintById[item.id]='';
+  });
+
+  function getCurrentLocation(){
+    let id=localStorage.getItem(STORAGE_KEYS.current);
+    if(!DATA.getLocationById(id)){
+      id=DATA.defaultCurrentLocationId;
+      localStorage.setItem(STORAGE_KEYS.current,id);
+    }
+    return DATA.getLocationById(id);
+  }
+
+  function getSelectedLocation(){
+    return DATA.getLocationById(selectedLocationId)||getCurrentLocation();
+  }
+
+  function buildResults(keyword){
+    const current=getCurrentLocation();
+    const query=String(keyword||'').trim();
+    const base=query?DATA.searchLocations(query):[current].concat(DATA.locations.slice(0,8));
+    const deduped=[];
+    const used={};
+    base.forEach(function(item){
+      if(!item||used[item.id])return;
+      used[item.id]=true;
+      deduped.push(item);
+    });
+    return deduped.slice(0,8);
+  }
+
+  function renderSelected(){
+    const current=getCurrentLocation();
+    const selected=getSelectedLocation();
+    document.getElementById('mapSelectedName').textContent=selected.name;
+    document.getElementById('mapSelectedMeta').textContent=selected.id===current.id?'当前位置':'已选地址';
+  }
+
+  function renderCurrent(){
+    const current=getCurrentLocation();
+    document.getElementById('cityName').textContent=current.city||'深圳';
+  }
+
+  function renderResults(keyword){
+    const selected=getSelectedLocation();
+    const results=buildResults(keyword);
+    const mount=document.getElementById('resultList');
+    if(!results.length){
+      mount.innerHTML='<div class="empty">没有匹配结果，试试输入更短的关键词，或者只输入医院、小区、写字楼等名称。</div>';
+      return;
+    }
+    mount.innerHTML=results.map(function(item){
+      const isCurrent=item.id===getCurrentLocation().id;
+      const metaParts=[];
+      metaParts.push('距离'+DATA.distanceKm(getCurrentLocation(),item).toFixed(1).replace(/\.0$/,'')+'km');
+      metaParts.push(item.name);
+      return (
+        '<div class="address-item '+(item.id===selected.id?'active':'')+' '+(isCurrent?'':'secondary')+'" data-location-id="'+item.id+'">'+
+          '<div class="address-icon">'+(isCurrent?'📍':'⌖')+'</div>'+
+          '<div class="address-info"><div class="address-name">'+item.name+'</div><div class="address-meta">'+(popularityHintById[item.id]?'<span class="highlight">'+popularityHintById[item.id]+'</span> ｜ ':'')+metaParts.join(' ｜ ')+'</div></div>'+
+          '<div class="address-check"></div>'+
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function saveAndBack(){
+    const selected=getSelectedLocation();
+    const formData=Object.assign({},draft.formData||{});
+    formData.roughLocation=selected.name;
+    formData.selectedLocationId=selected.id;
+    draft.projectKey=project.key;
+    draft.projectName=project.name;
+    draft.categoryKey=project.categoryKey;
+    draft.roughLocation=selected.name;
+    draft.selectedLocationId=selected.id;
+    draft.formData=formData;
+    PublishFlowConfig.writeDraft(draft);
+    location.replace('publish-items.html?category='+encodeURIComponent(project.categoryKey)+'&project='+encodeURIComponent(project.key));
+  }
+
+  document.getElementById('pageDesc').textContent='为帮助服务者准确赴约，请选择更精准的地址，如 1 号楼';
+
+  if(!selectedLocationId){
+    selectedLocationId=getCurrentLocation().id;
+  }
+
+  document.getElementById('currentCard').addEventListener('click',function(){
+    selectedLocationId=getCurrentLocation().id;
+    renderSelected();
+    renderResults(document.getElementById('searchInput').value);
+  });
+  document.getElementById('searchInput').addEventListener('input',function(){
+    renderResults(this.value);
+  });
+  document.getElementById('resultList').addEventListener('click',function(event){
+    const item=event.target.closest('[data-location-id]');
+    if(!item)return;
+    selectedLocationId=item.dataset.locationId||'';
+    renderSelected();
+    renderResults(document.getElementById('searchInput').value);
+  });
+  document.getElementById('confirmBtn').addEventListener('click',saveAndBack);
+
+  renderCurrent();
+  renderSelected();
+  renderResults('');
+})();
+</script>
+</body>
+</html>

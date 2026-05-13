@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>绑定手机号 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.form-card{background:#fff;margin:16px;border-radius:12px;padding:24px}
+.step-title{font-size:18px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.step-desc{font-size:13px;color:#999;margin-bottom:24px}
+.field{margin-bottom:20px}
+.field label{display:block;font-size:14px;color:#666;margin-bottom:8px}
+.field input{width:100%;height:44px;border:1px solid #e8e8e8;border-radius:8px;padding:0 12px;font-size:15px;color:#333;outline:none}
+.field input:focus{border-color:#4A6CF7}
+.code-row{display:flex;gap:12px}
+.code-row input{flex:1}
+.code-btn{min-width:110px;height:44px;background:#f0f3ff;color:#4A6CF7;border:none;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap}
+.code-btn:disabled{color:#ccc;background:#f5f5f5}
+.wx-bind{display:flex;align-items:center;gap:8px;padding:14px 0;border-top:1px solid #f0f0f0;margin-top:8px}
+.wx-icon{width:20px;height:20px;background:#07C160;border-radius:4px}
+.wx-bind span{font-size:13px;color:#4A6CF7}
+.wechat-card{display:none;text-align:center;padding:12px 0 4px}
+.wechat-badge{width:56px;height:56px;border-radius:18px;background:#07C160;color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.wechat-title{font-size:20px;font-weight:600;color:#1a1a2e;margin-bottom:8px}
+.wechat-desc{font-size:14px;line-height:1.6;color:#666}
+.wechat-tip{margin-top:16px;padding:12px 14px;border-radius:10px;background:#f6f9ff;font-size:13px;line-height:1.6;color:#4A6CF7}
+.wechat-login .nav .title{padding-right:32px}
+.wechat-login .form-card{padding-top:28px;padding-bottom:28px}
+.submit-btn{display:block;width:calc(100% - 32px);margin:24px auto 0;height:48px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.submit-btn:active{opacity:.85}
+.submit-btn:disabled{background:#ccc}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="login.html" class="back">←</a>
+  <span class="title">绑定手机号</span>
+  <span class="placeholder"></span>
+</div>
+<div class="form-card">
+  <div class="step-title">绑定手机号</div>
+  <div class="step-desc">绑定后可使用发布任务、接单等核心功能</div>
+  <div class="wx-bind">
+    <div class="wx-icon"></div>
+    <span>微信快捷获取手机号（推荐）</span>
+  </div>
+  <div id="bindForm">
+    <div class="field" style="margin-top:20px">
+      <label>手机号</label>
+      <input type="tel" id="phone" placeholder="请输入11位手机号" maxlength="11">
+    </div>
+    <div class="field">
+      <label>验证码</label>
+      <div class="code-row">
+        <input type="text" id="code" placeholder="6位短信验证码" maxlength="6">
+        <button class="code-btn" id="sendCode" onclick="sendCode()">获取验证码</button>
+      </div>
+    </div>
+  </div>
+  <div class="wechat-card" id="wechatCard">
+    <div class="wechat-badge">微</div>
+    <div class="wechat-title">微信手机号授权成功</div>
+    <div class="wechat-desc">你已通过微信一键登录完成手机号授权，无需再次绑定手机号。</div>
+    <div class="wechat-tip">登录成功后即可进入平台，认证将在发布任务或接单时按需引导完成。</div>
+  </div>
+</div>
+<button class="submit-btn" id="submitBtn" onclick="goNext()">确认绑定</button>
+<script>
+let countdown=0,ti;
+const isWechatLogin=new URLSearchParams(location.search).get('wechatLogin')==='1';
+
+if(isWechatLogin){
+  document.body.classList.add('wechat-login');
+  document.querySelector('.step-title').textContent='微信一键登录';
+  document.querySelector('.step-desc').textContent='已通过微信授权获取手机号';
+  document.querySelector('.wx-bind span').textContent='当前为微信一键登录';
+  document.getElementById('bindForm').style.display='none';
+  document.getElementById('wechatCard').style.display='block';
+  document.getElementById('submitBtn').textContent='下一步';
+}
+
+function sendCode(){
+  if(countdown>0)return;
+  const phone=document.getElementById('phone').value;
+  if(!/^1\d{10}$/.test(phone)){document.getElementById('phone').style.borderColor='#FF4D4F';return}
+  countdown=60;const btn=document.getElementById('sendCode');btn.disabled=true;btn.textContent=countdown+'s后重发';
+  ti=setInterval(()=>{countdown--;if(countdown<=0){clearInterval(ti);btn.disabled=false;btn.textContent='获取验证码'}else{btn.textContent=countdown+'s后重发'}},1000)
+}
+
+function goNext(){
+  const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+  authState.loggedIn=true;
+  authState.phoneBound=true;
+  authState.loginMethod=isWechatLogin?'wechat':'phone';
+  authState.realnameVerified=!!authState.realnameVerified;
+  authState.eduVerified=!!authState.eduVerified;
+  authState.emergencyContactBound=!!authState.emergencyContactBound;
+  authState.accountStatus=authState.accountStatus||'active';
+  localStorage.setItem('authState',JSON.stringify(authState));
+  if(authState.accountStatus==='banned'){
+    location.href='account-banned.html';
+    return;
+  }
+  location.href='fuwuzhe_home.html';
+}
+</script>
+</body>
+</html>

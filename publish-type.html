@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>发布任务 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;color:#1a1a2e}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.progress{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 16px;background:#fff;border-bottom:1px solid #f1f3f5}
+.progress .step{position:relative;padding-top:14px;text-align:center;font-size:11px;color:#98a2b3}
+.progress .step::before{content:'';position:absolute;top:0;left:12px;right:12px;height:4px;border-radius:999px;background:#e5e7eb}
+.progress .step.active::before{background:#FF6B35}
+.progress .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#e5e7eb;color:#667085;font-size:11px;font-weight:700;margin-bottom:6px}
+.progress .active .num{background:#FF6B35;color:#fff}
+.card{margin:18px 16px;background:#fff;border-radius:20px;padding:24px 18px;text-align:center;border:1px solid #edf0f5}
+.card h1{font-size:18px;color:#1a1a2e}
+.card p{font-size:12px;color:#8c8c8c;line-height:1.8;margin-top:10px}
+.enter-btn{display:flex;align-items:center;justify-content:center;margin-top:18px;height:46px;border-radius:23px;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff;text-decoration:none;font-size:15px;font-weight:700;box-shadow:0 14px 30px rgba(255,107,53,.22)}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="index.html" class="back">←</a><span class="title">发布任务</span><span class="placeholder"></span></div>
+
+<div class="progress">
+  <div class="step active"><div class="num">1</div>填写信息</div>
+  <div class="step"><div class="num">2</div>确认订单</div>
+</div>
+
+<div class="card">
+  <h1>正在进入填写信息</h1>
+  <p>发布任务已简化为两步：填写信息、确认订单。当前页面仅用于发布前置校验和兼容旧入口。</p>
+  <a class="enter-btn" id="fallbackLink" href="publish-items.html">进入填写信息</a>
+</div>
+
+<script src="publish-flow-config.js"></script>
+<script>
+(function(){
+  const authState=JSON.parse(localStorage.getItem('authState')||'{}');
+  if(['banned','frozen'].includes(authState.accountStatus)){
+    const label=authState.accountStatus==='frozen'?'冻结':'封禁';
+    if(confirm('账号已'+label+'，暂不可发布任务。是否前往提交解封申诉？')){
+      location.replace('account-ban-appeal.html?from=publish&back='+encodeURIComponent(location.pathname.split('/').pop()+location.search));
+    }else{
+      location.replace('fuwuzhe_home.html');
+    }
+    return;
+  }
+  if(!authState.realnameVerified){
+    alert('发布任务前需要先完成实名认证。你也可以在“我的→认证中心”主动完成。');
+    location.replace('realname-auth.html?source=publish');
+    return;
+  }
+  if(!authState.emergencyContactBound){
+    alert('发布任务前需要先绑定紧急联系人。你也可以在“我的→认证中心”主动完成。');
+    location.replace('emergency-contact.html');
+    return;
+  }
+
+  const params=new URLSearchParams(location.search);
+  const draft=PublishFlowConfig.readDraft();
+  const targetParams=new URLSearchParams();
+  const categoryKey=params.get('category')||draft.categoryKey||'';
+  const projectKey=PublishFlowConfig.resolveProjectKey(params.get('project')||draft.projectKey||params.get('type')||'');
+  if(categoryKey)targetParams.set('category',categoryKey);
+  if(projectKey)targetParams.set('project',projectKey);
+  const targetUrl='publish-items.html'+(targetParams.toString()?('?'+targetParams.toString()):'');
+  document.getElementById('fallbackLink').href=targetUrl;
+  location.replace(targetUrl);
+})();
+</script>
+</body>
+</html>

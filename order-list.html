@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>订单 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:700;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.sub-tabs{display:flex;background:#fff;padding:0 16px}
+.sub-tabs .t{flex:1;text-align:center;padding:14px 0;font-size:14px;color:#666;cursor:pointer;border-bottom:2px solid transparent}
+.sub-tabs .t.active{color:#4A6CF7;border-color:#4A6CF7;font-weight:700}
+.status-filter{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.status-filter::-webkit-scrollbar{display:none}
+.status-filter span{padding:6px 14px;background:#fff;border-radius:999px;font-size:12px;color:#666;white-space:nowrap;cursor:pointer;border:1px solid #eee}
+.status-filter span.active{background:#4A6CF7;color:#fff;border-color:#4A6CF7}
+.order-list{padding-bottom:8px}
+.order-card{background:#fff;margin:0 16px 10px;border-radius:14px;padding:14px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease}
+.order-card:active{transform:scale(.995)}
+.order-card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.order-card .head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.order-card .order-id{font-size:11px;color:#98a2b3;letter-spacing:.2px}
+.order-card .role{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:8px}
+.role.applied{background:#EAF4FF;color:#1677FF}
+.role.accepted{background:#EEF2FF;color:#4A6CF7}
+.role.published{background:#FFF1EC;color:#FF6B35}
+.title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.order-card .title{font-size:15px;font-weight:700;color:#1a1a2e;line-height:1.5}
+.urgent-badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;background:#FFF1F0;color:#FF4D4F;font-size:10px;font-weight:700}
+.urgent-note{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;background:#FFF8F1;color:#B76E00;font-size:11px}
+.order-card .price{font-size:19px;font-weight:800;color:#FF6B35;white-space:nowrap}
+.order-card .price small{font-size:12px;font-weight:400}
+.order-card .status{font-size:12px;padding:4px 10px;border-radius:999px;font-weight:600}
+.status-waiting{background:#FFF7E6;color:#FA8C16}
+.status-applying{background:#FFF1F0;color:#FF7A45}
+.status-ready{background:#EEF2FF;color:#4A6CF7}
+.status-serving{background:#E6F4FF;color:#1677FF}
+.status-confirm{background:#FFF7E6;color:#D48806}
+.status-review{background:#F5F3FF;color:#7C3AED}
+.status-done{background:#F0FFF4;color:#52C41A}
+.status-dispute{background:#FFF1F0;color:#FF4D4F}
+.status-cancel{background:#F3F4F6;color:#9CA3AF}
+.status-refund{background:#FFF7E6;color:#D48806}
+.status-failed{background:#F5F5F5;color:#8C8C8C}
+.meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#8c8c8c;margin-top:8px}
+.meta span{display:flex;align-items:center;gap:4px}
+.footer{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.actions button{padding:7px 14px;border-radius:18px;font-size:12px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666}
+.actions button.primary{background:#4A6CF7;color:#fff;border-color:#4A6CF7}
+.empty{padding:54px 20px;text-align:center;color:#999;font-size:13px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">订单</span><span class="placeholder"></span></div>
+<div class="sub-tabs" id="subTabs">
+  <span class="t" data-role="applied">申请记录</span>
+  <span class="t" data-role="accepted">服务订单</span>
+  <span class="t" data-role="published">发布订单</span>
+</div>
+<div class="status-filter" id="statusFilter"></div>
+<div class="order-list" id="orderList"></div>
+<div class="empty" id="emptyState" style="display:none">当前筛选下暂无订单，试试切换状态或订单身份。</div>
+
+<script src="prototype-data.js"></script>
+<script src="location-utils.js"></script>
+<script src="time-utils.js"></script>
+<script src="urgent-top-data.js"></script>
+<script src="completion-confirmation.js"></script>
+<script>
+const PUBLISHED_ORDER_KEY='banxing.latestPublishedOrder';
+const statusMeta={
+  all:{label:'全部',className:''},
+  waiting:{label:'待接单',className:'status-waiting'},
+  applied_pending:{label:'申请中',className:'status-applying'},
+  applying:{label:'已申请',className:'status-applying'},
+  ready:{label:'待服务',className:'status-ready'},
+  serving:{label:'服务中',className:'status-serving'},
+  confirm:{label:'待确认完成',className:'status-confirm'},
+  review:{label:'已完成',className:'status-review'},
+  done:{label:'已评价',className:'status-done'},
+  dispute:{label:'纠纷中',className:'status-dispute'},
+  cancel:{label:'已取消',className:'status-cancel'},
+  refund:{label:'已退款',className:'status-refund'},
+  failed:{label:'未接单成功',className:'status-failed'}
+};
+
+const typeMeta={
+  cat:'🐱 上门喂猫',
+  outdoor:'🏃 户外任务',
+  health:'🏥 陪诊',
+  wedding:'💒 婚庆协助'
+};
+
+function getTypeProjectName(typeKey){
+  return String(typeMeta[typeKey]||'任务').replace(/^[^\s]+\s*/,'').trim()||'任务';
+}
+
+const defaultTaskDurationByType={
+  cat:'1.5 小时',
+  outdoor:'1 小时',
+  health:'3 小时',
+  wedding:'半天'
+};
+
+function formatTaskDuration(timeText,fallbackText,typeKey){
+  const primary=String(timeText||'').trim();
+  const fallback=String(fallbackText||'').trim();
+  const source=primary||fallback;
+  if(!source)return defaultTaskDurationByType[typeKey]||'';
+  const rangeMatch=source.match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  if(rangeMatch){
+    const startMinutes=Number(rangeMatch[1])*60+Number(rangeMatch[2]);
+    let endMinutes=Number(rangeMatch[3])*60+Number(rangeMatch[4]);
+    if(endMinutes<=startMinutes)endMinutes+=24*60;
+    const hours=(endMinutes-startMinutes)/60;
+    return String(Number.isInteger(hours)?hours:hours.toFixed(1).replace(/\.0$/,''))+' 小时';
+  }
+  const hourMatch=source.match(/(\d+(?:\.\d+)?)\s*小时/);
+  if(hourMatch)return hourMatch[1]+' 小时';
+  const minuteMatch=source.match(/(\d+)\s*分钟/);
+  if(minuteMatch)return minuteMatch[1]+' 分钟';
+  const dayMatch=source.match(/(\d+(?:\.\d+)?)\s*天/);
+  if(dayMatch)return dayMatch[1]+' 天';
+  if(/半天|半日/.test(source))return '半天';
+  if(/全天/.test(source))return '全天';
+  return defaultTaskDurationByType[typeKey]||'';
+}
+
+function extractTaskDistrict(locationText){
+  const source=String(locationText||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return '';
+  const resolved=window.BanxingLocationUtils&&typeof BanxingLocationUtils.resolveLocation==='function'
+    ?BanxingLocationUtils.resolveLocation(source)
+    :null;
+  const base=resolved&&resolved.region?resolved.region:source;
+  const matches=String(base).match(/[^省市区县旗\s·,，/]+(?:区|县|旗|市)/g);
+  if(matches&&matches.length){
+    const filtered=matches.filter(function(item){
+      return !/^(北京市|上海市|天津市|重庆市)$/.test(item);
+    });
+    return filtered[filtered.length-1]||matches[matches.length-1];
+  }
+  const parts=source.split(/[·,，/]/).map(function(item){
+    return item.trim();
+  }).filter(Boolean);
+  return parts[parts.length-1]||source;
+}
+
+function getOrderDisplayTitle(order){
+  return [
+    getTypeProjectName(order&&order.typeKey),
+    formatTaskDuration(order&&order.time,order&&order.title,order&&order.typeKey),
+    extractTaskDistrict(order&&order.location)
+  ].filter(Boolean).join('｜')||String(order&&order.title||'任务');
+}
+
+function formatOrderTime(timeText){
+  return BanxingTimeUtils.formatTaskTime(timeText)||String(timeText||'');
+}
+
+const providerNames={
+  wang:'王小明',
+  liu:'刘同学',
+  chen:'陈学长'
+};
+
+const orders=[
+  {id:'a1',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'cat',title:'上门喂猫｜1.5 小时｜海淀区',price:'¥120',priceUnit:'/次',status:'serving',time:'2026年4月18日 14:00-15:30',location:'中关村南大街',partner:'发布者：张小花',insurance:'🛡️ 已购保险',desc:'服务中，可继续查看打卡记录并和发布者沟通进度。'},
+  {id:'a2',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'outdoor',title:'户外任务｜1 小时｜朝阳区',price:'¥80',priceUnit:'/次',status:'ready',time:'2026年4月19日 17:00',location:'奥森公园南门',partner:'发布者：李明',insurance:'🛡️ 已购保险',desc:''},
+  {id:'a3',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'health',title:'健康陪诊｜3 小时｜海淀区',price:'¥150',priceUnit:'/次',status:'review',time:'2026年4月22日 09:00',location:'北医三院',partner:'发布者：王阿姨',insurance:'🛡️ 已购保险',desc:'服务已完成，当前可去评价。'},
+  {id:'a4',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'wedding',title:'婚庆协助｜半天｜海淀区',price:'¥420',priceUnit:'/次',status:'done',time:'2026年4月10日 08:00',location:'海淀逸林酒店',partner:'发布者：孙先生',insurance:'🛡️ 未购保险',desc:'双方已评价，订单已归档。'},
+  {id:'a5',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'cat',title:'上门喂猫｜1 小时｜朝阳区',price:'¥95',priceUnit:'/次',status:'dispute',time:'2026年4月18日 20:30',location:'朝阳公寓',partner:'发布者：陈同学',insurance:'🛡️ 未购保险',desc:'纠纷处理中，可查看平台处理进度和双方提交的材料。'},
+  {id:'a6',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'outdoor',title:'户外任务｜4 小时｜海淀区',price:'¥180',priceUnit:'/次',status:'cancel',time:'2026年4月18日 08:00',location:'香山公园',partner:'发布者：周老师',insurance:'🛡️ 已购保险',desc:''},
+  {id:'a9',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'health',title:'健康陪诊｜3 小时｜海淀区',price:'¥188',priceUnit:'/次',status:'dispute',time:'2026年4月18日 15:00',location:'北医三院',partner:'发布者：许女士',insurance:'🛡️ 已购保险',desc:'对方已发起纠纷并上传资料，等待你在 24 小时内补充证据。',counterpartyDispute:true,evidenceDeadline:'剩余 18 小时'},
+  {id:'p1',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'health',title:'健康陪诊｜3 小时｜海淀区',price:'¥150',priceUnit:'/次',status:'waiting',time:'2026年4月22日 09:00',location:'北医三院',partner:'',insurance:'🛡️ 已购保险',desc:'实名完成后才可继续发单和成交。',applicants:0},
+  {id:'p2',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'cat',title:'上门喂猫｜1.5 小时｜海淀区',price:'¥120',priceUnit:'/次',status:'applying',time:'2026年4月19日 14:00-15:30',location:'中关村南大街',partner:'',insurance:'🛡️ 已购保险',desc:'已收到报名，订单支持后续展示优惠券或退款处理信息。',applicants:3,urgentTop:{enabled:true,km:10,fee:5,durationHours:6,durationLabel:'6小时',createdAt:'2026-04-18T09:00:00+08:00',expiresAt:'2026-04-18T15:00:00+08:00',nextKm:30,nextFee:10,nextDurationHours:12,nextDurationLabel:'12小时',nextStartsAt:'2026-04-18T15:00:00+08:00',nextExpiresAt:'2026-04-19T03:00:00+08:00'}},
+  {id:'p3',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'outdoor',title:'户外任务｜1 小时｜朝阳区',price:'¥80',priceUnit:'/次',status:'ready',time:'2026年4月19日 17:00',location:'奥森公园南门',partner:'',insurance:'🛡️ 已购保险',desc:'服务前可继续确认地点与备注，当前未使用优惠券。',providerId:'liu'},
+  {id:'p4',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'wedding',title:'婚庆协助｜全天｜海淀区',price:'¥500',priceUnit:'/次',status:'refund',time:'2026年4月15日 07:30',location:'海淀逸林酒店',partner:'',insurance:'🛡️ 未购保险',desc:'纠纷后已退款 ¥500，优惠券 ¥20 已原路退回，该单无收益。',providerId:'chen',disputeHistory:true},
+  {id:'p5',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'cat',title:'上门喂猫｜2天｜海淀区',price:'¥90',priceUnit:'/次',status:'done',time:'2026年3月15日 10:00',location:'知春路',partner:'',insurance:'🛡️ 已购保险',desc:'双方已评价，订单已归档。',providerId:'wang'},
+  {id:'p6',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'health',title:'健康陪诊｜半天｜东城区',price:'¥220',priceUnit:'/次',status:'serving',time:'2026年4月18日 09:30',location:'北京协和医院',partner:'',insurance:'🛡️ 已购保险',desc:'当前服务中，如进入纠纷流程后可继续展示退款金额。',providerId:'wang'},
+  {id:'p7',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'outdoor',title:'户外任务｜1 小时｜朝阳区',price:'¥160',priceUnit:'/次',status:'review',time:'2026年4月11日 07:00',location:'奥森公园',partner:'',insurance:'🛡️ 已购保险',desc:'服务已完成，当前可去评价。',providerId:'liu'},
+  {id:'p8',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'cat',title:'上门喂猫｜1 小时｜朝阳区',price:'¥65',priceUnit:'/次',status:'dispute',time:'2026年4月17日 20:00',location:'望京花园',partner:'',insurance:'🛡️ 未购保险',desc:'纠纷处理中，当前含优惠券 ¥2；如判定退款会展示退款金额并回冲收益。',providerId:'wang'},
+  {id:'p9',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'wedding',title:'婚庆协助｜半天｜朝阳区',price:'¥360',priceUnit:'/次',status:'cancel',time:'2026年4月20日 08:30',location:'朝阳婚礼堂',partner:'',insurance:'🛡️ 未购保险',desc:'已取消，若涉及退款或违约责任会在订单详情继续展示。'},
+  {id:'p11',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'outdoor',title:'户外任务｜2 小时｜朝阳区',price:'¥160',priceUnit:'/次',status:'dispute',time:'2026年4月18日 18:00',location:'奥森公园',partner:'',insurance:'🛡️ 已购保险',desc:'服务者已发起纠纷并上传资料，等待你在 24 小时内补充证据。',providerId:'liu',counterpartyDispute:true,evidenceDeadline:'剩余 20 小时'},
+  {id:'a7',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'wedding',title:'婚庆协助｜半天｜朝阳区',price:'¥320',priceUnit:'/次',status:'refund',time:'2026年4月8日 08:00',location:'朝阳婚礼堂',partner:'发布者：乔女士',insurance:'🛡️ 已购保险',desc:'纠纷已处理，本单已退款。',appealable:true},
+  {id:'a8',role:'accepted',roleLabel:'我接的',roleClass:'accepted',typeKey:'cat',title:'上门喂猫｜1 小时｜朝阳区',price:'¥118',priceUnit:'/次',status:'confirm',time:'2026年4月18日 20:00',location:'双井公寓',partner:'发布者：林同学',insurance:'🛡️ 已购保险',desc:'完成凭证已提交，等待发布者确认完成。'},
+  {id:'p10',role:'published',roleLabel:'我发的',roleClass:'published',typeKey:'health',title:'健康陪诊｜3 小时｜海淀区',price:'¥188',priceUnit:'/次',status:'confirm',time:'2026年4月18日 15:00',location:'北医三院',partner:'',insurance:'🛡️ 已购保险',desc:'服务者已提交完成凭证，请尽快确认是否完成。',providerId:'wang'}
+];
+
+function defaultAppliedHistory(){
+  return [
+    {
+      recordId:'seed-applying-cat-1',
+      taskId:'cat-history-1',
+      type:'cat',
+      title:'上门喂猫｜1 小时｜朝阳区',
+      time:'2026年4月19日 19:00',
+      location:'望京花园',
+      price:'¥88',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'林同学',
+      publisherCredit:'信用 91',
+      publisherStats:'已发布8单 · 好评率97%',
+      status:'applying',
+      appliedAtText:'4月2日 10:12',
+      updatedAtText:'4月2日 10:12',
+      resultNote:'已提交申请，等待发布者确认。'
+    },
+    {
+      recordId:'seed-failed-health-1',
+      taskId:'health-history-1',
+      type:'health',
+      title:'健康陪诊｜半天｜东城区',
+      time:'2026年4月13日 09:00',
+      location:'北京协和医院',
+      price:'¥220',
+      priceUnit:'/次',
+      insurance:'🛡️ 已购保险',
+      publisherName:'周阿姨',
+      publisherCredit:'信用 90',
+      publisherStats:'已发布14单 · 好评率95%',
+      status:'failed',
+      appliedAtText:'3月24日 08:15',
+      updatedAtText:'3月24日 08:42',
+      resultNote:'发布者已选择其他服务者，本次未接单成功。'
+    }
+  ];
+}
+
+function ensureSeedAppliedHistory(history){
+  const list=Array.isArray(history)?history.slice():[];
+  const seeds=defaultAppliedHistory();
+  const hasApplying=list.some(item=>item&&item.status==='applying');
+  const hasFailed=list.some(item=>item&&item.status==='failed');
+  if(!hasApplying){
+    list.push(seeds[0]);
+  }
+  if(!hasFailed){
+    list.push(seeds[1]);
+  }
+  return list;
+}
+
+function readAppliedHistory(){
+  let history=[];
+  try{
+    history=JSON.parse(localStorage.getItem('appliedTaskHistory')||'[]');
+  }catch(error){
+    history=[];
+  }
+  history=ensureSeedAppliedHistory(history);
+  try{
+    const legacyTasks=JSON.parse(localStorage.getItem('appliedTasks')||'{}');
+    Object.values(legacyTasks).forEach(item=>{
+      if(!history.some(record=>record.taskId===item.taskId&&record.status===item.status)){
+        history.unshift({
+          recordId:'legacy-'+(item.taskId||Date.now()),
+          taskId:item.taskId||'legacy-task',
+          type:item.type||'cat',
+          title:item.title||'已申请任务',
+          time:item.time||'待确认',
+          location:item.location||'待确认',
+          price:item.price||'¥0',
+          priceUnit:item.priceUnit||'/次',
+          insurance:item.insurance||'🛡️ 已购保险',
+          publisherName:item.publisherName||'发布者',
+          publisherCredit:item.publisherCredit||'信用 90',
+          publisherStats:item.publisherStats||'已发布任务',
+          status:item.status||'applying',
+          appliedAtText:item.appliedAtText||'刚刚',
+          updatedAtText:item.updatedAtText||'刚刚',
+          resultNote:item.resultNote||'已提交申请，等待发布者确认。'
+        });
+      }
+    });
+  }catch(error){
+  }
+  history=ensureSeedAppliedHistory(history);
+  localStorage.setItem('appliedTaskHistory',JSON.stringify(history));
+  return history;
+}
+
+function getAppliedOrders(){
+  return readAppliedHistory()
+    .filter(item=>item.status!=='accepted')
+    .sort((a,b)=>new Date(b.updatedAt||b.appliedAt||0).getTime()-new Date(a.updatedAt||a.appliedAt||0).getTime())
+    .map(item=>({
+      id:item.recordId||item.taskId||'applied-task',
+      recordId:item.recordId||item.taskId||'applied-task',
+      taskId:item.taskId||'applied-task',
+      role:'applied',
+      roleLabel:'',
+      roleClass:'applied',
+      typeKey:item.type||'cat',
+      title:item.title||'已申请任务',
+      price:item.price||'¥0',
+      priceUnit:item.priceUnit||'/次',
+      status:item.status==='failed'?'failed':'applied_pending',
+      rawStatus:item.status||'applying',
+      statusLabel:item.status==='applying'?'申请中':'未接单成功',
+      time:item.time||'待确认',
+      location:item.location||'待确认',
+      partner:'发布者：'+(item.publisherName||'发布者'),
+      insurance:item.insurance||'🛡️ 已购保险',
+      desc:item.status==='failed'
+        ? (item.resultNote||'发布者已选择其他服务者，本次未接单成功')
+        : '已提交接单申请，等待发布者确认',
+      publisherName:item.publisherName,
+      publisherCredit:item.publisherCredit,
+      publisherStats:item.publisherStats,
+      appliedAtText:item.appliedAtText,
+      updatedAtText:item.updatedAtText,
+      resultNote:item.resultNote
+    }));
+}
+
+function readLatestPublishedOrder(){
+  try{
+    const stored=JSON.parse(localStorage.getItem(PUBLISHED_ORDER_KEY)||'null');
+    if(!stored||stored.role!=='published')return null;
+    const insuranceText=stored.insurance==='未购保险'?'🛡️ 未购保险':'🛡️ 已购保险';
+    return {
+      id:stored.id||'p0000',
+      role:'published',
+      roleLabel:'我发的',
+      roleClass:'published',
+      typeKey:stored.typeKey||'cat',
+      title:stored.title||'新发布订单',
+      price:stored.price||'¥0.00',
+      priceUnit:stored.priceUnit||'/次',
+      status:stored.status||'waiting',
+      time:stored.time||'待确认',
+      location:stored.location||'待确认',
+      partner:stored.partner||'',
+      insurance:insuranceText,
+      desc:stored.desc||'当前未使用优惠券，订单已发布成功。',
+      applicants:stored.applicants||0,
+      finance:stored.finance||null,
+      urgentTop:stored.urgentTop||null
+    };
+  }catch(error){
+    return null;
+  }
+}
+
+function attachUrgentTop(order){
+  const baseTop=order&&order.urgentTop&&order.urgentTop.enabled
+    ? BanxingUrgentTop.normalize({orderId:order.id,...order.urgentTop})
+    : null;
+  const storedTop=BanxingUrgentTop.getByOrderId(order.id);
+  const urgentTop=storedTop||baseTop;
+  const finance=order.finance?{...order.finance}:null;
+  if(urgentTop){
+    if(finance){
+      finance.topFee=finance.topFee||BanxingUrgentTop.formatMoney(urgentTop.fee);
+    }
+  }
+  return {...order,urgentTop:urgentTop,finance:finance};
+}
+
+function getPublishedOrders(){
+  const latestOrder=readLatestPublishedOrder();
+  const merged=latestOrder?[latestOrder].concat(orders.filter(function(item){return item.id!==latestOrder.id;})):orders.slice();
+  return merged.map(attachUrgentTop);
+}
+
+function getAllOrders(){
+  return ensureOrderStatusCoverage([...getAppliedOrders(),...getPublishedOrders()].map(attachUrgentTop).map(resolveCompletionStatus));
+}
+
+function ensureOrderStatusCoverage(orderList){
+  const list=orderList.slice();
+  const coverage={
+    accepted:['ready','serving','confirm','review','done','dispute','refund','cancel'],
+    published:['waiting','applying','ready','serving','confirm','review','done','dispute','refund','cancel']
+  };
+  const labelByStatus={
+    waiting:'待接单展示样例',
+    applying:'已申请展示样例',
+    ready:'待服务展示样例',
+    serving:'服务中展示样例',
+    confirm:'待确认完成展示样例',
+    review:'已完成展示样例',
+    done:'已评价展示样例',
+    dispute:'纠纷中展示样例',
+    refund:'已退款展示样例',
+    cancel:'已取消展示样例'
+  };
+  Object.entries(coverage).forEach(([role,statuses])=>{
+    statuses.forEach((status,index)=>{
+      if(list.some(order=>order.role===role&&order.status===status))return;
+      list.push({
+        id:(role==='accepted'?'demo-a-':'demo-p-')+status,
+        role,
+        roleLabel:role==='accepted'?'我接的':'我发的',
+        roleClass:role,
+        typeKey:['cat','outdoor','health','wedding'][index%4],
+        title:labelByStatus[status],
+        price:role==='accepted'?'¥96':'¥128',
+        priceUnit:'/次',
+        status,
+        time:'2026年4月21日 10:00',
+        location:role==='accepted'?'学院路示例地点':'中关村示例地点',
+        partner:role==='accepted'?'发布者：状态样例':'',
+        insurance:'🛡️ 已购保险',
+        desc:'用于补齐订单状态展示，方便检查该状态的按钮和详情页。',
+        applicants:status==='applying'?2:0,
+        providerId:['waiting','applying','cancel'].includes(status)?'':'wang',
+        disputeHistory:['dispute','refund'].includes(status),
+        appealable:['refund','cancel'].includes(status)
+      });
+    });
+  });
+  return list;
+}
+
+function buildQuery(params){
+  const query=new URLSearchParams();
+  Object.entries(params).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function getMaskedLocationText(text,options){
+  const source=String(text||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{
+    exactVisible:false,
+    maskStyle:options&&options.maskStyle||'distance',
+    includeDistance:!(options&&options.includeDistance===false)
+  }).text||source;
+}
+
+function getAcceptedOrderLocationText(order){
+  const source=String(order&&order.location||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  const hiddenDistanceStatuses=['review','done','refund','cancel'];
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{
+    exactVisible:['ready','serving','confirm','dispute'].includes(order.status),
+    maskStyle:'asterisk',
+    includeDistance:!hiddenDistanceStatuses.includes(order.status)
+  }).text||source;
+}
+
+function getAppliedOrderLocationText(location){
+  const source=String(location||'').trim();
+  if(!source||source==='待确认'||source==='待补充')return source||'待确认';
+  return BanxingLocationUtils.getOrderLocationDisplay(source,{
+    exactVisible:false,
+    maskStyle:'asterisk',
+    includeDistance:false
+  }).text||source;
+}
+
+function resolveCompletionStatus(order){
+  if(!order||!['accepted','published'].includes(order.role))return order;
+  const resolvedStatus=BanxingCompletionConfirm.resolveStatus(order.status,{
+    type:order.typeKey,
+    time:formatOrderTime(order.time),
+    amount:order.price
+  });
+  if(resolvedStatus===order.status)return order;
+  const descByRole={
+    accepted:'完成凭证已提交，等待发布者确认完成。',
+    published:'服务者已提交完成凭证，请尽快确认是否完成。'
+  };
+  const reviewDescByRole={
+    accepted:'发布者已确认完成，当前可去评价。',
+    published:'你已确认完成服务，当前可去评价。'
+  };
+  return {
+    ...order,
+    status:resolvedStatus,
+    desc:resolvedStatus==='confirm'
+      ? descByRole[order.role]
+      : reviewDescByRole[order.role]
+  };
+}
+
+function hasCreditAppeal(order){
+  return !!(order&&order.appealable);
+}
+
+function createBaseParams(order,options){
+  const includeLocation=!!(options&&options.includeLocation);
+  const params={
+    owner:order.role,
+    status:order.status,
+    type:order.typeKey,
+    id:order.id,
+    taskId:order.taskId,
+    provider:order.providerId,
+    applicants:order.applicants,
+    disputeHistory:order.disputeHistory?'1':'',
+    returnRole:state.role,
+    returnStatus:state.status,
+    title:getOrderDisplayTitle(order),
+    time:order.time,
+    price:order.price,
+    coupon:order.finance&&order.finance.coupon,
+    paid:order.finance&&order.finance.paid,
+    refund:order.finance&&order.finance.refund,
+    insuranceFee:order.finance&&order.finance.insuranceFee,
+    urgentEnabled:order.urgentTop&&order.urgentTop.enabled?'1':'',
+    urgentKm:order.urgentTop&&order.urgentTop.km,
+    urgentDuration:order.urgentTop&&order.urgentTop.durationHours,
+    urgentFee:order.finance&&order.finance.topFee,
+    urgentCreatedAt:order.urgentTop&&order.urgentTop.createdAt,
+    urgentExpiresAt:order.urgentTop&&order.urgentTop.expiresAt,
+    urgentNextKm:order.urgentTop&&order.urgentTop.nextKm,
+    urgentNextFee:order.urgentTop&&order.urgentTop.nextFee,
+    urgentNextDuration:order.urgentTop&&order.urgentTop.nextDurationHours,
+    urgentNextStartsAt:order.urgentTop&&order.urgentTop.nextStartsAt,
+    urgentNextExpiresAt:order.urgentTop&&order.urgentTop.nextExpiresAt,
+    urgentPrevKm:order.urgentTop&&order.urgentTop.previousKm,
+    urgentPrevDuration:order.urgentTop&&order.urgentTop.previousDurationHours,
+    urgentChangedRange:order.urgentTop&&order.urgentTop.changedRange?'1':'',
+    paymentMethod:order.finance&&order.finance.paymentMethod,
+    counterparty:order.counterpartyDispute?'1':'',
+    disputeSource:order.counterpartyDispute?'counterparty':'',
+    evidenceDeadline:order.evidenceDeadline,
+    evidenceExpired:order.evidenceExpired?'1':'',
+    chatName:order.role==='accepted'
+      ? order.partner.replace('发布者：','')
+      : (providerNames[order.providerId]||'服务者')
+  };
+  if(includeLocation){
+    params.location=order.role==='accepted'
+      ?getAcceptedOrderLocationText(order)
+      :(order.role==='applied'
+        ?getAppliedOrderLocationText(order.location)
+        :getMaskedLocationText(order.location,{maskStyle:'distance'}));
+  }
+  return params;
+}
+
+function detailHref(order){
+  if(order.role==='accepted'){
+    return 'fuwuzhe_order-detail.html?'+buildQuery(createBaseParams(order));
+  }
+  if(order.role==='applied'){
+    return 'applied-order-detail.html?'+buildQuery({
+      recordId:order.recordId||order.id,
+      taskId:order.taskId||order.id,
+      returnRole:state.role,
+      returnStatus:state.status
+    });
+  }
+  return 'order-detail.html?'+buildQuery(createBaseParams(order));
+}
+
+function applicantsHref(order){
+  return 'applicants.html?'+buildQuery(createBaseParams(order));
+}
+
+function applicantDetailHref(order){
+  const providerUserMap={
+    wang:'wang',
+    liu:'li',
+    chen:'chen'
+  };
+  return 'applicant-detail.html?'+buildQuery({
+    mode:'user',
+    userId:providerUserMap[order.providerId]||'wang',
+    backHref:detailHref(order)
+  });
+}
+
+function disputeHref(order,mode){
+  return 'dispute.html?'+buildQuery({...createBaseParams(order,{includeLocation:true}),mode,detailStatus:order.status});
+}
+
+function cancelHref(order,mode){
+  return 'order-cancel.html?'+buildQuery({...createBaseParams(order,{includeLocation:true}),mode,detailStatus:order.status});
+}
+
+function appendSosRecord(order){
+  const SOS_STORAGE_KEY='banxing.sosRecords';
+  let records=[];
+  try{
+    records=JSON.parse(localStorage.getItem(SOS_STORAGE_KEY)||'[]');
+    if(!Array.isArray(records))records=[];
+  }catch(error){
+    records=[];
+  }
+  const now=new Date();
+  const time=BanxingTimeUtils.now();
+  records.unshift({
+    id:'SOS-'+Date.now(),
+    time:time,
+    status:'处理中',
+    role:order.role==='accepted'?'服务者':'发布者',
+    source:'订单列表',
+    orderId:(order.id||'').toUpperCase(),
+    orderTitle:getOrderDisplayTitle(order)||'订单',
+    location:order.location||'待确认',
+    contacts:'已通知平台安全团队、紧急联系人',
+    desc:'用户在订单列表页触发 SOS，系统已同步当前订单和处理优先级。',
+    timeline:'平台已受理，等待回访'
+  });
+  localStorage.setItem(SOS_STORAGE_KEY,JSON.stringify(records));
+}
+
+function buildFlowMeta(order){
+  return {
+    type:order.typeKey,
+    time:order.time,
+    amount:order.price
+  };
+}
+
+function hasCurrentUserRated(order){
+  if(order.role==='accepted'){
+    return BanxingCompletionConfirm.hasRated(buildFlowMeta(order),'accepted');
+  }
+  if(order.role==='published'){
+    return BanxingCompletionConfirm.hasRated(buildFlowMeta(order),'published');
+  }
+  return false;
+}
+
+function orderActions(order){
+  if(order.role==='applied'){
+    return[];
+  }
+  if(order.role==='accepted'){
+    if(order.status==='ready')return[
+      {label:'聊天',key:'chat'},
+      {label:'取消订单',key:'cancelConfirm'},
+      {label:'开始服务',key:'start',primary:true}
+    ];
+    if(order.status==='serving')return[
+      {label:'聊天',key:'chat'},
+      {label:'上传打卡',key:'progress'},
+      {label:'完成服务',key:'complete',primary:true},
+      {label:'SOS',key:'sos'}
+    ];
+    if(order.status==='confirm')return[
+      {label:'聊天',key:'chat'},
+      {label:'上传打卡',key:'progress'},
+      {label:'SOS',key:'sos'}
+    ];
+    if(order.status==='review'){
+      const actions=[];
+      if(!hasCurrentUserRated(order))actions.push({label:'去评价',key:'rating',primary:true});
+      return actions;
+    }
+    if(order.status==='done')return[];
+    if(order.status==='dispute')return[
+      {label:'聊天',key:'chat'}
+    ];
+    if(order.status==='refund')return[];
+    if(order.status==='cancel')return[];
+  }
+  if(order.status==='waiting')return[
+    {label:order.urgentTop&&order.urgentTop.enabled?'续费置顶':'急单置顶',key:'urgentTop'},
+    {label:'取消订单',key:'cancelConfirm'}
+  ];
+  if(order.status==='applying')return[
+    {label:order.urgentTop&&order.urgentTop.enabled?'续费置顶':'急单置顶',key:'urgentTop'},
+    {label:'申请列表（'+(order.applicants||0)+'）',key:'applicants'},
+    {label:'取消订单',key:'cancelConfirm'}
+  ];
+  if(order.status==='ready')return[
+    {label:'聊天',key:'chat'},
+    {label:'取消订单',key:'cancelConfirm'}
+  ];
+  if(order.status==='serving')return[
+    {label:'聊天',key:'chat'},
+    {label:'SOS',key:'sos'}
+  ];
+  if(order.status==='confirm')return[
+    {label:'聊天',key:'chat'},
+    {label:'确认完成',key:'confirmComplete',primary:true},
+    {label:'SOS',key:'sos'}
+  ];
+  if(order.status==='review'){
+    const actions=[];
+    if(!hasCurrentUserRated(order))actions.push({label:'去评价',key:'rating',primary:true});
+    actions.push({label:'再次发布',key:'publish'});
+    return actions;
+  }
+  if(order.status==='done')return[];
+  if(order.status==='dispute')return[
+    {label:'聊天',key:'chat'}
+  ];
+  if(order.status==='refund')return[];
+  if(order.status==='cancel')return[
+    {label:'再次发布',key:'publish'}
+  ];
+  return[];
+}
+
+const query=new URLSearchParams(location.search);
+const validRoles=['applied','accepted','published'];
+const validStatuses=Object.keys(statusMeta);
+const state={
+  role:validRoles.includes(query.get('role'))?query.get('role'):'accepted',
+  status:validStatuses.includes(query.get('status'))?query.get('status'):'all'
+};
+
+const subTabs=[...document.querySelectorAll('#subTabs .t')];
+const statusFilter=document.getElementById('statusFilter');
+const orderList=document.getElementById('orderList');
+const emptyState=document.getElementById('emptyState');
+let latestRenderedOrders=[];
+
+const statusOptionsByRole={
+  applied:['all','applied_pending','failed'],
+  accepted:['all','ready','serving','confirm','review','done','dispute','refund','cancel'],
+  published:['all','waiting','applying','ready','serving','confirm','review','done','dispute','cancel','refund']
+};
+
+function handleOrderAction(index,key){
+  const order=latestRenderedOrders[index];
+  if(!order)return;
+  const baseParams=createBaseParams(order,{includeLocation:true});
+  const flowMeta=buildFlowMeta(order);
+  switch(key){
+    case 'detail':
+      location.href=detailHref(order);
+      return;
+    case 'chat':
+      location.href='chat.html?'+buildQuery(baseParams);
+      return;
+    case 'start':
+      location.href='fuwuzhe_order-detail.html?'+buildQuery({...createBaseParams(order),triggerAction:'start'});
+      return;
+    case 'progress':
+      location.href='service-progress.html?'+buildQuery(createBaseParams(order));
+      return;
+    case 'complete':
+      location.href='order-complete.html?'+buildQuery(createBaseParams(order));
+      return;
+    case 'disputeApply':
+      location.href='dispute.html?'+buildQuery({...baseParams,mode:'apply',detailStatus:order.status});
+      return;
+    case 'disputeView':
+      location.href=disputeHref(order,'view');
+      return;
+    case 'cancelConfirm':
+      location.href=cancelHref(order,'confirm');
+      return;
+    case 'cancelView':
+      location.href=cancelHref(order,'view');
+      return;
+    case 'rating':
+      location.href='rating.html?'+buildQuery(createBaseParams(order));
+      return;
+    case 'urgentTop':
+      location.href='order-urgent-top.html?'+buildQuery(baseParams);
+      return;
+    case 'publish':
+      location.href='publish-items.html';
+      return;
+    case 'applicants':
+      location.href=applicantsHref(order);
+      return;
+    case 'provider':
+      location.href=applicantDetailHref(order);
+      return;
+    case 'wallet':
+      location.href='wallet.html';
+      return;
+    case 'appeal':
+      location.href='credit-appeal.html?'+buildQuery({
+        orderId:(order.id||'').toUpperCase(),
+        orderTitle:getOrderDisplayTitle(order),
+        orderStatus:statusMeta[order.status]&&statusMeta[order.status].label||order.status,
+        orderTime:formatOrderTime(order.time),
+        orderAmount:order.price,
+        orderLocation:getMaskedLocationText(order.location),
+        detailLink:detailHref(order),
+        backLink:detailHref(order),
+        appealTitle:'订单相关信用分申诉'
+      });
+      return;
+    case 'confirmComplete':
+      BanxingCompletionConfirm.markConfirmed(flowMeta);
+      alert('你已确认服务完成，订单已进入已完成。');
+      location.href='order-detail.html?'+buildQuery({...createBaseParams(order),status:'review'});
+      return;
+    case 'sos':
+      appendSosRecord(order);
+      alert('SOS 已触发，平台安全团队和紧急联系人将立即收到报警提醒。');
+      return;
+    default:
+      location.href=detailHref(order);
+  }
+}
+
+function renderStatusFilter(){
+  const options=statusOptionsByRole[state.role]||statusOptionsByRole.accepted;
+  if(!options.includes(state.status)){
+    state.status='all';
+  }
+  statusFilter.innerHTML=options.map(key=>'<span data-status="'+key+'">'+statusMeta[key].label+'</span>').join('');
+}
+
+function syncControls(){
+  subTabs.forEach(tab=>tab.classList.toggle('active',tab.dataset.role===state.role));
+  [...statusFilter.querySelectorAll('span')].forEach(chip=>chip.classList.toggle('active',chip.dataset.status===state.status));
+}
+
+function renderOrders(){
+  const visible=getAllOrders().filter(item=>{
+    const roleMatch=item.role===state.role;
+    const statusMatch=state.status==='all'||item.status===state.status;
+    return roleMatch&&statusMatch;
+  });
+  latestRenderedOrders=visible;
+  orderList.innerHTML=visible.map((item,index)=>`
+    <div class="order-card" data-order-index="${index}" tabindex="0" role="button" aria-label="查看订单详情">
+      ${(()=>{
+        const activeUrgentTop=BanxingUrgentTop.isActive(item.urgentTop);
+        const showUrgentTopDisplay=activeUrgentTop&&!(item.role==='published'&&item.status==='ready');
+        const urgentSummary=showUrgentTopDisplay?BanxingUrgentTop.formatSummary(item.urgentTop):'';
+        const urgentChangeNote=showUrgentTopDisplay?BanxingUrgentTop.getChangeNote(item.urgentTop):'';
+        return `
+      <div class="top">
+        <div style="flex:1;min-width:0">
+          <div class="head">
+            <span class="order-id">订单编号 ${item.id.toUpperCase()}</span>
+          </div>
+          <div class="title-row">
+            <div class="title">${getOrderDisplayTitle(item)}</div>
+            ${showUrgentTopDisplay?'<span class="urgent-badge">急单置顶中</span>':''}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="price">${item.price}<small>${item.priceUnit}</small></div>
+          <div class="status ${statusMeta[item.status].className}" style="margin-top:8px">${item.statusLabel||statusMeta[item.status].label}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <span>🕐 ${formatOrderTime(item.time)}</span>
+        <span>📍 ${item.role==='accepted'
+          ?getAcceptedOrderLocationText(item)
+          :(item.role==='applied'
+            ?getAppliedOrderLocationText(item.location)
+            :getMaskedLocationText(item.location))}</span>
+        ${item.role==='published'&&item.partner&&item.partner.indexOf('当前状态：')!==0?'<span>'+item.partner+'</span>':''}
+        <span>${item.insurance}</span>
+        ${showUrgentTopDisplay?'<span class="urgent-note">📌 '+urgentSummary+'</span>':''}
+        ${urgentChangeNote?'<span class="urgent-note">🔁 '+urgentChangeNote+'</span>':''}
+      </div>
+      <div class="footer">
+        <div class="actions">
+          ${orderActions(item).map(action=>`<button class="${action.primary||action.kind==='primary'?'primary':''}" data-order-index="${index}" data-action-key="${action.key}">${action.label}</button>`).join('')}
+        </div>
+      </div>
+      `;
+      })()}
+    </div>
+  `).join('');
+  emptyState.style.display=visible.length?'none':'block';
+}
+
+subTabs.forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    state.role=tab.dataset.role;
+    renderStatusFilter();
+    syncControls();
+    renderOrders();
+  });
+});
+
+statusFilter.addEventListener('click',event=>{
+  const chip=event.target.closest('span[data-status]');
+  if(!chip)return;
+  state.status=chip.dataset.status;
+  syncControls();
+  renderOrders();
+});
+
+orderList.addEventListener('click',event=>{
+  const actionButton=event.target.closest('button[data-action-key]');
+  if(actionButton){
+    handleOrderAction(Number(actionButton.dataset.orderIndex),actionButton.dataset.actionKey);
+    return;
+  }
+  const card=event.target.closest('.order-card[data-order-index]');
+  if(!card)return;
+  handleOrderAction(Number(card.dataset.orderIndex),'detail');
+});
+
+orderList.addEventListener('keydown',event=>{
+  const card=event.target.closest('.order-card[data-order-index]');
+  if(!card)return;
+  if(event.key!=='Enter'&&event.key!==' ')return;
+  event.preventDefault();
+  handleOrderAction(Number(card.dataset.orderIndex),'detail');
+});
+
+renderStatusFilter();
+syncControls();
+renderOrders();
+setInterval(function(){
+  if(latestRenderedOrders.some(function(order){
+    return BanxingUrgentTop.isActive(order.urgentTop);
+  })){
+    renderOrders();
+  }
+},1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>安全中心 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;overflow:hidden}
+.card-title{font-size:15px;font-weight:600;color:#1a1a2e;padding:16px 16px 8px}
+.item{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #f8f8f8;text-decoration:none;color:#333}
+.item:last-child{border:none}.item .icon{font-size:20px;margin-right:12px;min-width:24px}.item .text{flex:1;font-size:14px}.item .arrow{color:#ccc}
+.login-item{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #f8f8f8}
+.login-item:last-child{border:none}
+.login-item .time{font-size:12px;color:#999;min-width:80px}
+.login-item .info{flex:1;font-size:13px;color:#666}
+.login-item .warn{color:#FF4D4F;font-size:12px;font-weight:600}
+.danger-btn{display:block;width:calc(100% - 32px);margin:24px auto 0;height:44px;background:#fff;color:#FF4D4F;border:1px solid #FF4D4F;border-radius:22px;font-size:14px;cursor:pointer;text-align:center;line-height:44px}
+</style></head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="profile.html" class="back">←</a><span class="title">安全中心</span><span class="placeholder"></span></div>
+<div class="card">
+  <div class="card-title">账号安全</div>
+  <div class="login-item">
+    <div class="time">后台</div>
+    <div class="info">SOS 报警记录仅供后台查询，C 端不再提供入口</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">安全提醒</div>
+  <div class="login-item">
+    <div class="time" id="sosCount">0 条</div>
+    <div class="info">近 90 天 SOS 报警记录由后台统一查询，前台仅保留安全提醒</div>
+  </div>
+  <div class="login-item">
+    <div class="time">建议</div>
+    <div class="info">若遇到突发风险，请优先离场并立即触发 SOS，系统会同步记录当前订单与位置</div>
+  </div>
+</div>
+
+<a href="login.html" class="danger-btn">退出登录</a>
+<script>
+const SOS_STORAGE_KEY='banxing.sosRecords';
+function seedRecords(){
+  try{
+    const existing=JSON.parse(localStorage.getItem(SOS_STORAGE_KEY)||'[]');
+    if(Array.isArray(existing)&&existing.length)return existing;
+  }catch(error){}
+  const seeds=[
+    {
+      id:'SOS-240401-001',
+      time:'4月1日 21:18',
+      status:'已结案',
+      role:'服务者',
+      source:'订单详情',
+      orderId:'A5',
+      orderTitle:'今晚代喂两只猫',
+      location:'朝阳公寓 3 号楼',
+      contacts:'已通知平台安全团队、紧急联系人',
+      desc:'服务过程中发生入户纠纷，已触发 SOS，平台回呼确认后转入纠纷处理。',
+      timeline:'5 分钟内已回呼，后续已结案'
+    },
+    {
+      id:'SOS-240412-002',
+      time:'4月12日 17:42',
+      status:'处理中',
+      role:'发布者',
+      source:'订单详情',
+      orderId:'P8',
+      orderTitle:'晚间上门喂猫一次',
+      location:'望京花园 2 期',
+      contacts:'已通知平台安全团队、紧急联系人',
+      desc:'发布者反馈服务地点异常，已触发 SOS 并同步当前订单与位置。',
+      timeline:'平台已接单，等待回访结果'
+    }
+  ];
+  localStorage.setItem(SOS_STORAGE_KEY,JSON.stringify(seeds));
+  return seeds;
+}
+let records=[];
+try{
+  records=JSON.parse(localStorage.getItem(SOS_STORAGE_KEY)||'[]');
+  if(!Array.isArray(records)||!records.length){
+    records=seedRecords();
+  }
+}catch(error){
+  records=seedRecords();
+}
+document.getElementById('sosCount').textContent=records.length+' 条';
+</script>
+</body></html>

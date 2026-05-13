@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>提现 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:12px;padding:20px}
+.card .label{font-size:14px;color:#666;margin-bottom:8px}
+.card .amount-input{display:flex;align-items:baseline;gap:4px;margin-bottom:8px}
+.card .amount-input .unit{font-size:24px;color:#1a1a2e;font-weight:600}
+.card .amount-input input{border:none;font-size:40px;font-weight:700;color:#1a1a2e;outline:none;width:200px}
+.card .available{text-align:right;font-size:13px;color:#999}
+.card .available b{color:#4A6CF7;cursor:pointer}
+.method{background:#fff;margin:0 16px 16px;border-radius:12px;padding:16px}
+.method .label{font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:12px}
+.method-item{display:flex;align-items:center;padding:12px;border:2px solid #eee;border-radius:10px;margin-bottom:8px;cursor:pointer}
+.method-item.selected{border-color:#4A6CF7;background:#EEF2FF}
+.method-item .m-icon{width:32px;height:32px;border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.method-item .m-info{flex:1}
+.method-item .m-info .name{font-size:14px;color:#1a1a2e}
+.method-item .m-info .desc{font-size:11px;color:#999;margin-top:2px}
+.method-item .check{color:#4A6CF7;font-size:18px;font-weight:700}
+.rules{background:#fff;margin:0 16px;border-radius:12px;padding:16px;font-size:12px;color:#999;line-height:1.8}
+.rules b{display:block;font-size:13px;color:#666;margin-bottom:4px}
+.submit-btn{display:block;width:calc(100% - 32px);margin:24px auto 0;height:48px;background:linear-gradient(135deg,#4A6CF7,#6C5CF7);color:#fff;border:none;border-radius:24px;font-size:16px;font-weight:500;cursor:pointer}
+.submit-btn:active{opacity:.85}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="wallet.html" class="back">←</a>
+  <span class="title">提现</span>
+  <span class="placeholder"></span>
+</div>
+<div class="card">
+  <div class="label">提现金额</div>
+  <div class="amount-input">
+    <span class="unit">¥</span>
+    <input type="number" placeholder="0.00" value="100">
+  </div>
+  <div class="available">可提现余额 <b>¥368.50</b>，<a href="wallet.html" style="color:#4A6CF7">全部提现</a></div>
+</div>
+<div class="method">
+  <div class="label">提现方式</div>
+  <div class="method-item selected" onclick="this.parentElement.querySelectorAll('.method-item').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+    <div class="m-icon" style="background:#07C160;color:#fff">微</div>
+    <div class="m-info"><div class="name">微信零钱</div><div class="desc">预计T+1工作日到账</div></div>
+    <div class="check">✓</div>
+  </div>
+</div>
+<div class="rules">
+  <b>提现规则</b>
+  · 单笔最低提现：¥1.00<br>
+  · 单日最高提现：¥500.00<br>
+  · 每日前3次免费，第4次起收¥0.1手续费<br>
+  · 提现将在T+1工作日到账
+</div>
+<button class="submit-btn" onclick="alert('提现申请已提交\n预计明天到账')">确认提现</button>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>我的资料 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:24px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.section{background:#fff;margin:0 16px 16px;border-radius:16px;padding:16px}
+.section-title{font-size:15px;font-weight:700;color:#1a1a2e}
+.section-desc{font-size:12px;color:#98a2b3;line-height:1.7;margin-top:6px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px;margin-top:12px}
+.info-grid .item{font-size:12px;color:#98a2b3}
+.info-grid .item.full{grid-column:1/-1}
+.info-grid .val{font-size:14px;color:#1a1a2e;font-weight:600;line-height:1.7;margin-top:4px}
+.mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.mini-card{background:#f8faff;border-radius:14px;padding:14px}
+.mini-card strong{display:block;font-size:18px;color:#0f766e}
+.mini-card span{display:block;font-size:11px;color:#98a2b3;line-height:1.6;margin-top:4px}
+.empty-card{background:#fff;margin:16px;border-radius:16px;padding:24px 18px;text-align:center}
+.empty-card h3{font-size:18px;color:#1a1a2e}
+.empty-card p{font-size:13px;color:#98a2b3;line-height:1.8;margin-top:8px}
+.empty-card a{display:inline-flex;margin-top:16px;height:42px;padding:0 18px;border-radius:21px;background:#0f766e;color:#fff;text-decoration:none;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav"><a href="#" class="back" id="backLink">←</a><span class="title">我的资料</span><span class="placeholder"></span></div>
+
+<div id="contentMount"></div>
+
+<script src="partner-data.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const mock=params.get('mock')||'';
+const partnerState=mock?BanxingPartner.syncMockState(mock):BanxingPartner.get();
+
+function escapeHtml(text){
+  return String(text||'').replace(/[&<>"']/g,function(char){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
+}
+
+function buildPartnerHref(page){
+  return mock?page+'?mock='+encodeURIComponent(mock):page;
+}
+
+document.getElementById('backLink').href=buildPartnerHref('partner-dashboard.html');
+
+function renderBlocked(){
+  const title=partnerState.status==='pending'?'资料正在审核中':'还没有可查看的资料';
+  const desc=partnerState.status==='pending'
+    ?'你提交的主体资料和结算信息仍在审核中，审核通过后会完整展示在这里。'
+    :'请先完成合伙人申请，审核通过后即可查看资料与结算信息。';
+  const actionText=partnerState.status==='pending'?'返回查看进度':'去申请合伙人';
+  const actionHref=partnerState.status==='pending'?'partner-dashboard.html':'partner-apply.html';
+  return `
+    <div class="empty-card">
+      <h3>${escapeHtml(title)}</h3>
+      <p>${escapeHtml(desc)}</p>
+      <a href="${buildPartnerHref(actionHref)}">${escapeHtml(actionText)}</a>
+    </div>
+  `;
+}
+
+function renderApproved(){
+  return `
+    <div class="section">
+      <div class="section-title">主体资料</div>
+      <div class="section-desc"></div>
+      <div class="info-grid">
+        <div class="item"><div>合伙人类型</div><div class="val">${escapeHtml(partnerState.application.type)}</div></div>
+        <div class="item"><div>主体名称</div><div class="val">${escapeHtml(partnerState.application.name)}</div></div>
+        <div class="item full"><div>推广渠道</div><div class="val">${escapeHtml(partnerState.application.channel)}</div></div>
+        <div class="item"><div>预计月拉新</div><div class="val">${escapeHtml(partnerState.application.monthlyLeads||'未填写')}</div></div>
+        <div class="item"><div>资质材料</div><div class="val">${escapeHtml(partnerState.application.materials||'未补充')}</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">结算信息</div>
+      <div class="mini-grid">
+        <div class="mini-card"><strong>${escapeHtml(partnerState.commission.current)}</strong><span>当前分佣比例</span></div>
+        <div class="mini-card"><strong>${escapeHtml(partnerState.settlement.cycle)}</strong><span>结算周期</span></div>
+        <div class="mini-card"><strong>${escapeHtml(partnerState.settlement.account)}</strong><span>到账账户</span></div>
+        <div class="mini-card"><strong>${escapeHtml(partnerState.settlement.contact)}</strong><span>结算联系人</span></div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('contentMount').innerHTML=partnerState.status==='approved'?renderApproved():renderBlocked();
+</script>
+</body>
+</html>

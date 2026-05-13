@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>接单申请 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee;position:sticky;top:0;z-index:10}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .count{font-size:12px;color:#FF6B35;background:#FFF7E6;padding:3px 10px;border-radius:10px;font-weight:600}
+.task-brief{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #eee}
+.task-brief .icon{font-size:28px}
+.task-brief .info{flex:1}
+.task-brief .name{font-size:14px;font-weight:600;color:#1a1a2e}
+.task-brief .meta{font-size:12px;color:#999;margin-top:2px}
+.selection-notice{background:#F6FFED;margin:16px;border:1px solid #D9F7BE;border-radius:12px;padding:12px 14px;color:#389E0D;font-size:13px;line-height:1.6;display:none}
+.selection-notice strong{font-weight:700}
+.applicant-list{padding-bottom:16px}
+.applicant{background:#fff;margin:16px;border-radius:12px;padding:16px;position:relative}
+.applicant .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.applicant .avatar{width:48px;height:48px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:18px;color:#4A6CF7}
+.applicant .user-info{flex:1}
+.applicant .name{font-size:15px;font-weight:600;color:#1a1a2e;display:flex;align-items:center;gap:6px}
+.applicant .name .tag{font-size:10px;padding:1px 6px;border-radius:4px;background:#F0FFF4;color:#52C41A}
+.applicant .stats{font-size:12px;color:#999;margin-top:2px}
+.applicant .credit{background:#F0FFF4;color:#52C41A;padding:4px 12px;border-radius:10px;font-size:14px;font-weight:600}
+.applicant .reviews{margin:12px 0;padding:10px 0;border-top:1px solid #f8f8f8;border-bottom:1px solid #f8f8f8}
+.applicant .reviews .title{font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:6px}
+.applicant .reviews .item{font-size:12px;color:#666;line-height:1.5;margin-bottom:4px}
+.applicant .reviews .stars{color:#FAAD14}
+.applicant .actions{display:flex;gap:10px}
+.applicant .actions button{flex:1;height:40px;border-radius:20px;font-size:14px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666}
+.applicant .actions button.primary{background:#FF6B35;color:#fff;border:none}
+.locked-tip{margin-top:10px;padding:10px 12px;border-radius:10px;background:#FFF7E6;color:#FA8C14;font-size:12px;line-height:1.5;display:none}
+.new-badge{position:absolute;top:12px;right:12px;background:#FF4D4F;color:#fff;font-size:10px;padding:2px 8px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="order-detail.html" class="back" id="backLink">←</a>
+  <span class="title">接单申请</span>
+</div>
+<div class="task-brief">
+  <div class="icon" id="taskIcon">🐱</div>
+  <div class="info">
+    <div class="name" id="taskName">帮忙喂猫3天（含铲屎陪玩）</div>
+    <div class="meta" id="taskMeta">2026年4月19日 14:00 · ¥120 · 正在筛选申请人</div>
+  </div>
+</div>
+<div class="selection-notice" id="selectionNotice"></div>
+<div class="applicant-list" id="applicantList"></div>
+
+<script src="service-start-code.js"></script>
+<script src="time-utils.js"></script>
+<script>
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const status=params.get('status')||'applying';
+const type=params.get('type')||'cat';
+const orderId=params.get('id')||'p2';
+const selectedProviderId=params.get('provider')||'';
+const applicantsCount=Math.max(Number(params.get('applicants')||3),0);
+const returnRole=params.get('returnRole')||'published';
+const returnStatus=params.get('returnStatus')||'all';
+const orderTitle=params.get('title')||'帮忙喂猫3天（含铲屎陪玩）';
+const orderTime=BanxingTimeUtils.formatTaskTime(params.get('time')||'2026年4月19日 14:00')||'2026/04/19 14:00';
+const orderLocation=params.get('location')||'待确认';
+const orderPrice=params.get('price')||'¥120';
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(([key,val])=>{
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach((value,key)=>{
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(([key,val])=>{
+    next[key]=val;
+  });
+  (removeKeys||[]).forEach(key=>{
+    delete next[key];
+  });
+  return next;
+}
+
+function orderDetailHref(extra){
+  const detailStatus=selectedProviderId?(status==='applying'?'ready':status):status;
+  return 'order-detail.html?'+buildQuery(currentParams({
+    owner:'published',
+    status:detailStatus,
+    type,
+    id:orderId,
+    provider:selectedProviderId,
+    applicants:applicantsCount,
+    returnRole,
+    returnStatus,
+    title:orderTitle,
+    time:orderTime,
+    location:orderLocation,
+    price:orderPrice,
+    ...extra
+  },['source','applicant']));
+}
+
+function applicantDetailHref(applicantId){
+  return 'applicant-detail.html?'+buildQuery(currentParams({
+    owner,
+    status:selectedProviderId?'ready':status,
+    type,
+    id:orderId,
+    applicant:applicantId,
+    provider:selectedProviderId,
+    applicants:applicantsCount,
+    returnRole,
+    returnStatus,
+    title:orderTitle,
+    time:orderTime,
+    location:orderLocation,
+    price:orderPrice,
+    source:'applicants'
+  }));
+}
+
+const typeMeta={
+  cat:{icon:'🐱'},
+  outdoor:{icon:'🏃'},
+  health:{icon:'🏥'},
+  wedding:{icon:'💒'}
+};
+
+const applicants=[
+  {id:'wang',avatar:'王',name:'王小明',credit:'92',tags:['✅实名','🎓在校'],stats:'完成32单 · 好评率96% · 在读大二',reviews:['喂猫很细心，推荐！','猫咪很喜欢她'],highlight:true},
+  {id:'liu',avatar:'刘',name:'刘同学',credit:'85',tags:['✅实名','🎓在校'],stats:'完成18单 · 好评率89% · 在读大三',reviews:['准时到达，服务认真','沟通顺畅']},
+  {id:'chen',avatar:'陈',name:'陈学长',credit:'63',tags:['✅实名'],stats:'完成56单 · 好评率98% · 博二',reviews:['婚礼现场配合度很高','执行很稳，反馈很及时'],creditStyle:'background:#FFF7E6;color:#FA8C14'}
+];
+
+document.getElementById('backLink').href=orderDetailHref();
+document.getElementById('taskIcon').textContent=(typeMeta[type]||typeMeta.cat).icon;
+document.getElementById('taskName').textContent=orderTitle;
+document.getElementById('taskMeta').textContent=orderTime+' · '+orderPrice+' · '+(selectedProviderId?'已确认服务者':'正在筛选申请人');
+
+const selectedApplicant=applicants.find(item=>item.id===selectedProviderId)||null;
+if(selectedApplicant){
+  const notice=document.getElementById('selectionNotice');
+  notice.style.display='block';
+  notice.innerHTML='当前任务已确认服务者：<strong>'+selectedApplicant.name+'</strong>。当前列表仅支持继续查看各申请者详情。';
+}
+
+document.getElementById('applicantList').innerHTML=applicants.map(item=>{
+  const locked=Boolean(selectedProviderId);
+  return `
+    <div class="applicant" data-applicant-id="${item.id}">
+      ${item.highlight?'<span class="new-badge">新</span>':''}
+      <div class="top">
+        <div class="avatar">${item.avatar}</div>
+        <div class="user-info">
+          <div class="name">${item.name} ${item.tags.map(tag=>'<span class="tag">'+tag+'</span>').join('')}</div>
+          <div class="stats">${item.stats}</div>
+        </div>
+        <span class="credit" style="${item.creditStyle||''}">${item.credit}分</span>
+      </div>
+      <div class="reviews">
+        <div class="title">近期评价</div>
+        ${item.reviews.map(text=>'<div class="item"><span class="stars">⭐⭐⭐⭐⭐</span> '+text+'</div>').join('')}
+      </div>
+      <div class="actions">
+        <button onclick="location.href='${applicantDetailHref(item.id)}'">查看详情</button>
+        ${locked?'':`<button class="primary" onclick="selectApplicant('${item.id}')">确认选择</button>`}
+      </div>
+      <div class="locked-tip" style="display:${locked?'block':'none'}">${item.id===selectedProviderId?'当前已确认这位服务者，可继续查看详情。':'当前任务已确认其他服务者，暂不支持再次选择。'}</div>
+    </div>
+  `;
+}).join('');
+
+function selectApplicant(applicantId){
+  BanxingServiceStartCode.ensureCode({
+    type,
+    time:orderTime,
+    amount:orderPrice,
+    providerId:applicantId,
+    orderId
+  });
+  location.href=orderDetailHref({status:'ready',provider:applicantId});
+}
+</script>
+</body>
+</html>

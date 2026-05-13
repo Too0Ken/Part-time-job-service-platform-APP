@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>订单打赏 - 伴行</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f6fa;max-width:375px;margin:0 auto;min-height:100vh;padding-bottom:28px}
+.status-bar{height:44px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#333}
+.nav{height:44px;background:#fff;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid #eee}
+.nav .back{font-size:20px;color:#333;text-decoration:none;margin-right:12px}
+.nav .title{font-size:16px;font-weight:600;color:#1a1a2e;flex:1;text-align:center}
+.nav .placeholder{width:32px}
+.card{background:#fff;margin:16px;border-radius:16px;padding:16px}
+.title{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.label{font-size:12px;color:#98a2b3;margin-bottom:8px}
+.options{display:flex;gap:8px;flex-wrap:wrap}
+.options button{padding:8px 14px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;color:#667085;font-size:13px;cursor:pointer}
+.options button.active{background:#FFF1EC;border-color:#FF6B35;color:#FF6B35;font-weight:700}
+.amount-input,.message-input{width:100%;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px;font-size:14px;color:#1a1a2e;outline:none;background:#fff}
+.amount-input{margin-top:12px}
+.message-input{min-height:96px;resize:none}
+.summary{background:#FFF8F1;border:1px solid #FFD8C2;border-radius:14px;padding:14px;margin-top:14px}
+.summary .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:#666;padding:5px 0}
+.summary .row .val{color:#1a1a2e;font-weight:700;text-align:right}
+.warn{margin-top:12px;padding:12px;border-radius:12px;background:#FFF7E6;color:#B76E00;font-size:12px;line-height:1.7}
+.payment-option{display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #eee;border-radius:12px;cursor:pointer}
+.payment-option+.payment-option{margin-top:10px}
+.payment-option.active{border-color:#FF6B35;background:#FFF7E6}
+.payment-option.disabled{opacity:.55;cursor:default}
+.payment-radio{width:18px;height:18px;border:2px solid #d0d5dd;border-radius:50%;margin-top:2px;position:relative;flex:none}
+.payment-option.active .payment-radio{border-color:#FF6B35}
+.payment-option.active .payment-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:#FF6B35}
+.payment-info{flex:1}
+.payment-name{font-size:14px;font-weight:600;color:#1a1a2e}
+.payment-desc{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:4px}
+.record-card{background:linear-gradient(135deg,#FFF6ED,#FFFDF8);border:1px solid #FFD7B8;border-radius:16px;padding:16px}
+.record-amount{font-size:30px;font-weight:800;color:#FF6B35}
+.record-meta{font-size:12px;color:#8c8c8c;line-height:1.7;margin-top:8px}
+.record-message{margin-top:12px;padding:12px;border-radius:12px;background:#fff;color:#5f6675;font-size:13px;line-height:1.7}
+.submit-btn,.secondary-btn{display:block;width:calc(100% - 32px);height:48px;border:none;border-radius:24px;font-size:16px;font-weight:600;cursor:pointer}
+.submit-btn{margin:20px auto 0;background:linear-gradient(135deg,#FF6B35,#FF8F65);color:#fff}
+.secondary-btn{margin:12px auto 0;background:#fff;color:#667085;border:1px solid #d8dee6}
+</style>
+</head>
+<body>
+<div class="status-bar">9:41</div>
+<div class="nav">
+  <a href="#" class="back" id="backLink">←</a>
+  <span class="title">订单打赏</span>
+  <span class="placeholder"></span>
+</div>
+
+<div class="card" id="recordSection" style="display:none">
+  <div class="title">打赏记录</div>
+  <div class="record-card">
+    <div class="record-amount" id="recordAmount">¥0.00</div>
+    <div class="record-meta" id="recordMeta"></div>
+    <div class="record-message" id="recordMessage" style="display:none"></div>
+  </div>
+</div>
+
+<div class="card" id="formSection">
+  <div class="title">打赏设置</div>
+  <div class="label">快捷金额</div>
+  <div class="options" id="amountOptions"></div>
+  <input class="amount-input" id="customAmount" type="number" min="1" step="1" placeholder="或输入自定义金额，单位元">
+  <div class="label" style="margin-top:14px">感谢留言</div>
+  <textarea class="message-input" id="messageInput" maxlength="60" placeholder="选填，给服务者留一句感谢吧"></textarea>
+  <div class="summary">
+    <div class="row"><span>打赏对象</span><span class="val" id="summaryRecipient">服务者</span></div>
+    <div class="row"><span>打赏金额</span><span class="val" id="summaryAmount">¥8.00</span></div>
+    <div class="row"><span>到账方式</span><span class="val">直接结转至服务者</span></div>
+  </div>
+  <div class="warn">温馨提示：打赏属于自愿感谢，提交后将直接支付给服务者，请确认金额后再继续。</div>
+</div>
+
+<div class="card" id="paymentSection">
+  <div class="title">支付方式</div>
+  <div class="payment-option active" data-method="balance">
+    <div class="payment-radio"></div>
+    <div class="payment-info">
+      <div class="payment-name">平台余额支付</div>
+      <div class="payment-desc">优先用余额完成本次打赏。</div>
+    </div>
+  </div>
+  <div class="payment-option" data-method="wechat">
+    <div class="payment-radio"></div>
+    <div class="payment-info">
+      <div class="payment-name">微信支付</div>
+      <div class="payment-desc">提交后拉起微信，支付完成后立即到账。</div>
+    </div>
+  </div>
+</div>
+
+<button class="submit-btn" id="submitBtn">确认打赏</button>
+<button class="secondary-btn" id="backBtn" type="button">返回订单</button>
+
+<script src="time-utils.js"></script>
+<script src="order-tip-data.js"></script>
+<script>
+const PUBLISHED_ORDER_KEY='banxing.latestPublishedOrder';
+const QUICK_AMOUNTS=[8,18,28,58];
+const params=new URLSearchParams(location.search);
+const owner=params.get('owner')||'published';
+const status=params.get('status')||'done';
+const type=params.get('type')||'cat';
+const orderId=(params.get('id')||'p5').toUpperCase();
+const provider=params.get('provider')||'';
+const applicants=params.get('applicants')||'';
+const returnRole=params.get('returnRole')||owner;
+const returnStatus=params.get('returnStatus')||'all';
+const orderName=params.get('title')||'订单';
+const orderTime=BanxingTimeUtils.formatTaskTime(params.get('time'))||params.get('time')||'待确认';
+const orderLocation=params.get('location')||'待确认';
+const orderAmount=params.get('price')||'¥0.00';
+const recipientName=params.get('recipientName')||'服务者';
+const tipAlias=params.get('tipAlias')||'';
+const existingTip=BanxingOrderTips.getByOrderId(orderId)||null;
+let selectedAmount=existingTip&&existingTip.amount?existingTip.amount:QUICK_AMOUNTS[0];
+let paymentMethod=existingTip&&existingTip.paymentMethod==='微信支付'?'wechat':'balance';
+
+function buildQuery(obj){
+  const query=new URLSearchParams();
+  Object.entries(obj).forEach(function(entry){
+    const key=entry[0];
+    const val=entry[1];
+    if(val!==undefined&&val!==null&&val!=='')query.set(key,val);
+  });
+  return query.toString();
+}
+
+function currentParams(extra,removeKeys){
+  const next={};
+  params.forEach(function(value,key){
+    next[key]=value;
+  });
+  Object.entries(extra||{}).forEach(function(entry){
+    next[entry[0]]=entry[1];
+  });
+  (removeKeys||[]).forEach(function(key){
+    delete next[key];
+  });
+  return next;
+}
+
+function detailHref(){
+  return 'order-detail.html?'+buildQuery(currentParams({
+    owner,
+    status,
+    type,
+    id:orderId.toLowerCase(),
+    provider,
+    applicants,
+    returnRole,
+    returnStatus,
+    title:orderName,
+    time:orderTime,
+    location:orderLocation,
+    price:orderAmount
+  }));
+}
+
+function renderQuickOptions(){
+  document.getElementById('amountOptions').innerHTML=QUICK_AMOUNTS.map(function(amount){
+    return '<button type="button" data-amount="'+amount+'">'+BanxingOrderTips.formatMoney(amount)+'</button>';
+  }).join('');
+}
+
+function syncAmountButtons(){
+  document.querySelectorAll('#amountOptions button').forEach(function(button){
+    button.classList.toggle('active',BanxingOrderTips.parseMoney(button.dataset.amount)===selectedAmount);
+  });
+  document.getElementById('summaryAmount').textContent=BanxingOrderTips.formatMoney(selectedAmount);
+  document.getElementById('submitBtn').textContent=(paymentMethod==='wechat'?'微信':'余额')+'支付并打赏';
+}
+
+function updateSelectionFromInput(value){
+  const amount=Math.max(0,Math.floor(BanxingOrderTips.parseMoney(value)));
+  if(amount>0){
+    selectedAmount=amount;
+  }
+  syncAmountButtons();
+}
+
+function disableFormForRecord(){
+  document.getElementById('formSection').style.display='none';
+  document.getElementById('paymentSection').style.display='none';
+  document.getElementById('submitBtn').style.display='none';
+}
+
+function renderRecord(entry){
+  if(!entry||entry.amount<=0)return;
+  document.getElementById('recordSection').style.display='block';
+  document.getElementById('recordAmount').textContent=BanxingOrderTips.formatMoney(entry.amount);
+  document.getElementById('recordMeta').textContent=(entry.paidAt||'刚刚')+' · '+(entry.paymentMethod||'平台余额');
+  if(entry.message){
+    document.getElementById('recordMessage').style.display='block';
+    document.getElementById('recordMessage').textContent='留言：'+entry.message;
+  }
+}
+
+document.getElementById('backLink').href=detailHref();
+document.getElementById('backBtn').addEventListener('click',function(){
+  location.href=detailHref();
+});
+document.getElementById('summaryRecipient').textContent=recipientName;
+renderQuickOptions();
+
+if(existingTip&&existingTip.amount>0){
+  renderRecord(existingTip);
+  disableFormForRecord();
+}else{
+  syncAmountButtons();
+  document.getElementById('amountOptions').addEventListener('click',function(event){
+    const button=event.target.closest('[data-amount]');
+    if(!button)return;
+    selectedAmount=BanxingOrderTips.parseMoney(button.dataset.amount);
+    document.getElementById('customAmount').value='';
+    syncAmountButtons();
+  });
+  document.getElementById('customAmount').addEventListener('input',function(event){
+    updateSelectionFromInput(event.target.value);
+  });
+  document.querySelectorAll('.payment-option').forEach(function(option){
+    option.addEventListener('click',function(){
+      paymentMethod=option.dataset.method||'balance';
+      document.querySelectorAll('.payment-option').forEach(function(item){
+        item.classList.remove('active');
+      });
+      option.classList.add('active');
+      syncAmountButtons();
+    });
+  });
+
+  document.getElementById('submitBtn').addEventListener('click',function(){
+    const inputAmount=BanxingOrderTips.parseMoney(document.getElementById('customAmount').value);
+    const finalAmount=inputAmount>0?Math.floor(inputAmount):selectedAmount;
+    if(finalAmount<=0){
+      alert('请输入有效的打赏金额。');
+      return;
+    }
+    const saved=BanxingOrderTips.saveForOrder(orderId,{
+      amount:finalAmount,
+      message:document.getElementById('messageInput').value.trim(),
+      paidAt:'2026-04-16 18:20',
+      paymentMethod:paymentMethod==='wechat'?'微信支付':'平台余额',
+      recipientName:recipientName,
+      aliases:tipAlias?[tipAlias]:[]
+    });
+    try{
+      const latestOrder=JSON.parse(localStorage.getItem(PUBLISHED_ORDER_KEY)||'null');
+      if(latestOrder&&String(latestOrder.id||'').toUpperCase()===orderId){
+        latestOrder.finance=latestOrder.finance||{};
+        latestOrder.finance.tip=BanxingOrderTips.formatMoney(saved.amount);
+        localStorage.setItem(PUBLISHED_ORDER_KEY,JSON.stringify(latestOrder));
+      }
+    }catch(error){
+    }
+    if(paymentMethod==='wechat'){
+      alert('正在拉起微信支付...\n打赏成功后会立即同步到订单详情。');
+    }else{
+      alert('打赏已成功提交，服务者可在订单中查看。');
+    }
+    location.href=detailHref();
+  });
+}
+</script>
+</body>
+</html>
